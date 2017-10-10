@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Rootify</title>
+		
+		<style type="text/css">
+			#login, #loggedin, #tree-container {
+				display: none;
+			}
+			.text-overflow {
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
+				width: 500px;
+			}
+
+			.node {
+				cursor: pointer;
+			}
+
+			.overlay {
+				background-color:#EEE;
+			}
+
+			.node circle, rect, image {
+				fill: #fff;
+				stroke: steelblue;
+				stroke-width: 1.5px;
+			}
+
+			.node text {
+				font-size:10px; 
+				font-family:sans-serif;
+			}
+
+			.link {
+				fill: none;
+				stroke: #ccc;
+				stroke-width: 1.5px;
+			}
+		</style>
+		
+		<!-- jQuery -->
+		<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+		
+		<!-- D3.js v3 -->
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		
+		<!-- Spotify Web API (JS client-side wrapper) -->
+		<script src="spotify-web-api.js"></script>
+		
+		<!-- Our D3.js tree layout -->
+		<script src="tree.js"></script>
+	</head>
+    
+	<body>
+	
+		<div id="tree-container"></div>
+      
+		<div class="container">
+			<div id="login">
+				<h1>Rootify</h1>
+				<a href="/login" class="btn btn-primary">Log in with Spotify</a>
+			</div>
+			<div id="loggedin">
+				<div id="user-profile">
+				</div>
+				<div id="oauth">
+				</div>
+			</div>
+		</div>
+		
+		<script>
+			(function() {
+
+				/**
+				 * Obtains parameters from the hash of the URL
+				 * @return Object
+				 */
+				function getHashParams() {
+					var hashParams = {};
+					var e, r = /([^&;=]+)=?([^&;]*)/g, 
+						q = window.location.hash.substring(1);
+						
+					while ( e = r.exec(q)) {
+						hashParams[e[1]] = decodeURIComponent(e[2]);
+					}
+					
+					return hashParams;
+				}
+				
+				var params = getHashParams();
+				
+				var access_token = params.access_token,
+					refresh_token = params.refresh_token,
+					error = params.error;
+				
+				if (error) {
+					alert('There was an error during the authentication');
+				} else {
+					if (access_token) {
+						// Set the access token..
+					spotifyApi.setAccessToken(access_token);
+					$('#tree-container').show();
+					} else {
+						// Show login information
+						$('#login').show();
+					}
+				}
+			})();
+		</script>
+	</body>
+</html>
