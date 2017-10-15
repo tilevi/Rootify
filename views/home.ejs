@@ -2,14 +2,57 @@
 <html>
 	<head>
 		<title>Rootify</title>
+        
+        <!-- jQuery -->
+		<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+		
+		<!-- D3.js v3 -->
+		<script src="http://d3js.org/d3.v3.min.js"></script>
+		
+		<!-- Spotify Web API (JS client-side wrapper) -->
+		<script src="spotify-web-api.js"></script>
+        
+        <link rel="stylesheet" type="text/css" href="home.css">
 	</head>
     
 	<body>
-        <h1>Logged in!</h1>
+        <div id="tree-container"></div>
+        
+        <script type="text/javascript">
+            var spotifyApi = new SpotifyWebApi();
+            var access_token = "<%- access_token -%>";
+            
+            spotifyApi.setAccessToken(access_token);
+        </script>
         
         <script type="text/javascript">
             
-            var access_token = "<%- access_token -%>"
+            var treeDiv = document.getElementById("tree-container");
+            var svg = d3.select(treeDiv).append("svg");
+            
+            var viewerWidth;
+            var viewerHeight;
+            
+            function redraw(){
+                
+                // Extract the width and height that was computed by CSS.
+                viewerWidth = treeDiv.clientWidth;
+                viewerHeight = treeDiv.clientHeight;
+                
+                // Use the extracted size to set the size of an SVG element.
+                svg
+                .attr("width", viewerWidth)
+                .attr("height", viewerHeight)
+                .attr("class", "overlay");
+            }
+
+            // Draw for the first time to initialize.
+            redraw();
+
+            // Redraw based on the new size whenever the browser window is resized.
+            window.addEventListener("resize", redraw);
         </script>
+        
+        <script type="text/javascript" src="layouts.js"></script>
 	</body>
 </html>

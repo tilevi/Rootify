@@ -1,0 +1,43 @@
+#tree-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 85%;
+    height: 90%;
+    min-height: 720px;
+    min-width: 1080px;
+}
+
+.text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 500px;
+}
+
+.node {
+    cursor: pointer;
+}
+
+.overlay {
+    background-color:#EEE;
+}
+
+.node circle, rect, image {
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+.node text {
+    font-size:10px; 
+    font-family:sans-serif;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 1.5px;
+}
