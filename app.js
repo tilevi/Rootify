@@ -25,10 +25,6 @@ var homepage = require('./routes/home');
 app.use('/home', homepage);
 
 // These fields are information from the Spotify Developer site
-// I omitted client_id and client_secret because these are private.
-
-// I will send you guys the client ID and secret separately.
-// Once you fill it in, please DO NOT push this file to GitHub.
 
 var client_id = '***REMOVED***';
 var client_secret = '***REMOVED***';
