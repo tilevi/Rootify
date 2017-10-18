@@ -30,8 +30,8 @@ app.use('/home', homepage);
 // I will send you guys the client ID and secret separately.
 // Once you fill it in, please DO NOT push this file to GitHub.
 
-var client_id = ''; // Your client id
-var client_secret = ''; // Your secret
+var client_id = '8d9483d3d91b4031b96286a03fd88478';
+var client_secret = '6fbb0ed701a145cdb406c3ca6d05b572';
 var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
 
 // Generates a random string
