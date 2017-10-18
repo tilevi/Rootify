@@ -1,11 +1,11 @@
 #tree-container {
-    position: fixed;
+    position: relative;
     top: 0;
     left: 0;
     bottom: 0;
     right: 0;
-    width: 85%;
-    height: 90%;
+    width: 75%;
+    height: 75%;
     min-height: 720px;
     min-width: 1080px;
 }
