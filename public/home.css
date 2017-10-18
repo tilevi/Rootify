@@ -1,13 +1,11 @@
 #tree-container {
-    position: relative;
-    top: 0;
+    position: fixed;
+    top: 5%;
     left: 0;
     bottom: 0;
     right: 0;
-    width: 75%;
-    height: 75%;
-    min-height: 720px;
-    min-width: 1080px;
+    width: 85%;
+    height: 80%;
 }
 
 .text-overflow {
