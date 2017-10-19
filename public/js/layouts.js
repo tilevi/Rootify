@@ -169,7 +169,7 @@ function toggleChildren(d) {
 
 function click(d) {
     
-    if (inTransition) {
+    if (inTransition || d == root) {
         return;
     }
     
