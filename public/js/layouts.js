@@ -114,7 +114,7 @@ function centerNode(source) {
     x = -source.x0;
     y = -source.y0;
     x = x * scale + viewerWidth / 2;
-    y = y * scale + viewerHeight / 2;
+    y = y * scale + viewerHeight / 8;
 
     d3.select('g').transition()
         .duration(duration)
