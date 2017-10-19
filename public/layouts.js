@@ -109,15 +109,22 @@ function expand(d) {
 
 // Function to center node when clicked/dropped so node doesn't get lost when collapsing/moving with large amount of children.
 
-function centerNode(source) {
+function centerNode(source, first) {
     scale = zoomListener.scale();
     x = -source.x0;
     y = -source.y0;
     x = x * scale + viewerWidth / 2;
     y = y * scale + viewerHeight / 2;
-
-    d3.select('g').transition()
-        .duration(duration)
+    
+    var dur = duration;
+    
+    if (first) {
+        dur = 0;
+    }
+    
+     d3.select('g')
+        .transition()
+        .duration(dur)
         .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
     zoomListener.scale(scale);
     zoomListener.translate([x, y]);
@@ -206,36 +213,53 @@ function update(source) {
 
     // Set widths between levels based on maxLabelLength.
     nodes.forEach(function(d) {
-        d.y = (d.depth * 75); //500px per level.
+        d.y = (d.depth * 75); // 75px per level
     });
 
-    // Update the nodes…
+    // Grab the new set
     node = svgGroup.selectAll("g.node")
         .data(nodes, function(d) {
             if (!d.id) {
                 d.id = ++i;
             }
-            return d.aid ? d.aid : d.id;
-            //return d.id || (d.id = ++i);
+            if (d.aid) {
+                return d.aid;
+            }
+            return d.tid ? d.tid : d.id
         });
     
-    node.each(function(d){
-        if (d == source) {
-            if (d.children) {
-
+    node.each(function(d) {
+        
+        var line = d3.select(this).select("line");
+        
+        if (d.children) {
+            
+            if (line.length > 0 && line[0][0] == null) {
                 d3.select(this).append("line")
                     .attr("x1", 0)
                     .attr("y1", 25)
                     .attr("x2", 0)
                     .attr("y2", 42)
-                    .attr("stroke-width", 2)
-                    .attr("stroke", "black");
-            } else {
-                
-                d3.select(this).select("line").remove();
+                    .style("stroke", "grey")
+                    .style("stroke-width", 0)
+                    .transition()
+                    .duration(duration)
+                    .style("stroke-width", 2)
+                    .style("stroke", "black");
+            }
+        } else {
+            if (line.length > 0 && line[0][0] != null) {
+                line.remove();
             }
         }
     })
+    
+    // Set the destinations of the existing nodes.
+    node.transition()
+        .duration(duration)
+        .attr("transform", function(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        });
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
@@ -247,15 +271,19 @@ function update(source) {
     
     nodeEnter.each(function(d) {
         
-        if (d == source && d.children) {
+        if (d.children) {
             
             d3.select(this).append("line")
                 .attr("x1", 0)
                 .attr("y1", 25)
                 .attr("x2", 0)
                 .attr("y2", 42)
-                .attr("stroke-width", 2)
-                .attr("stroke", "black");
+                .style("stroke", "grey")
+                .style("stroke-width", 0)
+                .transition()
+                .duration(duration)
+                .style("stroke-width", 2)
+                .style("stroke", "black");
         }
         
         if (d.aid) {
@@ -312,6 +340,12 @@ function update(source) {
                     return d.url;
                 });
         }
+        
+        d3.select(this).transition()
+            .duration(duration)
+            .attr("transform", function(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        });
     });
     
     // Update the text to reflect whether node has children or not.
@@ -332,61 +366,60 @@ function update(source) {
         .style("fill", function(d) {
             return d._children ? "lightsteelblue" : "#fff";
         });
-
-    // Transition nodes to their new position.
-    var nodeUpdate = node.transition()
-        .duration(duration)
-        .attr("transform", function(d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
-
-    // Fade the text in
-    nodeUpdate.select("text")
-        .style("fill-opacity", 1);
-
+    
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit();
-
-    nodeExit.select("text").remove();
-
-    nodeExit = nodeExit.transition()
-        .attr("transform", function(d) {
-            if (!d.type || d.type != "T") {
-                return "translate(" + ( source.x + 0 ) + "," + ( source.y + 0 ) + ")";
-            } else {
-                return "translate(" + ( source.x + 25 ) + "," + ( source.y + 25 ) + ")";
-            }
-        })
-        .duration(duration)
-        .remove();
-
-    nodeExit.select("circle")
-        .attr("r", 0);
-
-    nodeExit.select("rect")
-        .attr("width", 0)
-        .attr("height", 0);
-
-    nodeExit.select("text")
-        .style("fill-opacity", 0);
+    var customClip = null;
+    
+    if (!nodeExit.empty()) {
+        
+        customClip = baseSvg.append("defs")
+                    .append("clipPath")
+                    .attr("id", "clip" + (source.aid))
+                        .append("circle")
+                        .attr("cx", 0)
+                        .attr("cy", 0)
+                        .attr("r", 25)
+                        .transition()
+                        .duration(duration)
+                        .attr("r", 0)
+                        .each("end", function() {
+                            
+                            d3.select("#clip" + (source.aid)).remove();
+                            console.log("ENDED."); 
+                        });
+    }
+    
+    nodeExit.each(function(d) {
+        
+        var exitVar = d3.select(this)
+            .transition()
+            .duration(duration)
+            .attr("transform", function(d) {
+                if (!d.type || d.type != "T") {
+                    return "translate(" + ( source.x + 0 ) + "," + ( source.y + 0 ) + ")";
+                } else {
+                    return "translate(" + ( source.x + 25 ) + "," + ( source.y + 25 ) + ")";
+                }
+            })
+            .remove();
+        
+        exitVar.select("image").attr("clip-path", "url(#" + "clip" + (source.aid) + ")");
+        exitVar.select("circle").attr("r", 0);
+    });
+    
+    
     
     var link = svgGroup.selectAll("path.link")
         .data(links, function(d) {
-            return d.target.aid ? d.target.aid : d.target.id;
+            return d.target.aid ? d.target.aid : d.target.tid;
         });
     
-    var linkEnter = link.enter().append("path").style("stroke", "grey");
+    var linkEnter = link.enter().append("path")
+                        .classed("link", true);
     
     linkEnter.each(function(d) {
-        
         if (d.target.spacer) { d3.select(this).style("opacity", 0); }
-        
-        // Enter any new links at the parent's previous position.
-        d3.select(this)
-            .attr("class", "link")
-            .transition()
-            .duration(duration)
-            .attr("d", elbow);
     });
     
     // Transition links to their new position.
@@ -409,8 +442,8 @@ var svgGroup = baseSvg.append("g");
 
 // Define the root
 root = treeData;
-root.x0 = viewerHeight / 2;
-root.y0 = 0;
+root.y0 = viewerHeight / 2;
+root.x0 = 0;
 
 var loadedArtists = false;
 var loadedTracks = false;
@@ -420,7 +453,7 @@ function doneLoading() {
     if (loadedArtists && loadedTracks) {
         
         update(root);
-        centerNode(root);
+        centerNode(root, true);
     }
 }
 
@@ -488,7 +521,7 @@ function createRootChildren() {
                 i++;
             }
             
-            root.children.push( {"index": count, "name": "SPACER", "spacer": true } );
+            root.children.push( {"index": count, "name": "SPACER", "tid": "spacer", "spacer": true } );
             trackID.push("INVALID_TRACK_ID1");
             count = count + 1;
             
