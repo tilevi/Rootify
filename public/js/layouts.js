@@ -32,7 +32,7 @@ var treeLong = d3.layout.tree()
 var tree = treeLong;
 
 function elbow(d, i) {
-    return "M" + d.source.x + "," + ( d.source.y + ((d.source == root) ? 55 : 42))
+    return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : 42))
     + "H" + d.target.x + "V" + ( d.target.y - 25 );
 }
 
@@ -175,7 +175,7 @@ function toggleChildren(d) {
 
 function click(d) {
     
-    if (inTransition || d == root) {
+    if (inTransition || d.root) {
         return;
     }
     
@@ -223,7 +223,7 @@ function update(source, switchM) {
                     .attr("x1", 0)
                     .attr("y1", 25)
                     .attr("x2", 0)
-                    .attr("y2", 48)
+                    .attr("y2", (d.root ? 55 : 42))
                     .style("stroke", "#ccc")
                     .style("stroke-width", 0)
                     .transition()
@@ -261,7 +261,7 @@ function update(source, switchM) {
                 .attr("x1", 0)
                 .attr("y1", 25)
                 .attr("x2", 0)
-                .attr("y2", (d == root) ? 55 : 42)
+                .attr("y2", (d.root) ? 55 : 42)
                 .style("stroke", "#ccc")
                 .style("stroke-width", 0)
                 .transition()
