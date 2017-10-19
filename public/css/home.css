@@ -1,0 +1,180 @@
+/* Body */
+
+body {
+    background-color:#2F394C;
+    margin:0;
+    font-family: Avenir Next;
+    font-size: 1em;
+}
+
+/* link options */
+a {
+
+}
+
+/* ------------- Header ------------ */
+#tophead {
+    height:12vh;
+    margin:0;
+    background-color:#252F41;
+    box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.6);
+}
+.navbar {
+    width:100vh;
+    padding-top: 3vh;
+    padding-left: 4vh;
+}
+
+.navbar a {
+    color: #fff;
+    border: 1px solid #B5BDC4;
+    float:left;
+    display: inline-block;
+    padding: 10px 30px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 400;
+}
+.navbar a:hover {
+    color: #fff;
+    background-color: #4B9877;
+    border-color: #4B9877;
+}
+
+.navbar a:active{
+    color-background: #4B9877;
+}
+/* ------------- sidebar ------------ */
+
+#sidebar {
+    z-index: 5px;
+    position: relative;
+    width: 20%;
+    height: 88vh;
+    float: right;
+    background-color: #2F3B4E;
+    box-shadow: -1px 4px 16px -5px rgba(0, 0, 0, 0.5);
+
+}
+
+.tabnav {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tablink {
+  flex: 1;
+  margin-right: 4px;
+  padding: 12px;
+  color: #fff;
+  text-decoration: none;
+  text-transform: uppercase;
+  background-color: #01B482;
+  text-align: center;
+  transition: color 0.3s;
+
+}
+
+.tablink a{
+    font-size: 1em;
+    letter-spacing: 1em;
+}
+
+.tablink:last-child {
+  margin-right: 0;
+}
+
+.tablink:hover {
+  color: #2F3B4E;
+}
+
+.tablink.is-active {
+  color: #01B482;
+  background-color: #2F3B4E;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+
+.c-tab {
+  display: none;
+
+}
+.c-tab.is-active {
+  display: block;
+}
+
+.tabcontent {
+  padding: 1.5rem;
+  color: #fff;
+}
+
+.tabcontent h2{
+    border-bottom: 5px solid #01B482;
+}
+
+ /* Tabs no-js fallback
+ */
+.c-tabs.no-js .tabnav{
+  display: none;
+}
+
+.c-tabs.no-js .c-tab {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+.c-tabs.no-js .c-tab:last-child {
+  margin-bottom: 0;
+}
+
+
+#overflowss {
+    height: 75vh;
+    overflow-y:auto;
+}
+
+/* ------------- Main Body of the Tree Container ------------ */
+#tree-container {
+    position: relative;
+    margin-top:0;
+    width: 80%;
+    height: 87vh;
+}
+
+.text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 500px;
+}
+
+.node {
+    cursor: pointer;
+}
+
+.overlay {
+    
+
+}
+
+.node circle, rect, image {
+    fill: #fff;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
+
+.node text {
+    font-size:10px; 
+    font-family:sans-serif;
+}
+
+.link {
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 1.5px;
+}

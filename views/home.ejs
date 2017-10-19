@@ -10,14 +10,56 @@
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		
 		<!-- Spotify Web API (JS client-side wrapper) -->
-		<script src="spotify-web-api.js"></script>
-        
-        <link rel="stylesheet" type="text/css" href="home.css">
+		<script src="/js/spotify-web-api.js"></script>
+
+
+        <link rel="stylesheet" type="text/css" href="/css/home.css">
 	</head>
     
 	<body>
-        <a href="/">Logout</a>
+        <!-- Header  -->
+        <div id="tophead">
+            <div class="navbar">
+                <a href="/">Logout</a>
+    </div>
+    </div>
+        <!-- Sidebar -->
+        <div id="sidebar">
+
+            <!-- Tabs -->
+             <div id="tabs" class="c-tabs no-js">
+                <div class="tabnav">
+                    <a href="#" class="tablink is-active">
+                        Details
+                    </a>
+                    <a href="#" class="tablink">
+                        Generate
+                    </a>
+                </div>
         
+
+            <!-- Tabs Content  -->
+            <div class="c-tab is-active">
+                <div id="overflowss" class="tabcontent">
+                    <h2> Details </h2>
+                    <p> Details stuff here
+                </div>
+            </div>
+
+            <div class="c-tab">
+                <div id="overflowss" class="tabcontent">
+                    <h2> Selected </h2>
+                    <p> Generate stuff here
+                    
+                    <h2> Generated Playlist </h2>
+                              
+                </div>
+            </div>
+
+            </div>
+        </div>
+
+        <!-- Tree Container -->
         <div id="tree-container"></div>
         
         <script type="text/javascript">
@@ -55,6 +97,20 @@
             window.addEventListener("resize", redraw);
         </script>
         
-        <script type="text/javascript" src="layouts.js"></script>
+        <script type="text/javascript" src="/js/layouts.js"></script>
+        
+
+        <!-- TAB JS -->
+        <script src="/js/tabs.js"></script>
+        
+        <script>
+          var myTabs = tabs({
+            el: '#tabs',
+            tabNavigationLinks: '.tablink',
+            tabContentContainers: '.c-tab'
+          });
+          myTabs.init();
+        </script>
+
 	</body>
 </html>
