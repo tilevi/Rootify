@@ -1,6 +1,8 @@
+var mode = "short";
+var inTransition = true;
 
 var treeData = { "name": "", "root": true };
-var me = {"url": ""};
+var me = { "url": "" };
 
 // Calculate total nodes, max label length
 var totalNodes = 0;
@@ -12,18 +14,24 @@ var patternDef;
 var i = 0;
 var duration = 750;
 
-var root;
-var artistID = [];
-var trackID = [];
+var longChildren;
+var shortChildren;
 
-var tree = d3.layout.tree()
+var root = null;
+
+var artistID_short = [];
+var trackID_short = [];
+
+var artistID_long = [];
+var trackID_long = [];
+
+var treeShort = d3.layout.tree()
     .size([viewerHeight, viewerWidth]);
 
-// define a d3 diagonal projection for use by the node paths later on.
-var diagonal = d3.svg.diagonal()
-    .projection(function(d) {
-        return [d.x, d.y - 15];
-    });
+var treeLong = d3.layout.tree()
+    .size([viewerHeight, viewerWidth]);
+
+var tree = treeLong;
 
 function elbow(d, i) {
     return "M" + d.source.x + "," + ( d.source.y + 42 )
@@ -31,33 +39,7 @@ function elbow(d, i) {
 }
 
 
-// A recursive helper function for performing some setup by walking through all nodes
-
-function visit(parent, visitFn, childrenFn) {
-    if (!parent) return;
-
-    visitFn(parent);
-
-    var children = childrenFn(parent);
-    if (children) {
-        var count = children.length;
-        for (var i = 0; i < count; i++) {
-            visit(children[i], visitFn, childrenFn);
-        }
-    }
-}
-
-// Call visit function to establish maxLabelLength
-visit(treeData, function(d) {
-    totalNodes++;
-    maxLabelLength = Math.max(d.name.length, maxLabelLength);
-
-}, function(d) {
-    return d.children && d.children.length > 0 ? d.children : null;
-});
-
-
-// sort the tree according to the node names
+// sort the tree according to the indices
 
 function sortTree() {
     tree.sort(function(a, b) {
@@ -72,7 +54,6 @@ sortTree();
 function zoom() {
     svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 }
-
 
 // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
 var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
@@ -89,7 +70,6 @@ patternDef = baseSvg.append("defs")
                         .attr("r", 25);
 
 // Helper functions for collapsing and expanding nodes.
-
 function collapse(d) {
     if (d.children) {
         d._children = d.children;
@@ -106,10 +86,7 @@ function expand(d) {
     }
 }
 
-
-// Function to center node when clicked/dropped so node doesn't get lost when collapsing/moving with large amount of children.
-
-function centerNode(source) {
+function centerNode(source, first) {
     scale = zoomListener.scale();
     x = -source.x0;
     y = -source.y0;
@@ -118,6 +95,17 @@ function centerNode(source) {
 
     d3.select('g').transition()
         .duration(duration)
+    y = y * scale + viewerHeight / 2;
+    
+    var dur = duration;
+    
+    if (first) {
+        dur = 0;
+    }
+    
+     d3.select('g')
+        .transition()
+        .duration(dur)
         .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
     zoomListener.scale(scale);
     zoomListener.translate([x, y]);
@@ -126,7 +114,7 @@ function centerNode(source) {
 // Toggle children function
 
 function toggleChildren(d) {
-
+    
     if (d._children) {
 
         d.children = d._children;
@@ -145,7 +133,13 @@ function toggleChildren(d) {
             while ( (i < data.artists.length) && (count < d3.min([3, data.artists.length])) ) {
 
                 var artist = data.artists[i];
-
+                
+                var artistID = artistID_short;
+                
+                if (mode == "long") {
+                    artistID = artistID_long;
+                }
+                
                 if (artistID.indexOf(artist.id) === -1) {
 
                     d.children.push( { "rank": i, "name": artist.name, "aid": artist.id, url: artist.images.length > 0 ? artist.images[artist.images.length-1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
@@ -175,67 +169,70 @@ function toggleChildren(d) {
 // Toggle children on click.
 
 function click(d) {
-   // if (d3.event.defaultPrevented) console.log(return; // click suppressed
+    
+    if (inTransition) {
+        return;
+    }
+    
     toggleChildren(d);
 }
 
-function update(source) {
-
-    // Compute the new height, function counts total children of root node and sets tree height accordingly.
-    // This prevents the layout looking squashed when new nodes are made visible or looking sparse when nodes are removed
-    // This makes the layout more consistent.
-    var levelWidth = [1];
-    var childCount = function(level, n) {
-
-        if (n.children && n.children.length > 0) {
-            if (levelWidth.length <= level + 1) levelWidth.push(0);
-
-            levelWidth[level + 1] += n.children.length;
-            n.children.forEach(function(d) {
-                childCount(level + 1, d);
-            });
-        }
-    };
-    childCount(0, root);
+function update(source, switchM) {
+    
     tree = tree.nodeSize([55, 55]);
     
     // Compute the new tree layout.
     var nodes = tree.nodes(root).reverse(),
         links = tree.links(nodes);
+    
     sortTree();
 
     // Set widths between levels based on maxLabelLength.
     nodes.forEach(function(d) {
-        d.y = (d.depth * 75); //500px per level.
+        d.y = (d.depth * 75); // 75px per level
     });
 
-    // Update the nodes…
+    // Grab the new set
     node = svgGroup.selectAll("g.node")
         .data(nodes, function(d) {
             if (!d.id) {
                 d.id = ++i;
             }
-            return d.aid ? d.aid : d.id;
-            //return d.id || (d.id = ++i);
+            return d.id;
         });
     
-    node.each(function(d){
-        if (d == source) {
-            if (d.children) {
-
+    node.each(function(d) {
+        
+        var line = d3.select(this).select("line");
+        
+        if (d.children) {
+            
+            if (line.length > 0 && line[0][0] == null) {
                 d3.select(this).append("line")
                     .attr("x1", 0)
                     .attr("y1", 25)
                     .attr("x2", 0)
                     .attr("y2", 42)
-                    .attr("stroke-width", 2)
-                    .attr("stroke", "black");
-            } else {
-                
-                d3.select(this).select("line").remove();
+                    .style("stroke", "grey")
+                    .style("stroke-width", 0)
+                    .transition()
+                    .duration(duration)
+                    .style("stroke-width", 2)
+                    .style("stroke", "black");
+            }
+        } else {
+            if (line.length > 0 && line[0][0] != null) {
+                line.remove();
             }
         }
     })
+    
+    // Set the destinations of the existing nodes.
+    node.transition()
+        .duration(duration)
+        .attr("transform", function(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        });
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
@@ -247,15 +244,19 @@ function update(source) {
     
     nodeEnter.each(function(d) {
         
-        if (d == source && d.children) {
+        if (d.children) {
             
             d3.select(this).append("line")
                 .attr("x1", 0)
                 .attr("y1", 25)
                 .attr("x2", 0)
                 .attr("y2", 42)
-                .attr("stroke-width", 2)
-                .attr("stroke", "black");
+                .style("stroke", "grey")
+                .style("stroke-width", 0)
+                .transition()
+                .duration(duration)
+                .style("stroke-width", 2)
+                .style("stroke", "black");
         }
         
         if (d.aid) {
@@ -312,6 +313,14 @@ function update(source) {
                     return d.url;
                 });
         }
+        
+        inTransition = true;
+        
+        d3.select(this).transition()
+            .duration(duration)
+            .attr("transform", function(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        }).each("end", function() { inTransition = false; });
     });
     
     // Update the text to reflect whether node has children or not.
@@ -332,61 +341,97 @@ function update(source) {
         .style("fill", function(d) {
             return d._children ? "lightsteelblue" : "#fff";
         });
-
-    // Transition nodes to their new position.
-    var nodeUpdate = node.transition()
-        .duration(duration)
-        .attr("transform", function(d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
-
-    // Fade the text in
-    nodeUpdate.select("text")
-        .style("fill-opacity", 1);
-
+    
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit();
-
-    nodeExit.select("text").remove();
-
-    nodeExit = nodeExit.transition()
-        .attr("transform", function(d) {
-            if (!d.type || d.type != "T") {
+    var customClip = null;
+    
+    if (!nodeExit.empty()) {
+        
+        inTransition = true;
+        
+        customClip = baseSvg.append("defs")
+                    .append("clipPath")
+                    .attr("id", "clip" + (source.id))
+                        .append("circle")
+                        .attr("cx", 0)
+                        .attr("cy", 0)
+                        .attr("r", 25)
+                        .transition()
+                        .duration(duration)
+                        .attr("r", 0)
+                        .each("end", function() {
+                            // At the end of the transition, remove the dynamic clip path.
+                            d3.select("#clip" + (source.id)).remove();
+                            inTransition = false;
+                            
+                            if (switchM == "long") {
+                                
+                                if (longChildren == null) {
+                                    createRootChildren();
+                                } else {
+                                    root.children = longChildren;
+                                    update(root);
+                                    centerNode(root, true);
+                                }
+                            } else if (switchM == "short") {
+                                
+                               if (shortChildren == null) {
+                                    createRootChildren();
+                                } else {
+                                    root.children = shortChildren;
+                                    update(root);
+                                    centerNode(root, true);
+                                } 
+                            }
+                        });
+    }
+    
+    nodeExit.each(function(d) {
+        
+        var line = d3.select(this).select("line");
+        if (line != null) {
+            line.remove();
+        }
+        
+        var exitVar = d3.select(this)
+            .transition()
+            .duration(duration)
+            .attr("transform", function(d) {
                 return "translate(" + ( source.x + 0 ) + "," + ( source.y + 0 ) + ")";
-            } else {
-                return "translate(" + ( source.x + 25 ) + "," + ( source.y + 25 ) + ")";
-            }
-        })
-        .duration(duration)
-        .remove();
-
-    nodeExit.select("circle")
-        .attr("r", 0);
-
-    nodeExit.select("rect")
-        .attr("width", 0)
-        .attr("height", 0);
-
-    nodeExit.select("text")
-        .style("fill-opacity", 0);
+            })
+            .remove();
+        
+        if (!d.tid) {
+            exitVar.select("image")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", 0)
+                    .attr("height", 0)
+                    .attr("clip-path", "url(#" + "clip" + (source.id) + ")");
+        } else {
+            exitVar.select("image")
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", 0)
+                    .attr("height", 0);
+        }
+        exitVar.select("circle").attr("r", 0);
+        exitVar.select("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0);
+    });
+    
+    
     
     var link = svgGroup.selectAll("path.link")
         .data(links, function(d) {
-            return d.target.aid ? d.target.aid : d.target.id;
+            return d.target.aid ? d.target.aid : d.target.tid;
         });
     
-    var linkEnter = link.enter().append("path").style("stroke", "grey");
+    var linkEnter = link.enter().append("path")
+                        .classed("link", true);
     
     linkEnter.each(function(d) {
-        
         if (d.target.spacer) { d3.select(this).style("opacity", 0); }
-        
-        // Enter any new links at the parent's previous position.
-        d3.select(this)
-            .attr("class", "link")
-            .transition()
-            .duration(duration)
-            .attr("d", elbow);
     });
     
     // Transition links to their new position.
@@ -409,7 +454,8 @@ var svgGroup = baseSvg.append("g");
 
 // Define the root
 root = treeData;
-root.x0 = viewerHeight / 2;
+
+root.x0 = 0;
 root.y0 = 0;
 
 var loadedArtists = false;
@@ -420,7 +466,7 @@ function doneLoading() {
     if (loadedArtists && loadedTracks) {
         
         update(root);
-        centerNode(root);
+        centerNode(root, true);
     }
 }
 
@@ -428,7 +474,7 @@ function loadArtists(baseCount) {
         spotifyApi.getMyTopArtists(
         {
             "limit": 5,
-            "time_range": "long_term"
+            "time_range": mode == "long" ? "medium_term" : "short_term"
         }, 
         function(err, data) {
             if (!err) {
@@ -439,7 +485,12 @@ function loadArtists(baseCount) {
                 while ( (i < data.items.length) && (count < d3.min([5, data.items.length])) ) {
 
                     var artist = data.items[i];
+                    var artistID = artistID_short;
 
+                    if (mode == "long") {
+                        artistID = artistID_long;
+                    }
+                    
                     if (artistID.indexOf(artist.id) === -1) {
                         
                         root.children.push( { "index": baseCount + i, "name": artist.name, "aid": artist.id, url: artist.images.length > 0 ? artist.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
@@ -463,7 +514,7 @@ function createRootChildren() {
     spotifyApi.getMyTopTracks(
     {
         "limit": 5,
-        "time_range": "long_term"
+        "time_range": mode == "long" ? "medium_term" : "short_term"
     },
     function(err, data) {
         if (!err) {
@@ -477,6 +528,12 @@ function createRootChildren() {
 
                 var track = data.items[i];
                 
+                var trackID = trackID_short;
+                
+                if (mode == "long") {
+                    trackID = trackID_long;
+                }
+                
                 if (trackID.indexOf(track.id) === -1) {
                     
                     root.children.push( { "index": i, "name": track.name, "tid": track.id, url: track.album.images.length > 0 ? track.album.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
@@ -488,7 +545,7 @@ function createRootChildren() {
                 i++;
             }
             
-            root.children.push( {"index": count, "name": "SPACER", "spacer": true } );
+            root.children.push( {"index": count, "name": "SPACER", "tid": "spacer", "spacer": true } );
             trackID.push("INVALID_TRACK_ID1");
             count = count + 1;
             
@@ -504,4 +561,30 @@ spotifyApi.getMe({}, function(err, data) {
         me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
         createRootChildren();
     }
+});
+
+var switchMode = function(m) {
+    
+    if (inTransition || mode == m) {
+        return;
+    }
+    
+    if (m == "long") {
+        shortChildren = root.children;
+    } else {
+        longChildren = root.children;
+    }
+    
+    mode = m;
+    root.children = null;
+    
+    update(root, m);
+}
+
+document.getElementById("long-term").addEventListener("click", function() {
+    switchMode("long");
+});
+
+document.getElementById("short-term").addEventListener("click", function() {
+    switchMode("short");
 });
