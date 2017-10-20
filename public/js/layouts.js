@@ -8,8 +8,6 @@ var me = { "url": "" };
 var totalNodes = 0;
 var maxLabelLength = 0;
 
-var patternDef;
-
 // Misc. variables
 var i = 0;
 var duration = 750;
@@ -34,7 +32,7 @@ var treeLong = d3.layout.tree()
 var tree = treeLong;
 
 function elbow(d, i) {
-    return "M" + d.source.x + "," + ( d.source.y + 42 )
+    return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : 42))
     + "H" + d.target.x + "V" + ( d.target.y - 25 );
 }
 
@@ -52,7 +50,13 @@ sortTree();
 // Define the zoom function for the zoomable tree
 
 function zoom() {
-    svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    var translate = d3.event.translate;
+    var scale = d3.event.scale;
+    
+    //console.log(d3.transform(svgGroup.attr("transform")).translate);
+    //console.log(translate);
+    
+    svgGroup.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
 }
 
 // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
@@ -61,13 +65,21 @@ var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
 // define the baseSvg, attaching a class for styling and the zoomListener
 var baseSvg = d3.select("svg").call(zoomListener);
 
-patternDef = baseSvg.append("defs")
-                .append("clipPath")
-                    .attr("id", "clip")
-                    .append("circle")
-                        .attr("cx", 0)
-                        .attr("cy", 0)
-                        .attr("r", 25);
+baseSvg.append("defs")
+    .append("clipPath")
+        .attr("id", "clip")
+        .append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 25);
+
+baseSvg.append("defs")
+    .append("clipPath")
+        .attr("id", "clip-root")
+        .append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 32);
 
 // Helper functions for collapsing and expanding nodes.
 function collapse(d) {
@@ -87,6 +99,9 @@ function expand(d) {
 }
 
 function centerNode(source, first) {
+    
+    if (!first) { return; }
+    
     scale = zoomListener.scale();
     x = -source.x0;
     y = -source.y0;
@@ -169,7 +184,7 @@ function toggleChildren(d) {
 
 function click(d) {
     
-    if (inTransition || d == root) {
+    if (inTransition || d.root) {
         return;
     }
     
@@ -178,7 +193,7 @@ function click(d) {
 
 function update(source, switchM) {
     
-    tree = tree.nodeSize([55, 55]);
+    tree = tree.nodeSize([64, 64]);
     
     // Compute the new tree layout.
     var nodes = tree.nodes(root).reverse(),
@@ -186,9 +201,15 @@ function update(source, switchM) {
     
     sortTree();
 
-    // Set widths between levels based on maxLabelLength.
+    // Set widths between levels
     nodes.forEach(function(d) {
-        d.y = (d.depth * 75); // 75px per level
+        if (d.depth == 0) {
+            d.y = 0;
+        } else if (d.depth == 1) {
+            d.y = 100;
+        } else {
+            d.y = 100 + ((d.depth-1) * 75); // 75px per level
+        }
     });
 
     // Grab the new set
@@ -211,13 +232,13 @@ function update(source, switchM) {
                     .attr("x1", 0)
                     .attr("y1", 25)
                     .attr("x2", 0)
-                    .attr("y2", 42)
-                    .style("stroke", "grey")
+                    .attr("y2", (d.root ? 55 : 42))
+                    .style("stroke", "#ccc")
                     .style("stroke-width", 0)
                     .transition()
                     .duration(duration)
-                    .style("stroke-width", 2)
-                    .style("stroke", "black");
+                    .style("stroke-width", 3)
+                    .style("stroke", "#ccc");
             }
         } else {
             if (line.length > 0 && line[0][0] != null) {
@@ -249,13 +270,13 @@ function update(source, switchM) {
                 .attr("x1", 0)
                 .attr("y1", 25)
                 .attr("x2", 0)
-                .attr("y2", 42)
-                .style("stroke", "grey")
+                .attr("y2", (d.root) ? 55 : 42)
+                .style("stroke", "#ccc")
                 .style("stroke-width", 0)
                 .transition()
                 .duration(duration)
-                .style("stroke-width", 2)
-                .style("stroke", "black");
+                .style("stroke-width", 3)
+                .style("stroke", "#ccc");
         }
         
         if (d.aid) {
@@ -278,20 +299,20 @@ function update(source, switchM) {
 
             d3.select(this).append("circle")
                 .attr('class', 'nodeCircle')
-                .attr("r", 25)
+                .attr("r", 32)
                 .style("fill", function(d) {
                     return d._children ? "lightsteelblue" : "#fff";
                 });
             
             d3.select(this).append('image')
-                .attr('x', -25)
-                .attr('y', -25)
-                .attr('width', 50)
-                .attr('height', 50)
+                .attr('x', -32)
+                .attr('y', -32)
+                .attr('width', 64)
+                .attr('height', 64)
                 .attr("xlink:href", function(d) {
                     return me.url;
                 })
-               .attr("clip-path", "url(#clip)");
+               .attr("clip-path", "url(#clip-root)");
         }
         else if (!d.spacer) {
             
@@ -321,25 +342,6 @@ function update(source, switchM) {
             return "translate(" + d.x + "," + d.y + ")";
         }).each("end", function() { inTransition = false; });
     });
-    
-    // Update the text to reflect whether node has children or not.
-    node.select('text')
-        .attr("x", function(d) {
-            return 0; //d.children || d._children ? -10 : 10;
-        })
-        .attr("text-anchor", function(d) {
-            return "middle"; //d.children || d._children ? "end" : "start";
-        })
-        .text(function(d) {
-            return "";
-        });
-
-    // Change the circle fill depending on whether it has children and is collapsed
-    node.select("circle.nodeCircle")
-        .attr("r", 25)
-        .style("fill", function(d) {
-            return d._children ? "lightsteelblue" : "#fff";
-        });
     
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit();
