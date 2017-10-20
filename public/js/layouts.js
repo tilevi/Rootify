@@ -50,7 +50,13 @@ sortTree();
 // Define the zoom function for the zoomable tree
 
 function zoom() {
-    svgGroup.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    var translate = d3.event.translate;
+    var scale = d3.event.scale;
+    
+    //console.log(d3.transform(svgGroup.attr("transform")).translate);
+    //console.log(translate);
+    
+    svgGroup.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
 }
 
 // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
@@ -93,6 +99,9 @@ function expand(d) {
 }
 
 function centerNode(source, first) {
+    
+    if (!first) { return; }
+    
     scale = zoomListener.scale();
     x = -source.x0;
     y = -source.y0;
