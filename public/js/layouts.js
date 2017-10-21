@@ -4,10 +4,6 @@ var inTransition = true;
 var treeData = { "name": "", "root": true };
 var me = { "url": "" };
 
-// Calculate total nodes, max label length
-var totalNodes = 0;
-var maxLabelLength = 0;
-
 // Misc. variables
 var i = 0;
 var duration = 750;
@@ -23,13 +19,8 @@ var trackID_short = [];
 var artistID_long = [];
 var trackID_long = [];
 
-var treeShort = d3.layout.tree()
+var tree = d3.layout.tree()
     .size([viewerHeight, viewerWidth]);
-
-var treeLong = d3.layout.tree()
-    .size([viewerHeight, viewerWidth]);
-
-var tree = treeLong;
 
 function elbow(d, i) {
     return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : 42))
@@ -49,14 +40,14 @@ sortTree();
 
 // Define the zoom function for the zoomable tree
 
+var saveTranslate = [0, 0];
+
 function zoom() {
     var translate = d3.event.translate;
     var scale = d3.event.scale;
     
-    //console.log(d3.transform(svgGroup.attr("transform")).translate);
-    //console.log(translate);
-    
     svgGroup.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+    //console.log(translate, d3.transform(svgGroup.attr("transform")).translate);
 }
 
 // define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
@@ -98,13 +89,24 @@ function expand(d) {
     }
 }
 
-function centerNode(source, first) {
+// The magic function.
+function getScreenCoords(x, y, ctm) {
+    var xn = ctm.e + x*ctm.a + y*ctm.c;
+    var yn = ctm.f + x*ctm.b + y*ctm.d;
+    return { x: xn, y: yn };
+}
+
+
+
+function centerNode(source, first, shouldPan) {
     
-    if (!first) { return; }
+    // Don't pan if you're not root or if you're on the screen.
+    if (!first && !shouldPan) { return; }
     
     scale = zoomListener.scale();
     x = -source.x0;
     y = -source.y0;
+    
     x = x * scale + viewerWidth / 2;
 
     d3.select('g').transition()
@@ -121,6 +123,7 @@ function centerNode(source, first) {
         .transition()
         .duration(dur)
         .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
+    
     zoomListener.scale(scale);
     zoomListener.translate([x, y]);
 }
@@ -134,8 +137,8 @@ function toggleChildren(d) {
         d.children = d._children;
         d._children = null;
 
-        update(d);
-        centerNode(d);
+        var pan = update(d);
+        centerNode(d, false, pan);
     } else if (d.aid && !d.children) {
 
         spotifyApi.getArtistRelatedArtists(d.aid, function(err, data) {
@@ -167,16 +170,16 @@ function toggleChildren(d) {
 
             d._children = null;
 
-            update(d);
-            centerNode(d);
+            var pan = update(d);
+            centerNode(d, false, pan);
         });
 
     } else if (d.children) {
         d._children = d.children;
         d.children = null;
 
-        update(d);
-        centerNode(d);
+        var pan = update(d);
+        centerNode(d, false, pan);
     }
 }
 
@@ -262,7 +265,10 @@ function update(source, switchM) {
         })
         .on('click', click);
     
-    nodeEnter.each(function(d) {
+    
+    var shouldPan = false;
+    
+    nodeEnter.each(function(d, i) {
         
         if (d.children) {
             
@@ -341,6 +347,28 @@ function update(source, switchM) {
             .attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
         }).each("end", function() { inTransition = false; });
+        
+        if (!shouldPan) {
+            
+            var circle = this;
+            
+            var cx = +circle.getAttribute('cx');
+            var cy = +circle.getAttribute('cy');
+            
+            var ctm = circle.getCTM();
+            var coords = getScreenCoords(cx, cy, ctm);
+            
+            var padding = 80;
+            
+            if (( coords.x - padding ) < 0 || ( coords.x + padding ) > viewerWidth) {
+                console.log("Should pan.");
+                shouldPan = true;
+            }
+            if (( coords.y - padding ) < 0 || ( coords.y + padding ) > viewerHeight) {
+                console.log("Should pan.");
+                shouldPan = true;
+            }
+        }
     });
     
     // Transition exiting nodes to the parent's new position.
@@ -448,6 +476,8 @@ function update(source, switchM) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
+    
+    return shouldPan;
 }
 
 // Append a group which holds all nodes and which the zoom Listener can act upon.
