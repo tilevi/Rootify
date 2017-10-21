@@ -433,15 +433,17 @@ function update(source, switchM) {
             
             // Here, we have found the node's relative position to the SVG.
             // We have to add the difference of where the node will be.
-            coords.x = coords.x + globalScale * (d.x - source.x);
-            coords.y = coords.y + globalScale * (d.y - source.y);
+            
+            var xDiff = (d.x - source.x0);
+            var yDiff = (d.y - source.y0);
+            
+            coords.x = coords.x + globalScale * xDiff;
+            coords.y = coords.y + globalScale * yDiff;
             
             /*
                 If the node is too far to the left or right, or too above or below, we should pan the view. I don't think the node could be too above but let's just keep that to be complete.
-                
-                Padding is 32 because of the maximum radius of a node is 32.
             */
-            var padding = 32;
+            var padding = 80;
             
             if (((coords.x - padding) < 0 || (coords.x + padding) > viewerWidth)
                 || ((coords.y - padding) < 0 || (coords.y + padding) > viewerHeight)) {
@@ -600,6 +602,11 @@ var svgGroup = baseSvg.append("g");
 */
 
 root = treeData;
+root.x0 = 0;
+root.y0 = 0;
+
+root.x = 0;
+root.y = 0;
 
 /*
     Booleans to indicate if we properly loaded our top artists and tracks.
