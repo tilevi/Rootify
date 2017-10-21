@@ -1,68 +1,94 @@
+// Either "short" or "long" 
+// Indicates if we want to view short-term or long-term
 var mode = "short";
 var inTransition = true;
 
+// Initial tree data
 var treeData = { "name": "", "root": true };
+
+// Initial Spotify user profile data
 var me = { "url": "" };
 
-// Misc. variables
+// Used for assigning IDs to our nodes
 var i = 0;
+
+// Duration of our transitions
 var duration = 750;
 
+// These will be arrays that hold the root's children for each mode.
 var longChildren;
 var shortChildren;
 
+// Root initially doesn't exist.
 var root = null;
 
+/*
+    All of these arrays are used to determine if a certain artist or track already exists in the tree. This is very important because if we have the same artist or track, it's redunant plus we can run into some huge visualization issues.
+*/
 var artistID_short = [];
 var trackID_short = [];
 
 var artistID_long = [];
 var trackID_long = [];
 
+/*
+    Our initial tree layout
+*/
 var tree = d3.layout.tree()
     .size([viewerHeight, viewerWidth]);
 
+/*
+    This is our path generator which creates an elbow shape.
+*/
 function elbow(d, i) {
     return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : 42))
     + "H" + d.target.x + "V" + ( d.target.y - 25 );
 }
 
-
-// sort the tree according to the indices
-
+/*
+    We use this to sort our tree.
+    Top tracks and artists appear left to right.
+    
+    In other words, the track or artist you listen to more are on the left.
+*/
 function sortTree() {
     tree.sort(function(a, b) {
         return a.index - b.index;
     });
 }
-// Sort the tree initially incase the JSON isn't in a sorted order.
+
+// Initially, sort the tree.
 sortTree();
 
-// Define the zoom function for the zoomable tree
+// This variable holds what our scale is, default is 1.
+var globalScale = 1;
 
-var saveTranslate = [0, 0];
-
+/*
+    This code handles our zoom.
+    It transforms our SVG 'g' (or group) element.
+    
+    If we put the root at the top left, the translation is [0, 0].
+*/
 function zoom() {
     var translate = d3.event.translate;
     var scale = d3.event.scale;
     
     svgGroup.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
-    //console.log(translate, d3.transform(svgGroup.attr("transform")).translate);
+    globalScale = scale;
 }
 
-// define the zoomListener which calls the zoom function on the "zoom" event constrained within the scaleExtents
+// Our zoom listener
 var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
 
-// define the baseSvg, attaching a class for styling and the zoomListener
+// Our base SVG
 var baseSvg = d3.select("svg").call(zoomListener);
 
-baseSvg.append("defs")
-    .append("clipPath")
-        .attr("id", "clip")
-        .append("circle")
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", 25);
+/*
+    Our clip paths.
+    
+    One is for our avatar (bigger radius), another is for the nodes (smaller radii).
+*/
+
 
 baseSvg.append("defs")
     .append("clipPath")
@@ -72,7 +98,18 @@ baseSvg.append("defs")
             .attr("cy", 0)
             .attr("r", 32);
 
-// Helper functions for collapsing and expanding nodes.
+baseSvg.append("defs")
+    .append("clipPath")
+        .attr("id", "clip")
+        .append("circle")
+            .attr("cx", 0)
+            .attr("cy", 0)
+            .attr("r", 25);
+
+
+/*
+    Both of these are helper methods used for expanding or collapsing sub-trees.
+*/
 function collapse(d) {
     if (d.children) {
         d._children = d.children;
@@ -89,14 +126,27 @@ function expand(d) {
     }
 }
 
-// The magic function.
+
+/*
+    This a helper function that converts an element's position in the SVG to its relative position to the SVG.
+    
+    Therefore, we can figure out if a node is visible.
+*/
+
 function getScreenCoords(x, y, ctm) {
     var xn = ctm.e + x*ctm.a + y*ctm.c;
     var yn = ctm.f + x*ctm.b + y*ctm.d;
     return { x: xn, y: yn };
 }
 
-
+/*
+    This function centers the view of a node at in the middle of the SVG, 
+    and then 1/8 from the top of the SVG.
+    
+    We pass shouldPan to indicate if we should pan the view.
+    In the update() function, we do some checks for the newly entered nodes, 
+    and then return shouldPan. We then call centerNode(...) with this return value as a parameter.
+*/
 
 function centerNode(source, first, shouldPan) {
     
@@ -128,19 +178,21 @@ function centerNode(source, first, shouldPan) {
     zoomListener.translate([x, y]);
 }
 
-// Toggle children function
-
+/*
+    This function is used when clicking on an artist or track.
+*/
 function toggleChildren(d) {
     
     if (d._children) {
-
+        // Here, we store a collapsed node's children in _children if it was opened previously.
         d.children = d._children;
         d._children = null;
 
         var pan = update(d);
         centerNode(d, false, pan);
     } else if (d.aid && !d.children) {
-
+        
+        // Grab related artists based on the artist we just selected.
         spotifyApi.getArtistRelatedArtists(d.aid, function(err, data) {
 
             var count = 0;
@@ -183,8 +235,10 @@ function toggleChildren(d) {
     }
 }
 
-// Toggle children on click.
-
+/*
+    When we click on a node, this fucntion is called.
+    We don't allow toggling if a transition is occuring or we clicked on the root node.
+*/
 function click(d) {
     
     if (inTransition || d.root) {
@@ -193,6 +247,26 @@ function click(d) {
     
     toggleChildren(d);
 }
+
+/*
+    This function is VERY important.
+    We call this function after we update the children of certain nodes.
+    
+    It will re-layout the tree layout (which computes all of the numbers for positioning, etc.).
+    
+    We have 3 selections here:
+        - Node ENTER (for each unbound data with key ID, we create our new nodes)
+        - Node UPDATE (we update the positions of our nodes)
+        - Node EXIT (we remove the nodes using a nice animation)
+        
+    The bottom line is that this function creates new (or removes) nodes and links, makes sure all of them are positioned, all transitions work properly.
+    
+    (Note: we also perform a check for newly entered nodes to see if we should pan the view.)
+    
+    Arguments:
+        - source (the node we clicked on)
+        - switchM (if specified, after node exit, we set the children and update)
+*/
 
 function update(source, switchM) {
     
@@ -206,12 +280,15 @@ function update(source, switchM) {
 
     // Set widths between levels
     nodes.forEach(function(d) {
+        // For the root, we have depth 0
         if (d.depth == 0) {
             d.y = 0;
         } else if (d.depth == 1) {
+            // For the first level, we have 100px spacing
             d.y = 100;
         } else {
-            d.y = 100 + ((d.depth-1) * 75); // 75px per level
+            // For every level after the first, we have 75px per level
+            d.y = 100 + ((d.depth-1) * 75);
         }
     });
 
@@ -224,6 +301,7 @@ function update(source, switchM) {
             return d.id;
         });
     
+    // For each node in the set..
     node.each(function(d) {
         
         var line = d3.select(this).select("line");
@@ -266,6 +344,8 @@ function update(source, switchM) {
         .on('click', click);
     
     
+    // We will return this variable at the end of this function.
+    // If this is set to true, we should pan our view.
     var shouldPan = false;
     
     nodeEnter.each(function(d, i) {
@@ -340,14 +420,7 @@ function update(source, switchM) {
                 });
         }
         
-        inTransition = true;
-        
-        d3.select(this).transition()
-            .duration(duration)
-            .attr("transform", function(d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        }).each("end", function() { inTransition = false; });
-        
+        // If shouldPan is true, a node was already detected outside of our view.
         if (!shouldPan) {
             
             var circle = this;
@@ -358,23 +431,47 @@ function update(source, switchM) {
             var ctm = circle.getCTM();
             var coords = getScreenCoords(cx, cy, ctm);
             
-            var padding = 80;
+            // Here, we have found the node's relative position to the SVG.
+            // We have to add the difference of where the node will be.
+            coords.x = coords.x + globalScale * (d.x - source.x);
+            coords.y = coords.y + globalScale * (d.y - source.y);
             
-            if (( coords.x - padding ) < 0 || ( coords.x + padding ) > viewerWidth) {
-                console.log("Should pan.");
-                shouldPan = true;
-            }
-            if (( coords.y - padding ) < 0 || ( coords.y + padding ) > viewerHeight) {
-                console.log("Should pan.");
+            /*
+                If the node is too far to the left or right, or too above or below, we should pan the view. I don't think the node could be too above but let's just keep that to be complete.
+                
+                Padding is 32 because of the maximum radius of a node is 32.
+            */
+            var padding = 32;
+            
+            if (((coords.x - padding) < 0 || (coords.x + padding) > viewerWidth)
+                || ((coords.y - padding) < 0 || (coords.y + padding) > viewerHeight)) {
+                
                 shouldPan = true;
             }
         }
+        
+        
+        /*
+            Transition the new nodes to their correct positions, starting at their parent's old position.
+        */
+        inTransition = true;
+        
+        d3.select(this).transition()
+            .duration(duration)
+            .attr("transform", function(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        }).each("end", function() { inTransition = false; });
     });
     
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit();
     var customClip = null;
     
+    /*
+        The below code is for node exit animation.
+        
+        If our node exit set is non-empty, we transition them properly. I make a custom clip element that resizes its radius as the transition occurs.
+    */
     if (!nodeExit.empty()) {
         
         inTransition = true;
@@ -394,19 +491,23 @@ function update(source, switchM) {
                             d3.select("#clip" + (source.id)).remove();
                             inTransition = false;
                             
+                            // After our nodes exit, we check if we should switch modes.
                             if (switchM == "long") {
                                 
+                                // If we have no data, then load it.
                                 if (longChildren == null) {
-                                    createRootChildren();
+                                    loadTopTracks();
                                 } else {
+                                    // Otherwise, set the root's children
                                     root.children = longChildren;
                                     update(root);
                                     centerNode(root, true);
                                 }
                             } else if (switchM == "short") {
                                 
-                               if (shortChildren == null) {
-                                    createRootChildren();
+                                // This is the same logic as above.
+                                if (shortChildren == null) {
+                                    loadTopTracks();
                                 } else {
                                     root.children = shortChildren;
                                     update(root);
@@ -450,7 +551,9 @@ function update(source, switchM) {
     });
     
     
-    
+    /*
+        Handle the ENTER links.
+    */
     var link = svgGroup.selectAll("path.link")
         .data(links, function(d) {
             return d.target.aid ? d.target.aid : d.target.tid;
@@ -471,27 +574,45 @@ function update(source, switchM) {
     // Transition exiting nodes to the parent's new position.
     link.exit().remove();
     
-    // Stash the old positions for transition.
+    /*
+        Stash the old positions for transition.
+        
+        This is very subtle but notice that x0 and y0 contain the current parent position after this function is called.
+    */
     nodes.forEach(function(d) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
     
+    // Should we pan our view?
     return shouldPan;
 }
 
 // Append a group which holds all nodes and which the zoom Listener can act upon.
 var svgGroup = baseSvg.append("g");
 
-// Define the root
+/*
+    Define the root by setting its initial data.
+    
+    The structure for the tree data is simple. Each node has a name, ID, and children. Of course, the children array can be empty if we have no related artists/tracks, etc.
+    
+    We can store extra information in these nodes if we need to.
+*/
+
 root = treeData;
 
-root.x0 = 0;
-root.y0 = 0;
+/*
+    Booleans to indicate if we properly loaded our top artists and tracks.
+*/
 
 var loadedArtists = false;
 var loadedTracks = false;
 
+/*
+    This function computes the new layout for our tree and then centers the root node at the middle top (1/2 from the left and right, 1/8 from the top and 7/8 from the bottom).
+    
+    This function is called when we finally loaded the data of our top artists and tracks.
+*/
 function doneLoading() {
     
     if (loadedArtists && loadedTracks) {
@@ -501,7 +622,15 @@ function doneLoading() {
     }
 }
 
-function loadArtists(baseCount) {
+/*
+    This function loads all of our top artists.
+    
+    Notice that we pass in a baseCount. This is a hacky solution but basically we need to make sure we are inserting the children of our root node properly.
+    
+    baseCount should be 6 because 5 of our tracks should have been loaded, including a spacer node so our tree looks clean.
+*/
+
+function loadTopArtists(baseCount) {
         spotifyApi.getMyTopArtists(
         {
             "limit": 5,
@@ -540,7 +669,20 @@ function loadArtists(baseCount) {
     );
 }
 
-function createRootChildren() {
+/*
+    This function loads our top tracks.
+    
+    After we loaded our top track information, we call loadTopArtists().
+    I understand that we could have an asynchornous operation here but we could run into all sorts of problems.
+    
+        For example, we could have race conditions with pushing into the children array. This probably wouldn't happen as JS is apparently single-threaded.
+
+        Another example is what if we only could load 2 top tracks and 5 top artists? Instead of using indices, we woud have to push nodes to the front of the list or append to the back.
+        
+        The bottom line is that we could do asynchorous operations and it would probably be fine but loading times for a Spotify user's top artists and tracks are relatively fast so the savings probably wouldn't be worth it for the design and implementation time.
+*/
+
+function loadTopTracks() {
     
     spotifyApi.getMyTopTracks(
     {
@@ -581,37 +723,54 @@ function createRootChildren() {
             count = count + 1;
             
             loadedTracks = true;
-            loadArtists(count);
+            loadTopArtists(count);
         }
     });
     
 }
 
+/*
+    This function grabs the Spotify user's information.
+*/
 spotifyApi.getMe({}, function(err, data) {
     if (!err) {
         me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
-        createRootChildren();
+        loadTopTracks();
     }
 });
 
+/*
+    This function switches the mode.
+    The possible modes are 'short' or 'long'.
+*/
+    
 var switchMode = function(m) {
     
+    // Don't switch if we're transitioning or in the same mode
     if (inTransition || mode == m) {
         return;
     }
     
     if (m == "long") {
+        // Save the short-term infomration
         shortChildren = root.children;
     } else {
+        // Save the long-term information
         longChildren = root.children;
     }
     
+    // Switch the mode
     mode = m;
+    // Set the root children initially to nothing
     root.children = null;
     
+    // Re-layout the tree
     update(root, m);
 }
 
+/*
+    These are just event listeners when a Spotify user selects on a certain mode.
+*/
 document.getElementById("long-term").addEventListener("click", function() {
     switchMode("long");
 });
