@@ -76,9 +76,7 @@ app.get('/logout', function(req, res) {
 // After a Spotify user logs in, this route is called.
 app.get('/callback', function(req, res) {
     
-    console.log(req.query);
-    console.log("\n");
-    
+    var state = req.query.state || null;
     var code = req.query.code || null;
     
     // Here, we are basically doing an extra check to make sure this 
