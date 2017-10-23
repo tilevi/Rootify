@@ -105,8 +105,11 @@
         <script type="text/javascript">
             var spotifyApi = new SpotifyWebApi();
             var access_token = "<%- access_token -%>";
-            
-            spotifyApi.setAccessToken(access_token);
+            if (access_token == null || access_token == "") {
+                window.location.replace('http://localhost:8888/');
+            } else {
+                spotifyApi.setAccessToken(access_token);
+            }
         </script>
         
         <script type="text/javascript">
