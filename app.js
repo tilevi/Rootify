@@ -49,7 +49,7 @@ app.get('/login', function(req, res) {
     res.cookie(stateKey, state);
     
     // your application requests authorization
-    var scope = 'user-read-recently-played user-top-read user-read-private user-read-email';
+    var scope = 'user-top-read user-read-private';
     res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
         response_type: 'code',
@@ -76,6 +76,11 @@ app.get('/logout', function(req, res) {
 // After a Spotify user logs in, this route is called.
 app.get('/home', function(req, res) {
     
+    if (req.cookies['myToken'] != null) {
+        res.render('home', { access_token: '' });
+    } else {
+        
+
     var state = req.query.state || null;
     var code = req.query.code || null;
     
@@ -115,6 +120,8 @@ app.get('/home', function(req, res) {
                 var access_token = body.access_token,
                 refresh_token = body.refresh_token;
                 
+                res.cookie('myToken', access_token);
+                
                 var options = {
                     url: 'https://api.spotify.com/v1/me',
                     headers: { 'Authorization': 'Bearer ' + access_token },
@@ -129,6 +136,7 @@ app.get('/home', function(req, res) {
                 res.redirect('/');
             }
         });
+    }
     }
 });
 

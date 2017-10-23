@@ -103,11 +103,22 @@
         <div id="tree-container"></div>
         
         <script type="text/javascript">
+            
+            function getCookie(name)
+              {
+                var re = new RegExp(name + "=([^;]+)");
+                var value = re.exec(document.cookie);
+                return (value != null) ? unescape(value[1]) : null;
+              }
+
             var spotifyApi = new SpotifyWebApi();
-            var access_token = "<%- access_token -%>";
+            //var access_token = "<%- access_token -%>";
+            var access_token = getCookie("myToken");
+            
             if (access_token == null || access_token == "") {
                 window.location.replace('http://localhost:8888/');
             } else {
+                
                 spotifyApi.setAccessToken(access_token);
             }
         </script>
