@@ -21,14 +21,14 @@ app.use(express.static(__dirname + '/public'))
 
 // Our main visualization page
 // Please see: routes/home.js
-var homepage = require('./routes/home');
-app.use('/home', homepage);
+//var homepage = require('./routes/home');
+//app.use('/home', homepage);
 
 // These fields are information from the Spotify Developer site
 
 var client_id = '***REMOVED***';
 var client_secret = '***REMOVED***';
-var redirect_uri = 'http://localhost:8888/callback'; // Your redirect uri
+var redirect_uri = 'http://localhost:8888/home'; // Your redirect uri
 
 // Generates a random string
 var generateRandomString = function(length) {
@@ -69,12 +69,12 @@ app.get('/logout', function(req, res) {
     res.cookie(stateKey, state);
     
     // Logout and present a new login screen
-    res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D***REMOVED***%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Flocalhost%3A8888%252Fcallback%26state%3D' + state + '%26show_dialog%3Dtrue');
+    res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D***REMOVED***%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Flocalhost%3A8888%252Fhome%26state%3D' + state + '%26show_dialog%3Dtrue');
 });
 
 // Callback route
 // After a Spotify user logs in, this route is called.
-app.get('/callback', function(req, res) {
+app.get('/home', function(req, res) {
     
     var state = req.query.state || null;
     var code = req.query.code || null;
@@ -121,17 +121,7 @@ app.get('/callback', function(req, res) {
                     json: true
                 };
                 
-                // Here, we choose to pass the access token to the client browser.
-                // This allows the client to use the Spotify Web API JS wrapper.
-                res.redirect(url.format({
-                    // Our main visaulization page will be located at /home
-                    pathname:"/home",
-                    // These will be query variables passed at the end of the URL
-                    query: {
-                        "access_token": access_token,
-                        "refresh_token": refresh_token
-                    }
-                }));
+                res.render('home', { access_token: access_token, refresh_token: refresh_token });
             } else {
                 
                 // If there is an error or the status is not 'OK' (200),
