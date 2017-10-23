@@ -61,9 +61,23 @@ app.get('/login', function(req, res) {
     }));
 });
 
+// Logout
+app.get('/logout', function(req, res) {
+    
+    // When logging out and then in again, we generate a random state for the Spotify login
+    var state = generateRandomString(16);
+    res.cookie(stateKey, state);
+    
+    // Logout and present a new login screen
+    res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D8d9483d3d91b4031b96286a03fd88478%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Flocalhost%3A8888%252Fcallback%26state%3D' + state + '%26show_dialog%3Dtrue');
+});
+
 // Callback route
 // After a Spotify user logs in, this route is called.
 app.get('/callback', function(req, res) {
+    
+    console.log(req.query);
+    console.log("\n");
     
     var code = req.query.code || null;
     
@@ -71,10 +85,10 @@ app.get('/callback', function(req, res) {
     // user actually logged in and didn't just guess our callback URI.
     
     // More information: https://developer.spotify.com/web-api/authorization-guide/
-    var state = req.query.state || null;
     var storedState = req.cookies ? req.cookies[stateKey] : null;
     
     if (state === null || state !== storedState) {
+        
         res.redirect('/');
     } else {
         
