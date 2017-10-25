@@ -121,6 +121,7 @@ app.get('/home', function(req, res) {
                 refresh_token = body.refresh_token;
                 
                 res.cookie('myToken', access_token);
+                res.cookie('myRefreshToken', refresh_token);
                 
                 var options = {
                     url: 'https://api.spotify.com/v1/me',
@@ -140,6 +141,31 @@ app.get('/home', function(req, res) {
     }
 });
 
+app.get('/refresh_token', function(req, res) {
+
+  // requesting access token from refresh token
+  var refresh_token = req.query.refresh_token;
+  var authOptions = {
+    url: 'https://accounts.spotify.com/api/token',
+    headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
+    form: {
+      grant_type: 'refresh_token',
+      refresh_token: refresh_token
+    },
+    json: true
+  };
+
+  request.post(authOptions, function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+      var access_token = body.access_token;
+      res.send({
+        'access_token': access_token
+      });
+    }
+  });
+});
+
+    
 // If there is an unknown route, we will just re-route to our login page
 app.all('*', function(req, res) {
   res.redirect("http://localhost:8888/");
