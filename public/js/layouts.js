@@ -11,9 +11,10 @@ var me = { "url": "" };
 
 // Used for assigning IDs to our nodes
 var i = 0;
+var j = 0;
 
 // Duration of our transitions
-var duration = 750;
+var duration = 700;
 
 // These will be arrays that hold the root's children for each mode.
 var longChildren;
@@ -194,38 +195,95 @@ function toggleChildren(d) {
         
         // Grab related artists based on the artist we just selected.
         spotifyApi.getArtistRelatedArtists(d.aid, function(err, data) {
+            
+            if (!err) {
 
-            var count = 0;
-            var i = 0;
-            d.children = [];
+                var count = 0;
+                var i = 0;
+                d.children = [];
 
-            while ( (i < data.artists.length) && (count < d3.min([3, data.artists.length])) ) {
+                while ( (i < data.artists.length) && (count < d3.min([3, data.artists.length])) ) {
 
-                var artist = data.artists[i];
-                
-                var artistID = artistID_short;
-                
-                if (mode == "long") {
-                    artistID = artistID_long;
+                    var artist = data.artists[i];
+
+                    var artistID = artistID_short;
+
+                    if (mode == "long") {
+                        artistID = artistID_long;
+                    }
+
+                    if (artistID.indexOf(artist.id) === -1) {
+
+                        d.children.push( { "rank": i, "name": artist.name, "aid": artist.id, url: artist.images.length > 0 ? artist.images[artist.images.length-1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
+
+                        artistID.push(artist.id);
+                        count++;
+                    }
+
+                    i++;
                 }
-                
-                if (artistID.indexOf(artist.id) === -1) {
 
-                    d.children.push( { "rank": i, "name": artist.name, "aid": artist.id, url: artist.images.length > 0 ? artist.images[artist.images.length-1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
+                d._children = null;
 
-                    artistID.push(artist.id);
-                    count++;
-                }
-
-                i++;
+                var pan = update(d);
+                centerNode(d, false, pan);
             }
-
-            d._children = null;
-
-            var pan = update(d);
-            centerNode(d, false, pan);
         });
 
+    } else if (d.tid && !d.children) {
+        
+        spotifyApi.getRecommendations(
+        {
+            "limit": 3,
+            "seed_tracks": ("" + d.tid)
+        }, 
+        function(err, data) {
+            
+            if (!err) {
+                
+                var count = 0;
+                var i = 0;
+                d.children = [];
+                
+                var trackID = trackID_short;
+                var tracks = [];
+                
+                if (mode == "long") {
+                    trackID = trackID_long;
+                }
+                
+                while ( (i < data.tracks.length) && (count < d3.min([3, data.tracks.length])) ) {
+
+                    var track = data.tracks[i];
+                    
+                    if (trackID.indexOf(track.id) === -1) {
+                        
+                        tracks.push(track.id);
+                        
+                        d.children.push( { "index": i, "name": track.name, "tid": track.id, url: track.album.images.length > 1 ? track.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
+
+                        trackID.push(track.id);
+                        count++;
+                    }
+                    
+                    i++;
+                }
+
+                d._children = null;
+
+                var pan = update(d);
+                centerNode(d, false, pan);
+                
+                /*spotifyApi.getAudioFeaturesForTracks(
+                tracks, 
+                function(err, data) {
+                    if (!err) {
+                        //console.log(data);
+                    }
+                });*/
+            }
+        });
+        
     } else if (d.children) {
         d._children = d.children;
         d.children = null;
@@ -320,10 +378,38 @@ function update(source, switchM) {
                     .duration(duration)
                     .style("stroke-width", 3)
                     .style("stroke", "#ccc");
+                
+                if (!d.root) {
+                    
+                    d3.select(this).select(".triangleDown").style("opacity", 0).style("fill-opacity", 0);
+
+                    d3.select(this).append('path')
+                        .classed("triangleUp", true)
+                        .attr("d", d3.svg.symbol().type("triangle-up").size(50))
+                        .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
+                        .style("fill", "white")
+                        .attr("stroke", "black")
+                        .attr("stroke-width", "1px")
+                        .style("opacity", 1)
+                        .on("click", click);
+                }
             }
         } else {
             if (line.length > 0 && line[0][0] != null) {
+                
                 line.remove();
+            }
+            
+            var triUp = d3.select(this).select(".triangleUp");
+            if (triUp.length > 0 && triUp[0][0] != null) {
+                triUp.remove();
+
+                var triDown = d3.select(this).select(".triangleDown");
+                if (triDown.length > 0 && triDown[0][0] != null) {
+                    console.log("Attempting to set opacity back.");
+                    triDown.style("opacity", 1);
+                    triDown.style("fill-opacity", 1);
+                }
             }
         }
     })
@@ -340,8 +426,7 @@ function update(source, switchM) {
         .attr("class", "node")
         .attr("transform", function(d) {
             return "translate(" + source.x0 + "," + source.y0 + ")";
-        })
-        .on('click', click);
+        });
     
     
     // We will return this variable at the end of this function.
@@ -363,10 +448,35 @@ function update(source, switchM) {
                 .duration(duration)
                 .style("stroke-width", 3)
                 .style("stroke", "#ccc");
+            
+            if (d.aid || d.tid) {
+                d3.select(this).append('path')
+                    .classed("triangleUp", true)
+                    .attr("d", d3.svg.symbol().type("triangle-up").size(50))
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
+                    .style("fill", "white")
+                    .attr("stroke", "black")
+                    .attr("stroke-width", "1px")
+                    .style("opacity", 1)
+                    .on("click", click);
+            }
+            
+
+        } if (!d.root && !d.spacer) {
+            
+            d3.select(this).append('path')
+                .classed("triangleDown", true)
+                .attr("d", d3.svg.symbol().type("triangle-down").size(150))
+                .attr("transform", function(d) { return "translate(" + 0 + "," + 27 + ")"; })
+                .style("fill", "white")
+                .attr("stroke", "black")
+                .attr("stroke-width", "1px")
+                .style("opacity", d.children == null ? 1 : 0)
+                .on("click", click);
         }
         
         if (d.aid) {
-
+            
             d3.select(this).append('circle')
                 .attr("r", 25)
                 .style("fill", "lightblue");
@@ -524,6 +634,7 @@ function update(source, switchM) {
         var line = d3.select(this).select("line");
         if (line != null) {
             line.remove();
+            d3.select(this).selectAll("path").remove();
         }
         
         var exitVar = d3.select(this)
@@ -703,16 +814,15 @@ function loadTopTracks() {
             var i = 0;
             
             root.children = [];
+            var trackID = trackID_short;
+
+            if (mode == "long") {
+                trackID = trackID_long;
+            }
             
             while ( (i < data.items.length) && (count < d3.min([5, data.items.length])) ) {
 
                 var track = data.items[i];
-                
-                var trackID = trackID_short;
-                
-                if (mode == "long") {
-                    trackID = trackID_long;
-                }
                 
                 if (trackID.indexOf(track.id) === -1) {
                     
@@ -739,12 +849,45 @@ function loadTopTracks() {
 /*
     This function grabs the Spotify user's information.
 */
-spotifyApi.getMe({}, function(err, data) {
-    if (!err) {
-        me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
-        loadTopTracks();
-    }
-});
+
+var loadMe = function() {
+
+    spotifyApi.getMe({}, function(err, data) {
+        if (!err) {
+
+            me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
+            loadTopTracks();
+        } else {
+            
+            // If there's an error, we want to get our refresh token.
+            // This will be used primarily for development as our access token may expire.
+            
+            // Source: http://www.the-art-of-web.com/javascript/getcookie/
+            function getCookie(name)
+            {
+                var re = new RegExp(name + "=([^;]+)");
+                var value = re.exec(document.cookie);
+                return (value != null) ? unescape(value[1]) : null;
+            }
+
+            var refresh_token = getCookie("myRefreshToken");
+            console.log(refresh_token);
+
+            $.ajax({
+                  url: '/refresh_token',
+                  data: {
+                    'refresh_token': refresh_token
+                  }
+                }).done(function(data) {
+                    spotifyApi.setAccessToken(data.access_token);
+                    loadMe();
+                });
+        }
+    });
+}
+
+// Load the Spotify user's associated information
+loadMe();
 
 /*
     This function switches the mode.
