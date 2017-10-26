@@ -107,27 +107,6 @@ baseSvg.append("defs")
             .attr("cy", 0)
             .attr("r", 25);
 
-
-/*
-    Both of these are helper methods used for expanding or collapsing sub-trees.
-*/
-function collapse(d) {
-    if (d.children) {
-        d._children = d.children;
-        d._children.forEach(collapse);
-        d.children = null;
-    }
-}
-
-function expand(d) {
-    if (d._children) {
-        d.children = d._children;
-        d.children.forEach(expand);
-        d._children = null;
-    }
-}
-
-
 /*
     This a helper function that converts an element's position in the SVG to its relative position to the SVG.
     
