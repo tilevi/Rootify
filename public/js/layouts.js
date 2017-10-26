@@ -556,7 +556,6 @@ function update(source, switchM) {
     
     // Transition exiting nodes to the parent's new position.
     var nodeExit = node.exit();
-    var customClip = null;
     
     /*
         The below code is for node exit animation.
@@ -567,7 +566,8 @@ function update(source, switchM) {
         
         inTransition = true;
         
-        customClip = baseSvg.append("defs")
+        // This custom clip should 
+        var customClip = baseSvg.append("defs")
                     .append("clipPath")
                     .attr("id", "clip" + (source.id))
                         .append("circle")
@@ -583,27 +583,24 @@ function update(source, switchM) {
                             inTransition = false;
                             
                             // After our nodes exit, we check if we should switch modes.
-                            if (switchM == "long") {
+                            if (switchM) {
+                                
+                                var childRef = null;
+                                if (switchM == "long") {
+                                    childRef = longChildren;
+                                } else if (switchM == "short") {
+                                    childRef = shortChildren;
+                                }
                                 
                                 // If we have no data, then load it.
-                                if (longChildren == null) {
+                                if (childRef == null) {
                                     loadTopTracks();
                                 } else {
                                     // Otherwise, set the root's children
-                                    root.children = longChildren;
+                                    root.children = childRef;
                                     update(root);
                                     centerNode(root, true);
                                 }
-                            } else if (switchM == "short") {
-                                
-                                // This is the same logic as above.
-                                if (shortChildren == null) {
-                                    loadTopTracks();
-                                } else {
-                                    root.children = shortChildren;
-                                    update(root);
-                                    centerNode(root, true);
-                                } 
                             }
                         });
     }
