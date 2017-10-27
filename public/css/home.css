@@ -46,17 +46,39 @@ a {
 .navbar a:active{
     color-background: #4B9877;
 }
+
+.buttonnav{
+    color: #fff;
+    border: 1px solid #4B9877;
+    float:left;
+    display: inline-block;
+    padding: 10px 30px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 400;
+    background-color:transparent;
+}
+.buttonnav:hover{
+   color: #fff;
+    background-color: #4B9877;
+    border-color: #4B9877;  
+}
+.buttonnav:active{
+    color-background: #4B9877;
+}
+
 /* ------------- sidebar ------------ */
 
 #sidebar {
     z-index: 5px;
     position: relative;
     width: 18%;
-    height: 88vh;
+    height: 100%;
+    height: 87vh;
     float: right;
     background-color: #2F3B4E;
     box-shadow: -1px 4px 16px -5px rgba(0, 0, 0, 0.5);
-
 }
 
 .tabnav {
@@ -124,7 +146,7 @@ a {
     padding-right: 1.5rem;
     letter-spacing: 0.8px;
     background-color:#232f3f;
-    height: 67%;
+    height: 65%;
     overflow-y:auto;
 
 }
@@ -165,12 +187,32 @@ a {
     display: block;
     padding:10px;
     padding-top: 10px;
+    float:bottom;
+    display: block;
+    padding:10px;
+    padding-bottom: 10px;
     padding-left: 0;
     padding-right: 0;
     text-align: center;
     text-decoration: none;
 }
 
+/*----------- Other ---------*/
+
+.spotbutton{ 
+  color: #fff;
+    background-color:#00B685;
+    float:left;
+    padding: 20px 30px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 400;
+    text-align: center;
+    display: block;
+    margin: 0 auto;
+
+}
 
 /* ------------- Main Body of the Tree Container ------------ */
 #tree-container {

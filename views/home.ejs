@@ -21,10 +21,12 @@
         <!-- Header  -->
         <div id="tophead">
             <div class="navbar">
-                <a href="/logout">Logout</a>
-                
-                <button style="margin-left: 25px;" type="button" id="short-term">Short-Term</button>
-                <button type="button" id="long-term">Long-Term</button>
+                <a href="/">Logout</a>
+
+        
+        <button class="buttonnav" style="margin-left: 25px;" type="button" id="short-term">Short-Term</button>
+        <button type="button" class="buttonnav" id="long-term">Long-Term</button>
+
     </div>
     </div>
         <!-- Sidebar -->
@@ -103,24 +105,10 @@
         <div id="tree-container"></div>
         
         <script type="text/javascript">
-            
-            function getCookie(name)
-              {
-                var re = new RegExp(name + "=([^;]+)");
-                var value = re.exec(document.cookie);
-                return (value != null) ? unescape(value[1]) : null;
-              }
-
             var spotifyApi = new SpotifyWebApi();
-            //var access_token = "<%- access_token -%>";
-            var access_token = getCookie("myToken");
+            var access_token = "<%- access_token -%>";
             
-            if (access_token == null || access_token == "") {
-                window.location.replace('http://localhost:8888/');
-            } else {
-                
-                spotifyApi.setAccessToken(access_token);
-            }
+            spotifyApi.setAccessToken(access_token);
         </script>
         
         <script type="text/javascript">
@@ -136,7 +124,7 @@
                 // Extract the width and height that was computed by CSS.
                 viewerWidth = treeDiv.clientWidth;
                 viewerHeight = treeDiv.clientHeight;
-                                
+                
                 // Use the extracted size to set the size of an SVG element.
                 svg
                 .attr("width", viewerWidth)
