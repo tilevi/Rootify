@@ -11,7 +11,6 @@ var me = { "url": "" };
 
 // Used for assigning IDs to our nodes
 var i = 0;
-var j = 0;
 
 // Duration of our transitions
 var duration = 700;
@@ -36,7 +35,7 @@ var trackID_long = [];
     Our initial tree layout
 */
 var tree = d3.layout.tree()
-    .size([viewerHeight, viewerWidth]);
+    .size([viewerWidth, viewerHeight]);
 
 /*
     This is our path generator which creates an elbow shape.
@@ -54,6 +53,11 @@ function elbow(d, i) {
 */
 function sortTree() {
     tree.sort(function(a, b) {
+        
+        if (a.popularity && b.popularity) {
+            return b.popularity - a.popularity;
+        }
+        
         return a.index - b.index;
     });
 }
@@ -239,7 +243,9 @@ function toggleChildren(d) {
                         
                         tracks.push(track.id);
                         
-                        d.children.push( { "index": i, "name": track.name, "tid": track.id, url: track.album.images.length > 1 ? track.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
+                        console.log(track.name, track.popularity);
+                        
+                        d.children.push( { "index": i, "name": track.name, "popularity": track.popularity, "tid": track.id, url: track.album.images.length > 1 ? track.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
 
                         trackID.push(track.id);
                         count++;
@@ -253,13 +259,13 @@ function toggleChildren(d) {
                 var pan = update(d);
                 centerNode(d, false, pan);
                 
-                /*spotifyApi.getAudioFeaturesForTracks(
+                spotifyApi.getAudioFeaturesForTracks(
                 tracks, 
                 function(err, data) {
                     if (!err) {
-                        //console.log(data);
+                        console.log(data);
                     }
-                });*/
+                });
             }
         });
         
@@ -645,21 +651,36 @@ function update(source, switchM) {
     */
     var link = svgGroup.selectAll("path.link")
         .data(links, function(d) {
-            return d.target.aid ? d.target.aid : d.target.tid;
+            return d.target.aid ? ("link_" + d.target.aid) : ("link_" + d.target.tid);
         });
     
     var linkEnter = link.enter().append("path")
-                        .classed("link", true);
-    
-    linkEnter.each(function(d) {
-        if (d.target.spacer) { d3.select(this).style("opacity", 0); }
-    });
+                        .classed("link", true)
+                        .style("opacity", 0);
     
     // Transition links to their new position.
-    link.transition()
-        .duration(duration)
-        .attr("d", elbow);
-
+    link.each(function(d) { 
+        
+            if (d3.select(this).style("opacity") == 0) {
+                d3.select(this).transition()
+                .duration(duration)
+                .style("opacity", function(d) {
+                    
+                    if (d.target.spacer) {
+                        return 0;
+                    }
+                    
+                    return 1;
+                })
+                .attr("d", elbow)
+            } else {
+                
+                d3.select(this).transition()
+                .duration(duration)
+                .attr("d", elbow)
+            }
+    });
+    
     // Transition exiting nodes to the parent's new position.
     link.exit().remove();
     
