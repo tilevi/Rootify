@@ -53,6 +53,11 @@ function elbow(d, i) {
 */
 function sortTree() {
     tree.sort(function(a, b) {
+        
+        if (a.popularity && b.popularity) {
+            return b.popularity - a.popularity;
+        }
+        
         return a.index - b.index;
     });
 }
@@ -238,7 +243,9 @@ function toggleChildren(d) {
                         
                         tracks.push(track.id);
                         
-                        d.children.push( { "index": i, "name": track.name, "tid": track.id, url: track.album.images.length > 1 ? track.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
+                        console.log(track.name, track.popularity);
+                        
+                        d.children.push( { "index": i, "name": track.name, "popularity": track.popularity, "tid": track.id, url: track.album.images.length > 1 ? track.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
 
                         trackID.push(track.id);
                         count++;
