@@ -11,7 +11,6 @@ var me = { "url": "" };
 
 // Used for assigning IDs to our nodes
 var i = 0;
-var j = 0;
 
 // Duration of our transitions
 var duration = 700;
@@ -36,7 +35,7 @@ var trackID_long = [];
     Our initial tree layout
 */
 var tree = d3.layout.tree()
-    .size([viewerHeight, viewerWidth]);
+    .size([viewerWidth, viewerHeight]);
 
 /*
     This is our path generator which creates an elbow shape.
@@ -253,13 +252,13 @@ function toggleChildren(d) {
                 var pan = update(d);
                 centerNode(d, false, pan);
                 
-                /*spotifyApi.getAudioFeaturesForTracks(
+                spotifyApi.getAudioFeaturesForTracks(
                 tracks, 
                 function(err, data) {
                     if (!err) {
-                        //console.log(data);
+                        console.log(data);
                     }
-                });*/
+                });
             }
         });
         
@@ -649,13 +648,13 @@ function update(source, switchM) {
         });
     
     var linkEnter = link.enter().append("path")
-                        .style("opacity", 0)
-                        .classed("link", true);
+                        .classed("link", true)
+                        .style("opacity", 0);
     
     // Transition links to their new position.
     link.each(function(d) { 
         
-            if (d3.select(this).style("opacity" == 0)) {
+            if (d3.select(this).style("opacity") == 0) {
                 d3.select(this).transition()
                 .duration(duration)
                 .style("opacity", function(d) {
