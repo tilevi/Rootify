@@ -54,7 +54,7 @@ function elbow(d, i) {
 function sortTree() {
     tree.sort(function(a, b) {
         
-        if (a.popularity && b.popularity) {
+        if (a.depth > 1 && a.popularity && b.popularity) {
             return b.popularity - a.popularity;
         }
         
@@ -64,6 +64,108 @@ function sortTree() {
 
 // Initially, sort the tree.
 sortTree();
+
+
+/*
+    Populate children array with tracks.
+*/
+
+var loadTopArtists = function() {}
+var doneLoading = function() {}
+
+var getAudioFeatures = function(err, data, source) {
+    var tracks = [];
+    var audioFeatures = {};
+
+    var j = 0;
+
+    while (j < data.length) {
+        tracks.push(data[j].id);
+        j++;
+    }
+
+    spotifyApi.getAudioFeaturesForTracks(tracks, function(err, tdata) {
+        if (!err) {
+            j = 0;
+            while (j < tdata.audio_features.length) {
+                var item = tdata.audio_features[j];
+                audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence }
+                j++;
+            }
+            if (source == root) {
+                populateChildrenArray(err, data, root, "track", 0, 0, audioFeatures);
+            } else {
+                populateChildrenArray(err, data, source, "track", null, null, audioFeatures);
+            }
+        }
+    });
+}
+    
+
+var populateChildrenArray = function(err, data, source, typ, firstCount, baseCount, audioFeatures) {
+    if (!err) {
+        
+        var blacklist;
+        
+        if (typ == "track") {
+            if (mode == "short") {
+                blacklist = trackID_short;
+            } else {
+                blacklist = trackID_long;
+            }
+        } else {
+            if (mode == "short") {
+                blacklist = artistID_short;
+            } else {
+                blacklist = artistID_long;
+            }
+        }
+        
+        var baseIndex = (baseCount != null) ? baseCount : 0;
+        var maxChildren = (firstCount == null) ? 3 : 5;
+        
+        var count = 0;
+        var i = 0;
+        
+        if (!firstCount || firstCount == 0) {
+            source.children = [];
+        }
+        
+        while ( (i < data.length) && (count < d3.min([maxChildren, data.length])) ) {
+            var obj = data[i];
+            
+            if (blacklist.indexOf(obj.id) === -1) {
+                if (typ == "track") {
+                    var audioFeat = audioFeatures[obj.id];
+                    source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence } );
+                } else {
+                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} ); 
+                }
+
+                blacklist.push(obj.id);
+                count++;
+            }
+            
+            i++;
+        }
+        
+        if (firstCount == 0) {
+            source.children.push( {"index": count, "name": "SPACER", "tid": "spacer", "spacer": true } );
+            blacklist.push("INVALID");
+            count = count + 1;
+
+            loadTopArtists(count);
+        } else if (firstCount == 1) {
+            doneLoading();
+        } else {
+            source._children = null;
+            var pan = update(source);
+            centerNode(source, false, pan);
+        }
+    }
+}
+
+
 
 // This variable holds what our scale is, default is 1.
 var globalScale = 1;
@@ -133,7 +235,6 @@ function getScreenCoords(x, y, ctm) {
 */
 
 function centerNode(source, first, shouldPan) {
-    
     // Don't pan if you're not root or if you're on the screen.
     if (!first && !shouldPan) { return; }
     
@@ -178,39 +279,7 @@ function toggleChildren(d) {
         
         // Grab related artists based on the artist we just selected.
         spotifyApi.getArtistRelatedArtists(d.aid, function(err, data) {
-            
-            if (!err) {
-
-                var count = 0;
-                var i = 0;
-                d.children = [];
-
-                while ( (i < data.artists.length) && (count < d3.min([3, data.artists.length])) ) {
-
-                    var artist = data.artists[i];
-
-                    var artistID = artistID_short;
-
-                    if (mode == "long") {
-                        artistID = artistID_long;
-                    }
-
-                    if (artistID.indexOf(artist.id) === -1) {
-
-                        d.children.push( { "rank": i, "name": artist.name, "aid": artist.id, url: artist.images.length > 0 ? artist.images[artist.images.length-1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
-
-                        artistID.push(artist.id);
-                        count++;
-                    }
-
-                    i++;
-                }
-
-                d._children = null;
-
-                var pan = update(d);
-                centerNode(d, false, pan);
-            }
+            populateChildrenArray(err, data.artists, d, "artist");
         });
 
     } else if (d.tid && !d.children) {
@@ -221,52 +290,7 @@ function toggleChildren(d) {
             "seed_tracks": ("" + d.tid)
         }, 
         function(err, data) {
-            
-            if (!err) {
-                
-                var count = 0;
-                var i = 0;
-                d.children = [];
-                
-                var trackID = trackID_short;
-                var tracks = [];
-                
-                if (mode == "long") {
-                    trackID = trackID_long;
-                }
-                
-                while ( (i < data.tracks.length) && (count < d3.min([3, data.tracks.length])) ) {
-
-                    var track = data.tracks[i];
-                    
-                    if (trackID.indexOf(track.id) === -1) {
-                        
-                        tracks.push(track.id);
-                        
-                        console.log(track.name, track.popularity);
-                        
-                        d.children.push( { "index": i, "name": track.name, "popularity": track.popularity, "tid": track.id, url: track.album.images.length > 1 ? track.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
-
-                        trackID.push(track.id);
-                        count++;
-                    }
-                    
-                    i++;
-                }
-
-                d._children = null;
-
-                var pan = update(d);
-                centerNode(d, false, pan);
-                
-                spotifyApi.getAudioFeaturesForTracks(
-                tracks, 
-                function(err, data) {
-                    if (!err) {
-                        console.log(data);
-                    }
-                });
-            }
+            getAudioFeatures(err, data.tracks, d);
         });
         
     } else if (d.children) {
@@ -347,12 +371,14 @@ function update(source, switchM) {
     // For each node in the set..
     node.each(function(d) {
         
-        var line = d3.select(this).select("line");
+        var d3This = d3.select(this);
+        
+        var line = d3This.select("line");
         
         if (d.children) {
             
             if (line.length > 0 && line[0][0] == null) {
-                d3.select(this).append("line")
+                d3This.append("line")
                     .attr("x1", 0)
                     .attr("y1", 25)
                     .attr("x2", 0)
@@ -366,9 +392,9 @@ function update(source, switchM) {
                 
                 if (!d.root) {
                     
-                    d3.select(this).select(".triangleDown").style("opacity", 0).style("fill-opacity", 0);
+                    d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0);
 
-                    d3.select(this).append('path')
+                    d3This.append('path')
                         .classed("triangleUp", true)
                         .attr("d", d3.svg.symbol().type("triangle-up").size(50))
                         .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
@@ -385,13 +411,12 @@ function update(source, switchM) {
                 line.remove();
             }
             
-            var triUp = d3.select(this).select(".triangleUp");
+            var triUp = d3This.select(".triangleUp");
             if (triUp.length > 0 && triUp[0][0] != null) {
                 triUp.remove();
 
-                var triDown = d3.select(this).select(".triangleDown");
+                var triDown = d3This.select(".triangleDown");
                 if (triDown.length > 0 && triDown[0][0] != null) {
-                    console.log("Attempting to set opacity back.");
                     triDown.style("opacity", 1);
                     triDown.style("fill-opacity", 1);
                 }
@@ -420,9 +445,11 @@ function update(source, switchM) {
     
     nodeEnter.each(function(d, i) {
         
+        var d3This = d3.select(this);
+        
         if (d.children) {
             
-            d3.select(this).append("line")
+            d3This.append("line")
                 .attr("x1", 0)
                 .attr("y1", 25)
                 .attr("x2", 0)
@@ -435,7 +462,7 @@ function update(source, switchM) {
                 .style("stroke", "#ccc");
             
             if (d.aid || d.tid) {
-                d3.select(this).append('path')
+                d3This.append('path')
                     .classed("triangleUp", true)
                     .attr("d", d3.svg.symbol().type("triangle-up").size(50))
                     .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
@@ -449,7 +476,7 @@ function update(source, switchM) {
 
         } if (!d.root && !d.spacer) {
             
-            d3.select(this).append('path')
+            d3This.append('path')
                 .classed("triangleDown", true)
                 .attr("d", d3.svg.symbol().type("triangle-down").size(150))
                 .attr("transform", function(d) { return "translate(" + 0 + "," + 27 + ")"; })
@@ -462,11 +489,11 @@ function update(source, switchM) {
         
         if (d.aid) {
             
-            d3.select(this).append('circle')
+            d3This.append('circle')
                 .attr("r", 25)
                 .style("fill", "lightblue");
 
-            d3.select(this).append('image')
+            d3This.append('image')
                 .attr('x', -25)
                 .attr('y', -25)
                 .attr('width', 50)
@@ -478,14 +505,14 @@ function update(source, switchM) {
         }
         else if (d.root) {
 
-            d3.select(this).append("circle")
+            d3This.append("circle")
                 .attr('class', 'nodeCircle')
                 .attr("r", 32)
                 .style("fill", function(d) {
                     return d._children ? "lightsteelblue" : "#fff";
                 });
             
-            d3.select(this).append('image')
+            d3This.append('image')
                 .attr('x', -32)
                 .attr('y', -32)
                 .attr('width', 64)
@@ -497,7 +524,7 @@ function update(source, switchM) {
         }
         else if (!d.spacer) {
             
-            d3.select(this).append('rect')
+            d3This.append('rect')
                 .attr('x', -25)
                 .attr('y', -25)
                 .attr('width', 50)
@@ -505,7 +532,7 @@ function update(source, switchM) {
                 .attr('rx', 6)
                 .attr('ry', 6);
             
-            d3.select(this).append('image')
+            d3This.append('image')
                 .attr('x', -22)
                 .attr('y', -22)
                 .attr('width', 44)
@@ -514,6 +541,11 @@ function update(source, switchM) {
                     return d.url;
                 });
         }
+        
+         d3This.append("title")
+               .text(function(d) {
+                     return d.name;
+               });
         
         // If shouldPan is true, a node was already detected outside of our view.
         if (!shouldPan) {
@@ -553,7 +585,7 @@ function update(source, switchM) {
         */
         inTransition = true;
         
-        d3.select(this).transition()
+        d3This.transition()
             .duration(duration)
             .attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
@@ -613,13 +645,15 @@ function update(source, switchM) {
     
     nodeExit.each(function(d) {
         
-        var line = d3.select(this).select("line");
+        var d3This = d3.select(this);
+        
+        var line = d3This.select("line");
         if (line != null) {
             line.remove();
-            d3.select(this).selectAll("path").remove();
+            d3This.selectAll("path").remove();
         }
         
-        var exitVar = d3.select(this)
+        var exitVar = d3This
             .transition()
             .duration(duration)
             .attr("transform", function(d) {
@@ -654,32 +688,26 @@ function update(source, switchM) {
             return d.target.aid ? ("link_" + d.target.aid) : ("link_" + d.target.tid);
         });
     
+    // Transition links to their new position.
+    link.transition()
+                .duration(duration)
+                .attr("d", elbow);
+    
+    // Enter any new nodes.
     var linkEnter = link.enter().append("path")
                         .classed("link", true)
-                        .style("opacity", 0);
-    
-    // Transition links to their new position.
-    link.each(function(d) { 
-        
-            if (d3.select(this).style("opacity") == 0) {
-                d3.select(this).transition()
-                .duration(duration)
-                .style("opacity", function(d) {
-                    
-                    if (d.target.spacer) {
-                        return 0;
-                    }
-                    
-                    return 1;
-                })
-                .attr("d", elbow)
-            } else {
-                
-                d3.select(this).transition()
-                .duration(duration)
-                .attr("d", elbow)
-            }
-    });
+                        .style("opacity", 0)
+                        .transition()
+                        .duration(duration)
+                        .style("opacity", function(d) {
+
+                            if (d.target.spacer) {
+                                return 0;
+                            }
+
+                            return 1;
+                        })
+                        .attr("d", elbow);
     
     // Transition exiting nodes to the parent's new position.
     link.exit().remove();
@@ -728,13 +756,9 @@ var loadedTracks = false;
     
     This function is called when we finally loaded the data of our top artists and tracks.
 */
-function doneLoading() {
-    
-    if (loadedArtists && loadedTracks) {
-        
-        update(root);
-        centerNode(root, true);
-    }
+doneLoading = function() {
+    update(root);
+    centerNode(root, true);
 }
 
 /*
@@ -745,43 +769,16 @@ function doneLoading() {
     baseCount should be 6 because 5 of our tracks should have been loaded, including a spacer node so our tree looks clean.
 */
 
-function loadTopArtists(baseCount) {
-        spotifyApi.getMyTopArtists(
-        {
-            "limit": 5,
-            "time_range": mode == "long" ? "medium_term" : "short_term"
-        }, 
-        function(err, data) {
-            if (!err) {
-
-                var count = 0;
-                var i = 0;
-                
-                while ( (i < data.items.length) && (count < d3.min([5, data.items.length])) ) {
-
-                    var artist = data.items[i];
-                    var artistID = artistID_short;
-
-                    if (mode == "long") {
-                        artistID = artistID_long;
-                    }
-                    
-                    if (artistID.indexOf(artist.id) === -1) {
-                        
-                        root.children.push( { "index": baseCount + i, "name": artist.name, "aid": artist.id, url: artist.images.length > 0 ? artist.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
-
-                        artistID.push(artist.id);
-                        count++;
-                    }
-
-                    i++;
-                }
-                
-                loadedArtists = true;
-                doneLoading();
-            }
-        }
-    );
+loadTopArtists = function(baseCount) {
+    spotifyApi.getMyTopArtists(
+    {
+        "limit": 5,
+        "time_range": mode == "long" ? "medium_term" : "short_term"
+    },
+    
+    function(err, data) {
+        populateChildrenArray(err, data.items, root, "artist", 1, baseCount);
+    });
 }
 
 /*
@@ -805,42 +802,8 @@ function loadTopTracks() {
         "time_range": mode == "long" ? "medium_term" : "short_term"
     },
     function(err, data) {
-        if (!err) {
-            
-            var count = 0;
-            var i = 0;
-            
-            root.children = [];
-            var trackID = trackID_short;
-
-            if (mode == "long") {
-                trackID = trackID_long;
-            }
-            
-            while ( (i < data.items.length) && (count < d3.min([5, data.items.length])) ) {
-
-                var track = data.items[i];
-                
-                if (trackID.indexOf(track.id) === -1) {
-                    
-                    root.children.push( { "index": i, "name": track.name, "tid": track.id, url: track.album.images.length > 0 ? track.album.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} );
-                    
-                    trackID.push(track.id);
-                    count++;
-                }
-
-                i++;
-            }
-            
-            root.children.push( {"index": count, "name": "SPACER", "tid": "spacer", "spacer": true } );
-            trackID.push("INVALID_TRACK_ID1");
-            count = count + 1;
-            
-            loadedTracks = true;
-            loadTopArtists(count);
-        }
+        getAudioFeatures(err, data.items, root);
     });
-    
 }
 
 /*
@@ -848,10 +811,9 @@ function loadTopTracks() {
 */
 
 var loadMe = function() {
-
+    
     spotifyApi.getMe({}, function(err, data) {
         if (!err) {
-
             me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
             loadTopTracks();
         } else {
@@ -866,16 +828,24 @@ var loadMe = function() {
                 var value = re.exec(document.cookie);
                 return (value != null) ? unescape(value[1]) : null;
             }
-
+            
+            function setCookie(cname, cvalue, exdays) {
+                var d = new Date();
+                d.setTime(d.getTime() + (exdays*24*60*60*1000));
+                var expires = "expires="+ d.toUTCString();
+                document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+            }
+            
             var refresh_token = getCookie("myRefreshToken");
             console.log(refresh_token);
-
+            
             $.ajax({
                   url: '/refresh_token',
                   data: {
                     'refresh_token': refresh_token
                   }
                 }).done(function(data) {
+                    setCookie('myToken', data.access_token, 5);
                     spotifyApi.setAccessToken(data.access_token);
                     loadMe();
                 });

@@ -113,7 +113,11 @@
 
             var spotifyApi = new SpotifyWebApi();
             //var access_token = "<%- access_token -%>";
+            
             var access_token = getCookie("myToken");
+            var refresh_token = getCookie("myRefreshToken");
+            
+            console.log(refresh_token);
             
             if (access_token == null || access_token == "") {
                 window.location.replace('http://localhost:8888/');
