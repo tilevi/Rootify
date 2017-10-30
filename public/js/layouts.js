@@ -139,7 +139,7 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
                     var audioFeat = audioFeatures[obj.id];
                     source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence } );
                 } else {
-                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} ); 
+                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity } ); 
                 }
 
                 blacklist.push(obj.id);
@@ -188,7 +188,7 @@ function zoom() {
 var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
 
 // Our base SVG
-var baseSvg = d3.select("svg").call(zoomListener);
+var baseSvg = d3.select("#baseSVG").call(zoomListener);
 
 /*
     Our clip paths.
@@ -501,7 +501,10 @@ function update(source, switchM) {
                 .attr("xlink:href", function(d) {
                     return d.url;
                 })
-               .attr("clip-path", "url(#clip)");
+                .attr("clip-path", "url(#clip)")
+                .on("click", function(d) {
+                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                });
         }
         else if (d.root) {
 
@@ -539,12 +542,17 @@ function update(source, switchM) {
                 .attr('height', 44)
                 .attr("xlink:href", function(d) {
                     return d.url;
+                }).on("click", function(d) {
+                
+                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                    
+                    d3.select("#spotifyTracks").html("<iframe src='https://open.spotify.com/embed/track/" + d.tid + "' width='100%' height='355' frameborder='0' allowtransparency='true'></iframe>");
                 });
         }
         
          d3This.append("title")
                .text(function(d) {
-                     return d.name;
+                     return d.name + ", Popularity: " + d.popularity;
                });
         
         // If shouldPan is true, a node was already detected outside of our view.
@@ -894,4 +902,20 @@ document.getElementById("long-term").addEventListener("click", function() {
 
 document.getElementById("short-term").addEventListener("click", function() {
     switchMode("short");
+});
+
+document.getElementById("reset_tree").addEventListener("click", function() {
+    root.children.forEach(function(d) {
+        d.children = [];
+        d._children = null;
+    });
+    
+    if (mode == "long") {
+        longChildren = root.children;
+    } else {
+        shortChildren = root.children;
+    }
+
+    update(root);
+    centerNode(root, true);
 });

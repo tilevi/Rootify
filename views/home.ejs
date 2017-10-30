@@ -25,8 +25,10 @@
                 
                 <button style="margin-left: 25px;" type="button" id="short-term">Short-Term</button>
                 <button type="button" id="long-term">Long-Term</button>
+                <button type="button" id="reset_tree">Reset Tree</button>
             </div>
-    </div>
+        </div>
+        
         <!-- Sidebar -->
         <div id="sidebar">
 
@@ -47,8 +49,10 @@
             <div class="c-tab is-active">
                 <div id="overflowss" class="tabcontent">
                     <h2> Details </h2>
-                    <div class="tabcontentinner">
-                        <p> Details stuff here
+                    <div class="tabcontentinner" id="detailsTab">
+                        <div id="spotifyTracks" width="100%"></div>
+                        <div id="headerImage" width="100%"></div>
+                        <svg id="detailsSVG" width="100%"></svg>
                     </div>
                 </div>
             </div>
@@ -130,7 +134,7 @@
         <script type="text/javascript">
             
             var treeDiv = document.getElementById("tree-container");
-            var svg = d3.select(treeDiv).append("svg");
+            var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
             
             var viewerWidth;
             var viewerHeight;
