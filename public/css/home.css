@@ -38,6 +38,10 @@ a {
 }
 
 .navbar a {
+    -moz-user-select: none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+    cursor: pointer;
     color: #fff;
     border: 1px solid #B5BDC4;
     float:left;

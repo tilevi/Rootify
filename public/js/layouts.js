@@ -1,7 +1,7 @@
 // Either "short" or "long" 
 // Indicates if we want to view short-term or long-term
 var mode = "short";
-var inTransition = true;
+var switchingMode = true;
 
 // Initial tree data
 var treeData = { "name": "", "root": true };
@@ -161,6 +161,7 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
             source._children = null;
             var pan = update(source);
             centerNode(source, false, pan);
+            source.clicked = false;
         }
     }
 }
@@ -217,6 +218,8 @@ baseSvg.append("defs")
     This a helper function that converts an element's position in the SVG to its relative position to the SVG.
     
     Therefore, we can figure out if a node is visible.
+    
+    Reference: https://stackoverflow.com/questions/18554224/getting-screen-positions-of-d3-nodes-after-transform/18561829
 */
 
 function getScreenCoords(x, y, ctm) {
@@ -267,6 +270,7 @@ function centerNode(source, first, shouldPan) {
     This function is used when clicking on an artist or track.
 */
 function toggleChildren(d) {
+    d.clicked = true;
     
     if (d._children) {
         // Here, we store a collapsed node's children in _children if it was opened previously.
@@ -275,6 +279,8 @@ function toggleChildren(d) {
 
         var pan = update(d);
         centerNode(d, false, pan);
+        
+        d.clicked = false;
     } else if (d.aid && !d.children) {
         
         // Grab related artists based on the artist we just selected.
@@ -299,6 +305,8 @@ function toggleChildren(d) {
 
         var pan = update(d);
         centerNode(d, false, pan);
+        
+        d.clicked = false;
     }
 }
 
@@ -307,8 +315,7 @@ function toggleChildren(d) {
     We don't allow toggling if a transition is occuring or we clicked on the root node.
 */
 function click(d) {
-    
-    if (inTransition || d.root) {
+    if (d.root || d.clicked) {
         return;
     }
     
@@ -336,7 +343,6 @@ function click(d) {
 */
 
 function update(source, switchM) {
-    
     tree = tree.nodeSize([64, 64]);
     
     // Compute the new tree layout.
@@ -370,9 +376,7 @@ function update(source, switchM) {
     
     // For each node in the set..
     node.each(function(d) {
-        
         var d3This = d3.select(this);
-        
         var line = d3This.select("line");
         
         if (d.children) {
@@ -391,7 +395,6 @@ function update(source, switchM) {
                     .style("stroke", "#ccc");
                 
                 if (!d.root) {
-                    
                     d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0);
 
                     d3This.append('path')
@@ -407,7 +410,6 @@ function update(source, switchM) {
             }
         } else {
             if (line.length > 0 && line[0][0] != null) {
-                
                 line.remove();
             }
             
@@ -444,11 +446,9 @@ function update(source, switchM) {
     var shouldPan = false;
     
     nodeEnter.each(function(d, i) {
-        
         var d3This = d3.select(this);
         
         if (d.children) {
-            
             d3This.append("line")
                 .attr("x1", 0)
                 .attr("y1", 25)
@@ -475,7 +475,6 @@ function update(source, switchM) {
             
 
         } if (!d.root && !d.spacer) {
-            
             d3This.append('path')
                 .classed("triangleDown", true)
                 .attr("d", d3.svg.symbol().type("triangle-down").size(150))
@@ -488,7 +487,6 @@ function update(source, switchM) {
         }
         
         if (d.aid) {
-            
             d3This.append('circle')
                 .attr("r", 25)
                 .style("fill", "lightblue");
@@ -507,7 +505,6 @@ function update(source, switchM) {
                 });
         }
         else if (d.root) {
-
             d3This.append("circle")
                 .attr('class', 'nodeCircle')
                 .attr("r", 32)
@@ -526,7 +523,6 @@ function update(source, switchM) {
                .attr("clip-path", "url(#clip-root)");
         }
         else if (!d.spacer) {
-            
             d3This.append('rect')
                 .attr('x', -25)
                 .attr('y', -25)
@@ -557,7 +553,6 @@ function update(source, switchM) {
         
         // If shouldPan is true, a node was already detected outside of our view.
         if (!shouldPan) {
-            
             var circle = this;
             
             var cx = +circle.getAttribute('cx');
@@ -582,7 +577,6 @@ function update(source, switchM) {
             
             if (((coords.x - padding) < 0 || (coords.x + padding) > viewerWidth)
                 || ((coords.y - padding) < 0 || (coords.y + padding) > viewerHeight)) {
-                
                 shouldPan = true;
             }
         }
@@ -591,13 +585,11 @@ function update(source, switchM) {
         /*
             Transition the new nodes to their correct positions, starting at their parent's old position.
         */
-        inTransition = true;
-        
         d3This.transition()
             .duration(duration)
             .attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
-        }).each("end", function() { inTransition = false; });
+        });
     });
     
     // Transition exiting nodes to the parent's new position.
@@ -609,9 +601,6 @@ function update(source, switchM) {
         If our node exit set is non-empty, we transition them properly. I make a custom clip element that resizes its radius as the transition occurs.
     */
     if (!nodeExit.empty()) {
-        
-        inTransition = true;
-        
         // This custom clip should 
         var customClip = baseSvg.append("defs")
                     .append("clipPath")
@@ -626,7 +615,6 @@ function update(source, switchM) {
                         .each("end", function() {
                             // At the end of the transition, remove the dynamic clip path.
                             d3.select("#clip" + (source.id)).remove();
-                            inTransition = false;
                             
                             // After our nodes exit, we check if we should switch modes.
                             if (switchM) {
@@ -767,6 +755,7 @@ var loadedTracks = false;
 doneLoading = function() {
     update(root);
     centerNode(root, true);
+    switchingMode = false;
 }
 
 /*
@@ -845,7 +834,6 @@ var loadMe = function() {
             }
             
             var refresh_token = getCookie("myRefreshToken");
-            console.log(refresh_token);
             
             $.ajax({
                   url: '/refresh_token',
@@ -868,18 +856,26 @@ loadMe();
     This function switches the mode.
     The possible modes are 'short' or 'long'.
 */
-    
+
 var switchMode = function(m) {
-    
-    // Don't switch if we're transitioning or in the same mode
-    if (inTransition || mode == m) {
+    // Don't switch if we're in the same mode or currently switching modes
+    if (mode == m || switchingMode) {
         return;
     }
     
+    // We are switching modes now
+    switchingMode = true;
+    
     if (m == "long") {
+        d3.select("#long-term").style("background-color", "#4B9877");
+        d3.select("#short-term").style("background-color", null);
+        
         // Save the short-term infomration
         shortChildren = root.children;
     } else {
+        d3.select("#short-term").style("background-color", "#4B9877");
+        d3.select("#long-term").style("background-color", null);
+        
         // Save the long-term information
         longChildren = root.children;
     }
@@ -891,6 +887,9 @@ var switchMode = function(m) {
     
     // Re-layout the tree
     update(root, m);
+    
+    // Wait twice the duration, plus a little more, then reallow switching
+    setTimeout(function() { switchingMode = false; }, duration*2 + 1000);
 }
 
 /*
@@ -919,3 +918,12 @@ document.getElementById("reset_tree").addEventListener("click", function() {
     update(root);
     centerNode(root, true);
 });
+
+document.getElementById("logout-b").addEventListener("click", function() {
+    deleteCookie('myToken');
+    deleteCookie('myRefreshToken');
+    
+    window.location.href = "http://localhost:8888/logout";
+});
+
+d3.select("#short-term").style("background-color", "#4B9877");

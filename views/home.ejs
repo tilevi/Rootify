@@ -21,11 +21,12 @@
         <!-- Header  -->
         <div id="tophead">
             <div class="navbar">
-                <a href="/logout">Logout</a>
+                <a id="logout-b">Logout</a>
                 
-                <button style="margin-left: 25px;" type="button" id="short-term">Short-Term</button>
-                <button type="button" id="long-term">Long-Term</button>
-                <button type="button" id="reset_tree">Reset Tree</button>
+                <a style="margin-left: 25px;" id="short-term">Short-Term</a>
+                <a id="long-term">Long-Term</a>
+                
+                <a style="margin-left: 25px;" id="reset_tree">Reset Tree</a>
             </div>
         </div>
         
@@ -115,13 +116,15 @@
                 return (value != null) ? unescape(value[1]) : null;
               }
 
+            function deleteCookie(name) {
+                document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            }
+            
             var spotifyApi = new SpotifyWebApi();
             //var access_token = "<%- access_token -%>";
             
             var access_token = getCookie("myToken");
             var refresh_token = getCookie("myRefreshToken");
-            
-            console.log(refresh_token);
             
             if (access_token == null || access_token == "") {
                 window.location.replace('http://localhost:8888/');
