@@ -108,6 +108,13 @@
         <script type="text/javascript">
             var spotifyApi = new SpotifyWebApi();
             var access_token = "<%- access_token -%>";
+            //var access_token = "<%- access_token -%>";
+            
+            var access_token = getCookie("myToken");
+            var refresh_token = getCookie("myRefreshToken");
+            
+            console.log(refresh_token);
+            e58ccda86bd71af3322b3ab636815753a253e906
             
             spotifyApi.setAccessToken(access_token);
         </script>
