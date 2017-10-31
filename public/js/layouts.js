@@ -40,8 +40,12 @@ var tree = d3.layout.tree()
 /*
     This is our path generator which creates an elbow shape.
 */
+var difference = 55 - 42;
+
+var verticalSpacing = 78;
+
 function elbow(d, i) {
-    return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : 42))
+    return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : (verticalSpacing-13)) )
     + "H" + d.target.x + "V" + ( d.target.y - 25 );
 }
 
@@ -206,7 +210,7 @@ baseSvg.append("defs")
         .append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
-            .attr("r", 32);
+            .attr("r", 30);
 
 baseSvg.append("defs")
     .append("clipPath")
@@ -214,7 +218,7 @@ baseSvg.append("defs")
         .append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
-            .attr("r", 25);
+            .attr("r", 23);
 
 /*
     This a helper function that converts an element's position in the SVG to its relative position to the SVG.
@@ -363,7 +367,7 @@ function update(source, switchM) {
             d.y = 100;
         } else {
             // For every level after the first, we have 75px per level
-            d.y = 100 + ((d.depth-1) * 75);
+            d.y = 100 + ((d.depth-1) * 100);
         }
     });
 
@@ -386,9 +390,9 @@ function update(source, switchM) {
             if (line.length > 0 && line[0][0] == null) {
                 d3This.append("line")
                     .attr("x1", 0)
-                    .attr("y1", 33)
+                    .attr("y1", d.root ? 33 : 25)
                     .attr("x2", 0)
-                    .attr("y2", (d.root ? 55 : 42))
+                    .attr("y2", (d.root ? 55 : (verticalSpacing - 15)))
                     .style("stroke", "#ccc")
                     .style("stroke-width", 0)
                     .transition()
@@ -402,12 +406,15 @@ function update(source, switchM) {
                     d3This.append('path')
                         .classed("triangleUp", true)
                         .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-                        .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
+                        .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
                         .style("fill", "white")
                         .attr("stroke", "black")
                         .attr("stroke-width", "1px")
-                        .style("opacity", 1)
-                        .on("click", click);
+                        .style("opacity", 0)
+                        .on("click", click)
+                        .transition()
+                        .duration(duration)
+                        .style("opacity", 1);
                 }
             }
         } else {
@@ -455,7 +462,7 @@ function update(source, switchM) {
                 .attr("x1", 0)
                 .attr("y1", d.root ? 33 : 25)
                 .attr("x2", 0)
-                .attr("y2", (d.root) ? 55 : 42)
+                .attr("y2", d.root ? 55 : (verticalSpacing - 15))
                 .style("stroke", "#ccc")
                 .style("stroke-width", 0)
                 .transition()
@@ -467,12 +474,15 @@ function update(source, switchM) {
                 d3This.append('path')
                     .classed("triangleUp", true)
                     .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
                     .style("fill", "white")
                     .attr("stroke", "black")
                     .attr("stroke-width", "1px")
-                    .style("opacity", 1)
-                    .on("click", click);
+                    .style("opacity", 0)
+                    .on("click", click)
+                    .transition()
+                    .duration(duration)
+                    .style("opacity", 1);
             }
             
 
@@ -491,7 +501,7 @@ function update(source, switchM) {
         if (d.aid) {
             d3This.append('circle')
                 .attr("r", 25)
-                .style("fill", "lightblue");
+                .style("fill", "#282828");
 
             d3This.append('image')
                 .attr('x', -25)
@@ -511,7 +521,7 @@ function update(source, switchM) {
                 .attr('class', 'nodeCircle')
                 .attr("r", 32)
                 .style("fill", function(d) {
-                    return d._children ? "lightsteelblue" : "#fff";
+                    return "#282828";
                 });
             
             d3This.append('image')
@@ -610,7 +620,7 @@ function update(source, switchM) {
                         .append("circle")
                         .attr("cx", 0)
                         .attr("cy", 0)
-                        .attr("r", 25)
+                        .attr("r", 23)
                         .transition()
                         .duration(duration)
                         .attr("r", 0)

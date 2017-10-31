@@ -212,8 +212,8 @@ a {
 }
 
 .node circle, rect, image {
-    fill: #fff;
-    stroke: steelblue;
+    fill: #282828;
+    stroke: #4B9877;
     stroke-width: 1.5px;
 }
 
