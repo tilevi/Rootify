@@ -737,6 +737,12 @@ var svgGroup = baseSvg.append("g");
 
 root = treeData;
 
+root.x = 0;
+root.y = 0;
+
+root.x0 = 0;
+root.y0 = 0;
+
 /*
     Booleans to indicate if we properly loaded our top artists and tracks.
 */
