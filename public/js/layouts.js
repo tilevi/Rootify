@@ -4,7 +4,7 @@ var mode = "short";
 var switchingMode = true;
 
 // Initial tree data
-var treeData = { "name": "", "root": true };
+var treeData = { "name": "", "root": true, "children": [] };
 
 // Initial Spotify user profile data
 var me = { "url": "" };
@@ -89,7 +89,9 @@ var getAudioFeatures = function(err, data, source) {
             j = 0;
             while (j < tdata.audio_features.length) {
                 var item = tdata.audio_features[j];
-                audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence }
+                if (item != null) {
+                    audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence }
+                }
                 j++;
             }
             if (source == root) {
@@ -134,7 +136,7 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
         while ( (i < data.length) && (count < d3.min([maxChildren, data.length])) ) {
             var obj = data[i];
             
-            if (blacklist.indexOf(obj.id) === -1) {
+            if (obj != null && blacklist.indexOf(obj.id) === -1) {
                 if (typ == "track") {
                     var audioFeat = audioFeatures[obj.id];
                     source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence } );
@@ -384,7 +386,7 @@ function update(source, switchM) {
             if (line.length > 0 && line[0][0] == null) {
                 d3This.append("line")
                     .attr("x1", 0)
-                    .attr("y1", 25)
+                    .attr("y1", 33)
                     .attr("x2", 0)
                     .attr("y2", (d.root ? 55 : 42))
                     .style("stroke", "#ccc")
@@ -451,7 +453,7 @@ function update(source, switchM) {
         if (d.children) {
             d3This.append("line")
                 .attr("x1", 0)
-                .attr("y1", 25)
+                .attr("y1", d.root ? 33 : 25)
                 .attr("x2", 0)
                 .attr("y2", (d.root) ? 55 : 42)
                 .style("stroke", "#ccc")
@@ -734,11 +736,6 @@ var svgGroup = baseSvg.append("g");
 */
 
 root = treeData;
-root.x0 = 0;
-root.y0 = 0;
-
-root.x = 0;
-root.y = 0;
 
 /*
     Booleans to indicate if we properly loaded our top artists and tracks.
