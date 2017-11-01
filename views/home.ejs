@@ -21,15 +21,17 @@
         <!-- Header  -->
         <div id="tophead">
             <div class="navbar">
-                <a href="/">Logout</a>
 
+                <a id="logout-b">Logout</a>
+                
+                <a style="margin-left: 25px;" id="short-term">Short-Term</a>
+                <a id="long-term">Long-Term</a>
+                
+                <a style="margin-left: 25px;" id="reset_tree">Reset Tree</a>
+            </div>
+        </div>
         
-        <button class="buttonnav" style="margin-left: 25px;" type="button" id="short-term">Short-Term</button>
-        <button type="button" class="buttonnav" id="long-term">Long-Term</button>
 
-    </div>
-
-    </div>
         <!-- Sidebar -->
         <div id="sidebar">
 
@@ -50,8 +52,10 @@
             <div class="c-tab is-active">
                 <div id="overflowss" class="tabcontent">
                     <h2> Details </h2>
-                    <div class="tabcontentinner">
-                        <p> Details stuff here
+                    <div class="tabcontentinner" id="detailsTab">
+                        <div id="spotifyTracks" width="100%"></div>
+                        <div id="headerImage" width="100%"></div>
+                        <svg id="detailsSVG" width="100%" height="70px"></svg>
                     </div>
                 </div>
             </div>
@@ -103,9 +107,22 @@
         </div>
 
         <!-- Tree Container -->
-        <div id="tree-container"></div>
-        
-        <script type="text/javascript">
+        <div id="tree-container">
+            <script type="text/javascript">
+
+            
+            function getCookie(name)
+              {
+                var re = new RegExp(name + "=([^;]+)");
+                var value = re.exec(document.cookie);
+                return (value != null) ? unescape(value[1]) : null;
+              }
+
+            function deleteCookie(name) {
+                document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            }
+            
+
             var spotifyApi = new SpotifyWebApi();
             var access_token = "<%- access_token -%>";
             //var access_token = "<%- access_token -%>";
@@ -113,16 +130,26 @@
             var access_token = getCookie("myToken");
             var refresh_token = getCookie("myRefreshToken");
             
+
             console.log(refresh_token);
             e58ccda86bd71af3322b3ab636815753a253e906
             
             spotifyApi.setAccessToken(access_token);
+
+            if (access_token == null || access_token == "") {
+                window.location.replace('http://localhost:8888/');
+            } else {
+                
+                spotifyApi.setAccessToken(access_token);
+            }
+
         </script>
+        
         
         <script type="text/javascript">
             
             var treeDiv = document.getElementById("tree-container");
-            var svg = d3.select(treeDiv).append("svg");
+            var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
             
             var viewerWidth;
             var viewerHeight;
@@ -148,6 +175,10 @@
         </script>
         
         <script type="text/javascript" src="/js/layouts.js"></script>
+
+        </div>
+        
+        
         
 
         <!-- TAB JS -->

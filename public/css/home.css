@@ -13,6 +13,17 @@ a {
 
 }
 
+#headerImage {
+    width: 100%;
+    height: 0px;
+    background-image: url('');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: 50% 25%;
+    margin: 0px 0px 5px 0px;
+    
+}
+
 /* ------------- Header ------------ */
 #tophead {
     height:12vh;
@@ -27,6 +38,10 @@ a {
 }
 
 .navbar a {
+    -moz-user-select: none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+    cursor: pointer;
     color: #fff;
     border: 1px solid #B5BDC4;
     float:left;
@@ -136,8 +151,8 @@ a {
 }
 
 .tabcontentinner {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
     letter-spacing: 0.8px;
 }
 
@@ -239,8 +254,8 @@ a {
 }
 
 .node circle, rect, image {
-    fill: #fff;
-    stroke: steelblue;
+    fill: #282828;
+    stroke: #4B9877;
     stroke-width: 1.5px;
 }
 

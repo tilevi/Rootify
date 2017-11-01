@@ -1,10 +1,10 @@
 // Either "short" or "long" 
 // Indicates if we want to view short-term or long-term
 var mode = "short";
-var inTransition = true;
+var switchingMode = true;
 
 // Initial tree data
-var treeData = { "name": "", "root": true };
+var treeData = { "name": "", "root": true, "children": [] };
 
 // Initial Spotify user profile data
 var me = { "url": "" };
@@ -40,8 +40,12 @@ var tree = d3.layout.tree()
 /*
     This is our path generator which creates an elbow shape.
 */
+var difference = 55 - 42;
+
+var verticalSpacing = 78;
+
 function elbow(d, i) {
-    return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : 42))
+    return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : (verticalSpacing-13)) )
     + "H" + d.target.x + "V" + ( d.target.y - 25 );
 }
 
@@ -89,7 +93,9 @@ var getAudioFeatures = function(err, data, source) {
             j = 0;
             while (j < tdata.audio_features.length) {
                 var item = tdata.audio_features[j];
-                audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence }
+                if (item != null) {
+                    audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence }
+                }
                 j++;
             }
             if (source == root) {
@@ -134,12 +140,12 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
         while ( (i < data.length) && (count < d3.min([maxChildren, data.length])) ) {
             var obj = data[i];
             
-            if (blacklist.indexOf(obj.id) === -1) {
+            if (obj != null && blacklist.indexOf(obj.id) === -1) {
                 if (typ == "track") {
                     var audioFeat = audioFeatures[obj.id];
                     source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence } );
                 } else {
-                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png"} ); 
+                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity } ); 
                 }
 
                 blacklist.push(obj.id);
@@ -161,6 +167,7 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
             source._children = null;
             var pan = update(source);
             centerNode(source, false, pan);
+            source.clicked = false;
         }
     }
 }
@@ -188,7 +195,7 @@ function zoom() {
 var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
 
 // Our base SVG
-var baseSvg = d3.select("svg").call(zoomListener);
+var baseSvg = d3.select("#baseSVG").call(zoomListener);
 
 /*
     Our clip paths.
@@ -203,7 +210,7 @@ baseSvg.append("defs")
         .append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
-            .attr("r", 32);
+            .attr("r", 30);
 
 baseSvg.append("defs")
     .append("clipPath")
@@ -211,12 +218,14 @@ baseSvg.append("defs")
         .append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
-            .attr("r", 25);
+            .attr("r", 23);
 
 /*
     This a helper function that converts an element's position in the SVG to its relative position to the SVG.
     
     Therefore, we can figure out if a node is visible.
+    
+    Reference: https://stackoverflow.com/questions/18554224/getting-screen-positions-of-d3-nodes-after-transform/18561829
 */
 
 function getScreenCoords(x, y, ctm) {
@@ -267,6 +276,7 @@ function centerNode(source, first, shouldPan) {
     This function is used when clicking on an artist or track.
 */
 function toggleChildren(d) {
+    d.clicked = true;
     
     if (d._children) {
         // Here, we store a collapsed node's children in _children if it was opened previously.
@@ -275,6 +285,8 @@ function toggleChildren(d) {
 
         var pan = update(d);
         centerNode(d, false, pan);
+        
+        d.clicked = false;
     } else if (d.aid && !d.children) {
         
         // Grab related artists based on the artist we just selected.
@@ -299,6 +311,8 @@ function toggleChildren(d) {
 
         var pan = update(d);
         centerNode(d, false, pan);
+        
+        d.clicked = false;
     }
 }
 
@@ -307,8 +321,7 @@ function toggleChildren(d) {
     We don't allow toggling if a transition is occuring or we clicked on the root node.
 */
 function click(d) {
-    
-    if (inTransition || d.root) {
+    if (d.root || d.clicked) {
         return;
     }
     
@@ -336,7 +349,6 @@ function click(d) {
 */
 
 function update(source, switchM) {
-    
     tree = tree.nodeSize([64, 64]);
     
     // Compute the new tree layout.
@@ -355,7 +367,7 @@ function update(source, switchM) {
             d.y = 100;
         } else {
             // For every level after the first, we have 75px per level
-            d.y = 100 + ((d.depth-1) * 75);
+            d.y = 100 + ((d.depth-1) * 100);
         }
     });
 
@@ -370,9 +382,7 @@ function update(source, switchM) {
     
     // For each node in the set..
     node.each(function(d) {
-        
         var d3This = d3.select(this);
-        
         var line = d3This.select("line");
         
         if (d.children) {
@@ -380,9 +390,9 @@ function update(source, switchM) {
             if (line.length > 0 && line[0][0] == null) {
                 d3This.append("line")
                     .attr("x1", 0)
-                    .attr("y1", 25)
+                    .attr("y1", d.root ? 33 : 25)
                     .attr("x2", 0)
-                    .attr("y2", (d.root ? 55 : 42))
+                    .attr("y2", (d.root ? 55 : (verticalSpacing - 15)))
                     .style("stroke", "#ccc")
                     .style("stroke-width", 0)
                     .transition()
@@ -391,23 +401,24 @@ function update(source, switchM) {
                     .style("stroke", "#ccc");
                 
                 if (!d.root) {
-                    
                     d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0);
 
                     d3This.append('path')
                         .classed("triangleUp", true)
                         .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-                        .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
+                        .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
                         .style("fill", "white")
                         .attr("stroke", "black")
                         .attr("stroke-width", "1px")
-                        .style("opacity", 1)
-                        .on("click", click);
+                        .style("opacity", 0)
+                        .on("click", click)
+                        .transition()
+                        .duration(duration)
+                        .style("opacity", 1);
                 }
             }
         } else {
             if (line.length > 0 && line[0][0] != null) {
-                
                 line.remove();
             }
             
@@ -444,16 +455,14 @@ function update(source, switchM) {
     var shouldPan = false;
     
     nodeEnter.each(function(d, i) {
-        
         var d3This = d3.select(this);
         
         if (d.children) {
-            
             d3This.append("line")
                 .attr("x1", 0)
-                .attr("y1", 25)
+                .attr("y1", d.root ? 33 : 25)
                 .attr("x2", 0)
-                .attr("y2", (d.root) ? 55 : 42)
+                .attr("y2", d.root ? 55 : (verticalSpacing - 15))
                 .style("stroke", "#ccc")
                 .style("stroke-width", 0)
                 .transition()
@@ -465,17 +474,19 @@ function update(source, switchM) {
                 d3This.append('path')
                     .classed("triangleUp", true)
                     .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + 36 + ")"; })
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
                     .style("fill", "white")
                     .attr("stroke", "black")
                     .attr("stroke-width", "1px")
-                    .style("opacity", 1)
-                    .on("click", click);
+                    .style("opacity", 0)
+                    .on("click", click)
+                    .transition()
+                    .duration(duration)
+                    .style("opacity", 1);
             }
             
 
         } if (!d.root && !d.spacer) {
-            
             d3This.append('path')
                 .classed("triangleDown", true)
                 .attr("d", d3.svg.symbol().type("triangle-down").size(150))
@@ -488,10 +499,9 @@ function update(source, switchM) {
         }
         
         if (d.aid) {
-            
             d3This.append('circle')
                 .attr("r", 25)
-                .style("fill", "lightblue");
+                .style("fill", "#282828");
 
             d3This.append('image')
                 .attr('x', -25)
@@ -501,15 +511,17 @@ function update(source, switchM) {
                 .attr("xlink:href", function(d) {
                     return d.url;
                 })
-               .attr("clip-path", "url(#clip)");
+                .attr("clip-path", "url(#clip)")
+                .on("click", function(d) {
+                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                });
         }
         else if (d.root) {
-
             d3This.append("circle")
                 .attr('class', 'nodeCircle')
                 .attr("r", 32)
                 .style("fill", function(d) {
-                    return d._children ? "lightsteelblue" : "#fff";
+                    return "#282828";
                 });
             
             d3This.append('image')
@@ -523,7 +535,6 @@ function update(source, switchM) {
                .attr("clip-path", "url(#clip-root)");
         }
         else if (!d.spacer) {
-            
             d3This.append('rect')
                 .attr('x', -25)
                 .attr('y', -25)
@@ -539,17 +550,21 @@ function update(source, switchM) {
                 .attr('height', 44)
                 .attr("xlink:href", function(d) {
                     return d.url;
+                }).on("click", function(d) {
+                
+                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                    
+                    d3.select("#spotifyTracks").html("<iframe src='https://open.spotify.com/embed/track/" + d.tid + "' width='100%' height='355' frameborder='0' allowtransparency='true'></iframe>");
                 });
         }
         
          d3This.append("title")
                .text(function(d) {
-                     return d.name;
+                     return d.name + ", Popularity: " + d.popularity;
                });
         
         // If shouldPan is true, a node was already detected outside of our view.
         if (!shouldPan) {
-            
             var circle = this;
             
             var cx = +circle.getAttribute('cx');
@@ -574,7 +589,6 @@ function update(source, switchM) {
             
             if (((coords.x - padding) < 0 || (coords.x + padding) > viewerWidth)
                 || ((coords.y - padding) < 0 || (coords.y + padding) > viewerHeight)) {
-                
                 shouldPan = true;
             }
         }
@@ -583,13 +597,11 @@ function update(source, switchM) {
         /*
             Transition the new nodes to their correct positions, starting at their parent's old position.
         */
-        inTransition = true;
-        
         d3This.transition()
             .duration(duration)
             .attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
-        }).each("end", function() { inTransition = false; });
+        });
     });
     
     // Transition exiting nodes to the parent's new position.
@@ -601,9 +613,6 @@ function update(source, switchM) {
         If our node exit set is non-empty, we transition them properly. I make a custom clip element that resizes its radius as the transition occurs.
     */
     if (!nodeExit.empty()) {
-        
-        inTransition = true;
-        
         // This custom clip should 
         var customClip = baseSvg.append("defs")
                     .append("clipPath")
@@ -611,14 +620,13 @@ function update(source, switchM) {
                         .append("circle")
                         .attr("cx", 0)
                         .attr("cy", 0)
-                        .attr("r", 25)
+                        .attr("r", 23)
                         .transition()
                         .duration(duration)
                         .attr("r", 0)
                         .each("end", function() {
                             // At the end of the transition, remove the dynamic clip path.
                             d3.select("#clip" + (source.id)).remove();
-                            inTransition = false;
                             
                             // After our nodes exit, we check if we should switch modes.
                             if (switchM) {
@@ -738,11 +746,12 @@ var svgGroup = baseSvg.append("g");
 */
 
 root = treeData;
-root.x0 = 0;
-root.y0 = 0;
 
 root.x = 0;
 root.y = 0;
+
+root.x0 = 0;
+root.y0 = 0;
 
 /*
     Booleans to indicate if we properly loaded our top artists and tracks.
@@ -759,6 +768,7 @@ var loadedTracks = false;
 doneLoading = function() {
     update(root);
     centerNode(root, true);
+    switchingMode = false;
 }
 
 /*
@@ -837,7 +847,6 @@ var loadMe = function() {
             }
             
             var refresh_token = getCookie("myRefreshToken");
-            console.log(refresh_token);
             
             $.ajax({
                   url: '/refresh_token',
@@ -860,18 +869,26 @@ loadMe();
     This function switches the mode.
     The possible modes are 'short' or 'long'.
 */
-    
+
 var switchMode = function(m) {
-    
-    // Don't switch if we're transitioning or in the same mode
-    if (inTransition || mode == m) {
+    // Don't switch if we're in the same mode or currently switching modes
+    if (mode == m || switchingMode) {
         return;
     }
     
+    // We are switching modes now
+    switchingMode = true;
+    
     if (m == "long") {
+        d3.select("#long-term").style("background-color", "#4B9877");
+        d3.select("#short-term").style("background-color", null);
+        
         // Save the short-term infomration
         shortChildren = root.children;
     } else {
+        d3.select("#short-term").style("background-color", "#4B9877");
+        d3.select("#long-term").style("background-color", null);
+        
         // Save the long-term information
         longChildren = root.children;
     }
@@ -883,6 +900,9 @@ var switchMode = function(m) {
     
     // Re-layout the tree
     update(root, m);
+    
+    // Wait twice the duration, plus a little more, then reallow switching
+    setTimeout(function() { switchingMode = false; }, duration*2 + 1000);
 }
 
 /*
@@ -895,3 +915,28 @@ document.getElementById("long-term").addEventListener("click", function() {
 document.getElementById("short-term").addEventListener("click", function() {
     switchMode("short");
 });
+
+document.getElementById("reset_tree").addEventListener("click", function() {
+    root.children.forEach(function(d) {
+        d.children = [];
+        d._children = null;
+    });
+    
+    if (mode == "long") {
+        longChildren = root.children;
+    } else {
+        shortChildren = root.children;
+    }
+
+    update(root);
+    centerNode(root, true);
+});
+
+document.getElementById("logout-b").addEventListener("click", function() {
+    deleteCookie('myToken');
+    deleteCookie('myRefreshToken');
+    
+    window.location.href = "http://localhost:8888/logout";
+});
+
+d3.select("#short-term").style("background-color", "#4B9877");
