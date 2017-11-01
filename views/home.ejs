@@ -130,19 +130,13 @@
             var access_token = getCookie("myToken");
             var refresh_token = getCookie("myRefreshToken");
             
-
-            console.log(refresh_token);
-            e58ccda86bd71af3322b3ab636815753a253e906
-            
             spotifyApi.setAccessToken(access_token);
 
             if (access_token == null || access_token == "") {
                 window.location.replace('http://localhost:8888/');
             } else {
-                
                 spotifyApi.setAccessToken(access_token);
             }
-
         </script>
         
         

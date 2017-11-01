@@ -210,7 +210,7 @@ baseSvg.append("defs")
         .append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
-            .attr("r", 30);
+            .attr("r", 31);
 
 baseSvg.append("defs")
     .append("clipPath")
@@ -218,7 +218,7 @@ baseSvg.append("defs")
         .append("circle")
             .attr("cx", 0)
             .attr("cy", 0)
-            .attr("r", 23);
+            .attr("r", 24);
 
 /*
     This a helper function that converts an element's position in the SVG to its relative position to the SVG.
