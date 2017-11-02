@@ -106,7 +106,43 @@ var getAudioFeatures = function(err, data, source) {
         }
     });
 }
+
+var loadSpotifyTracks = function(trackArr) {
     
+    var html = "";
+    var i = 0;
+    var height = trackArr.length == 1 ? 355 : 80;
+    
+    while (i < trackArr.length) {
+        var trackID = trackArr[i];
+        html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "' frameborder='0' allowtransparency='true'></iframe><br/>";
+        i++;
+    }
+    
+    d3.select("#spotifyTracks").html(html);
+}
+
+var getArtistTopTracks = function(aid, source, callback) {
+
+        spotifyApi.getArtistTopTracks(aid, "US", {}, function(err, tdata) {
+            if (!err) {
+                var j = 0;
+                var count = 0;
+                source.tracks = [];
+                
+                while (j < tdata.tracks.length && count < 3) {
+                    var item = tdata.tracks[j];
+                    if (item != null) {
+                        source.tracks.push(item.id);
+                        count++;
+                    }
+                    j++;
+                }
+                
+                callback();
+            }
+        });
+}
 
 var populateChildrenArray = function(err, data, source, typ, firstCount, baseCount, audioFeatures) {
     if (!err) {
@@ -513,7 +549,13 @@ function update(source, switchM) {
                 })
                 .attr("clip-path", "url(#clip)")
                 .on("click", function(d) {
-                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                    if (d.tracks) {
+                        console.log("Exists.");
+                        loadSpotifyTracks(d.tracks);
+                    } else {
+                        getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                    }
+                    //d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
                 });
         }
         else if (d.root) {
@@ -551,10 +593,7 @@ function update(source, switchM) {
                 .attr("xlink:href", function(d) {
                     return d.url;
                 }).on("click", function(d) {
-                
-                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
-                    
-                    d3.select("#spotifyTracks").html("<iframe src='https://open.spotify.com/embed/track/" + d.tid + "' width='100%' height='355' frameborder='0' allowtransparency='true'></iframe>");
+                    loadSpotifyTracks([d.tid]);
                 });
         }
         
