@@ -15,11 +15,11 @@ a {
 
 #headerImage {
     width: 100%;
-    height: 0px;
+    height: 100px;
     background-image: url('');
-    background-size: cover;
+    background-size: center;
     background-repeat: no-repeat;
-    background-position: 50% 25%;
+    background-position: 50% 50%;
     margin: 0px 0px 5px 0px;
     
 }
@@ -256,8 +256,10 @@ a {
 .node circle, rect {
     fill: #282828;
     stroke: #fff;
-    stroke-width: 1.5px;
+    stroke-width: 2.5px;
 }
+
+
 
 .node text {
     font-size: 10px; 
@@ -268,4 +270,10 @@ a {
     fill: none;
     stroke: #ccc;
     stroke-width: 1.5px;
+}
+
+.line {
+    
+    cursor: none;
+    pointer-events: none;
 }

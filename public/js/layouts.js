@@ -22,6 +22,8 @@ var shortChildren;
 // Root initially doesn't exist.
 var root = null;
 
+var selectedNode = null;
+
 /*
     All of these arrays are used to determine if a certain artist or track already exists in the tree. This is very important because if we have the same artist or track, it's redunant plus we can run into some huge visualization issues.
 */
@@ -46,7 +48,7 @@ var verticalSpacing = 78;
 
 function elbow(d, i) {
     return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : (verticalSpacing-13)) )
-    + "H" + d.target.x + "V" + ( d.target.y - 25 );
+    + "H" + d.target.x + "V" + ( d.target.y - 26 );
 }
 
 /*
@@ -107,11 +109,35 @@ var getAudioFeatures = function(err, data, source) {
     });
 }
 
+var handleSelection = function(node, typ) {
+    
+    d3.select("#headerImage").style("height", "0px");
+    d3.select("#spotifyTracks").html("");
+    
+    
+    if (selectedNode != node) {
+        if (selectedNode != null) {
+            var parNode = d3.select(selectedNode.parentNode);
+            var parCircle = parNode.select("circle"); 
+            if (parCircle[0][0] != null) {
+                parCircle.style("stroke", "#fff");
+            } else {
+                parNode.select("rect").style("stroke", "#fff");
+            }
+        }
+        
+        if (node != null) {
+            d3.select(node.parentNode).select(typ).style("stroke", "#4B9877");
+            selectedNode = node;
+        }
+    }
+}
+
 var loadSpotifyTracks = function(trackArr) {
     
     var html = "";
     var i = 0;
-    var height = trackArr.length == 1 ? 355 : 80;
+    var height = trackArr.length == 1 ? 355 : 75;
     
     while (i < trackArr.length) {
         var trackID = trackArr[i];
@@ -228,7 +254,7 @@ function zoom() {
 }
 
 // Our zoom listener
-var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom);
+var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom).scale(1.35);
 
 // Our base SVG
 var baseSvg = d3.select("#baseSVG").call(zoomListener);
@@ -364,6 +390,13 @@ function click(d) {
     toggleChildren(d);
 }
 
+//This is the accessor function we talked about above
+var lineFunction = d3.svg.line()
+  .x(function(d) { return d.x; })
+  .y(function(d) { return d.y; })
+  .interpolate('linear');
+
+
 /*
     This function is VERY important.
     We call this function after we update the children of certain nodes.
@@ -419,22 +452,24 @@ function update(source, switchM) {
     // For each node in the set..
     node.each(function(d) {
         var d3This = d3.select(this);
-        var line = d3This.select("line");
+        var line = d3This.select("path.line");
         
         if (d.children) {
             
             if (line.length > 0 && line[0][0] == null) {
-                d3This.append("line")
-                    .attr("x1", 0)
-                    .attr("y1", d.root ? 33 : 25)
-                    .attr("x2", 0)
-                    .attr("y2", (d.root ? 55 : (verticalSpacing - 15)))
-                    .style("stroke", "#ccc")
-                    .style("stroke-width", 0)
-                    .transition()
-                    .duration(duration)
-                    .style("stroke-width", 3)
-                    .style("stroke", "#ccc");
+                d3This.append("path")
+                .classed("line", true)
+                .attr("d", lineFunction(
+                    [
+                        { "x": 0, "y": (d.root ? 33 : 26) }, 
+                        { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
+                    ]))
+                .style("stroke", "#ccc")
+                .style("stroke-width", 0)
+                .transition()
+                .duration(duration)
+                .style("stroke-width", 3)
+                .style("stroke", "#ccc");
                 
                 if (!d.root) {
                     d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0);
@@ -494,17 +529,20 @@ function update(source, switchM) {
         var d3This = d3.select(this);
         
         if (d.children) {
-            d3This.append("line")
-                .attr("x1", 0)
-                .attr("y1", d.root ? 33 : 25)
-                .attr("x2", 0)
-                .attr("y2", d.root ? 55 : (verticalSpacing - 15))
+            d3This.append("path")
+                .classed("line", true)
+                .attr("d", lineFunction(
+                    [
+                        { "x": 0, "y": (d.root ? 33 : 26) }, 
+                        { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
+                    ]))
                 .style("stroke", "#ccc")
                 .style("stroke-width", 0)
                 .transition()
                 .duration(duration)
                 .style("stroke-width", 3)
                 .style("stroke", "#ccc");
+            
             
             if (d.aid || d.tid) {
                 d3This.append('path')
@@ -549,18 +587,24 @@ function update(source, switchM) {
                 })
                 .attr("clip-path", "url(#clip)")
                 .on("click", function(d) {
+                    handleSelection(this, "circle");
+                    
+                    d3.select("#headerImage").style("height", "100px");
+                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                    
                     if (d.tracks) {
-                        console.log("Exists.");
                         loadSpotifyTracks(d.tracks);
                     } else {
                         getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
                     }
-                    //d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
                 });
         }
         else if (d.root) {
+            
+            d3This.style("cursor","none").style("pointer-events", "none");
+            
             d3This.append("circle")
-                .attr('class', 'nodeCircle')
+                .attr('class', 'node')
                 .attr("r", 32)
                 .style("fill", function(d) {
                     return "#282828";
@@ -593,14 +637,10 @@ function update(source, switchM) {
                 .attr("xlink:href", function(d) {
                     return d.url;
                 }).on("click", function(d) {
+                    handleSelection(this, "rect");
                     loadSpotifyTracks([d.tid]);
                 });
         }
-        
-         d3This.append("title")
-               .text(function(d) {
-                     return d.name + ", Popularity: " + d.popularity;
-               });
         
         // If shouldPan is true, a node was already detected outside of our view.
         if (!shouldPan) {
@@ -694,7 +734,7 @@ function update(source, switchM) {
         
         var d3This = d3.select(this);
         
-        var line = d3This.select("line");
+        var line = d3This.select("path.line");
         if (line != null) {
             line.remove();
             d3This.selectAll("path").remove();
@@ -918,6 +958,9 @@ var switchMode = function(m) {
     // We are switching modes now
     switchingMode = true;
     
+    // Unselect any nodes
+    handleSelection(null, null);
+    
     if (m == "long") {
         d3.select("#long-term").style("background-color", "#4B9877");
         d3.select("#short-term").style("background-color", null);
@@ -956,6 +999,8 @@ document.getElementById("short-term").addEventListener("click", function() {
 });
 
 document.getElementById("reset_tree").addEventListener("click", function() {
+    handleSelection(null, null);
+    
     root.children.forEach(function(d) {
         d.children = [];
         d._children = null;
