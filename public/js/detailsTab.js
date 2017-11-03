@@ -37,20 +37,50 @@ var detailsTabNS = new function() {
     var width = 0;
     var height = 0;
     
+    // Object that contains data about what/who is selected
+    var selected = {
+        "id": "",
+        "typ": ""
+    }
+    
+    // This method returns true if we are displaying information to the user.
+    this.notDisplayingInfo = function() {
+        return (selected.id == "" || selected.typ == "");
+    }
+    
+    // Return the selected item (either an artist or track)
+    this.getSelected = function() {
+        return selected;
+    }
+    
+    // Initially, the bars do not exist.
+    var created = false;
+    
+    this.barsExist = function() {
+        return created;
+    }
+    
     // This method is called if we initially click on an artist or track.
-    this.createBars = function(trackinfo) {
+    this.createBars = function(trackinfo, id, typ) {
+        // Return if we already created the bars
+        if (created) { return; }
+        created = true;
+        
+        // Update who/what we selected.
+        selected = { "id": id, "typ": typ };
+        
         // Grab our SVG width
         width = document.getElementById("detailsSVG").clientWidth;
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
         .domain([0, 1])
-        .range([barBorder, width - barBorder * 2]); //starts at 100 to allow space for names
+        .range([0, width - barBorder * 2]); //starts at 100 to allow space for names
         
         // Same with pitchScale
         pitchScale = d3.scale.linear()
         .domain([0, 12])
-        .range([barBorder, width - barBorder * 2]);
+        .range([0, width - barBorder * 2]);
         
         // We populate the artist or audio feature data into an array
         var dataset = [];
@@ -59,7 +89,7 @@ var detailsTabNS = new function() {
         }
         
         // Select all of the non-existent group bars
-        var barDiv = svg.selectAll("g.barDiv").data(dataset);
+        var barDiv = svg.selectAll("g.barDiv").data(dataset, function(d, i) { return audio_features[i]; });
         
         // Bar ENTER selection
         var barEnter = barDiv.enter().append("g")
@@ -126,47 +156,53 @@ var detailsTabNS = new function() {
     
     // Most of the code below needs to be re-written.
     
-    this.updateBars = function() {
-        /*
-        width = svg.attr("width");
-        height = svg.attr("height");
+    this.updateBars = function(trackinfo, id, typ) {
         
-        svg.selectAll("rect.bar")
-            .data(dataset)
-            .transition()
-            .delay(function(d, i) {
-                return i * 100;
-            })
-            .duration(500)
-            .ease(d3.easeLinear)
+        // Update who/what we selected.
+        selected = { "id": id, "typ": typ };
+        
+        // Grab our SVG width
+        width = document.getElementById("detailsSVG").clientWidth;
+        
+        // Re-define the xScale based on this width
+        xScale = d3.scale.linear()
+        .domain([0, 1])
+        .range([0, width - barBorder * 2]); //starts at 100 to allow space for names
+        
+        // Same with pitchScale
+        pitchScale = d3.scale.linear()
+        .domain([0, 12])
+        .range([0, width - barBorder * 2]);
+        
+        // We populate the artist or audio feature data into an array
+        var dataset = [];
+        for (var i = 0; i < 5; i++) {
+            dataset[i] = trackinfo[audio_features[i]];
+        }
+        
+        // Select all of the non-existent group bars
+        var barDiv = svg.selectAll("g.barDiv").data(dataset, function(d, i) { return audio_features[i]; });
+        
+        barDiv.select("rect.bar")
             .attr("width", function(d, i) {
-              if (i == 0) { // This is popularity.
-                return xScale(d/100);
-              } else if (i > 0 && i < 4) {
-                return xScale(d);
-              } else {
-                  // Key or major/minor
-                    return w - (barBorder * 2);
-              }
-           });
-
-        svg.selectAll("text")
-             .data(dataset)
-             .transition()
-             .text(function(d, i) {
-                if (i == 0) {
-                  return datanames[i] + " (" + Math.floor(d) + "%)";
-                } else if (i > 0 && i < 4) {
-                  return datanames[i] + " (" + Math.floor(d * 100) + "%)";
-                } else if(i == 4) {
-                  return "key: " + pitchclass[d];
-                } else if(i == 5) {
-                  if(d == 0) {
-                    return "minor";
-                  } else {
-                    return "major";
+                    if(i == 0){
+                    return xScale(d/100);
+                  }else if(i > 0 && i < 4){
+                    return xScale(d);
+                  }else {
+                      return pitchScale(d.key);
                   }
-                }
-             });*/
+                });
+        
+        barDiv.select("text").text(function(d, i) {
+                  if(i == 0){
+                    return audio_features[i] + " (" + Math.floor(d) + "%)";
+                  }else if(i > 0 && i < 4){
+                    return audio_features[i] + " (" + Math.floor(d * 100) + "%)";
+                  }else {
+                    return "Key: " + pitchclass[d.key] + " " + (d.mode == 0 ? "Minor" : "Major");
+                  }
+                  
+               });
     };
 };

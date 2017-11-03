@@ -113,7 +113,7 @@ var handleSelection = function(node, typ) {
     
     d3.select("#headerImage").style("height", "0px");
     d3.select("#spotifyTracks").html("");
-    
+    d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
     
     if (selectedNode != node) {
         if (selectedNode != null) {
@@ -315,7 +315,7 @@ function centerNode(source, first, shouldPan) {
     
     x = x * scale + viewerWidth / 2;
 
-    d3.select('g').transition()
+    svgGroup.transition()
         .duration(duration)
     y = y * scale + viewerHeight / 8;
     
@@ -325,7 +325,7 @@ function centerNode(source, first, shouldPan) {
         dur = 0;
     }
     
-     d3.select('g')
+     svgGroup
         .transition()
         .duration(dur)
         .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
@@ -647,7 +647,12 @@ function update(source, switchM) {
                         Key: { "key": d.tonic, "mode": d.mode },
                     };
                     
-                    detailsTabNS.createBars(trackInfo);
+                    if (detailsTabNS.barsExist()) {
+                        detailsTabNS.updateBars(trackInfo, d.tid, "track");
+                    } else {
+                        detailsTabNS.createBars(trackInfo, d.tid, "track");
+                    }
+                    
                     loadSpotifyTracks([d.tid]);
                 });
         }
