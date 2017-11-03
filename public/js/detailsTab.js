@@ -2,18 +2,18 @@ var detailsTabNS = new function() {
     
     var c10 = d3.scale.category10();
     
-    var barPadding = 0;
+    var barPadding = 2;
     var barBorder = 5;
     
     //colors for the bars
     var audio_features = ["Popularity", "Danceability", "Energy", "Happiness", "Key", "Mode"];
     
     
-    var colors = { blue: "#1F9599", lightblue: "#165873", darkblue: "#124C59", green1: "#428C5C", green2: "#4EA64B", green3: "#ADD96C", };
+    var colors = { blue: "#1F9599", lightblue: "#165873", darkblue: "#124C59", green1: "#428C5C", green2: "#4EA64B", green3: "#ADD96C", green4: "#8EB259" };
     
     var colorScale = d3.scale.ordinal()
                                 .domain(d3.range(0,6))
-                                .range([colors.blue, colors.lightblue, colors.darkblue, colors.green1, colors.green2, colors.green3]);
+                                .range([colors.blue, colors.lightblue, colors.darkblue, colors.green1, colors.green2, colors.green4]);
     
     
     
@@ -34,7 +34,7 @@ var detailsTabNS = new function() {
         
         xScale = d3.scale.linear()
         .domain([0, 1])
-        .range([barBorder, width - (barBorder * 2)]); //starts at 100 to allow space for names
+        .range([barBorder, width - barBorder * 2]); //starts at 100 to allow space for names
         
         var dataset = []; //temporary container
             //populate dataset with object info
@@ -42,7 +42,6 @@ var detailsTabNS = new function() {
               dataset[i] = trackinfo[audio_features[i]];
             }
             
-        /*
             //grey border bars
             svg.selectAll("rect.border")
               .data(greyrects)
@@ -57,9 +56,8 @@ var detailsTabNS = new function() {
               .attr("height", function(d, i) {
                 return (rectHeight) - barPadding;
               })
-              .attr("fill", "rgb(220, 220, 220)");
-            */
-        
+              .attr("fill", "#282828");
+            
               //xanex bars
             svg.selectAll("rect.bar")
                .data(dataset)
@@ -77,7 +75,7 @@ var detailsTabNS = new function() {
                   }else if(i > 0 && i < 4){
                     return xScale(d);
                   }else{
-                    return width - (barBorder * 2);
+                    return xScale(1);
                   }
                 })
                 .attr("height", rectHeight - (barBorder * 2) - barPadding)
