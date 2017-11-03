@@ -3,7 +3,7 @@ var detailsTabNS = new function() {
     var c10 = d3.scale.category10();
     
     var barPadding = 2;
-    var barBorder = 5;
+    var barBorder = 4;
     
     //colors for the bars
     var audio_features = ["Popularity", "Danceability", "Energy", "Happiness", "Key", "Mode"];
@@ -24,57 +24,63 @@ var detailsTabNS = new function() {
     var height = 0;
     
     var xScale;
+    var pitchScale;
     
-    var greyrects = [0, 1, 2, 3, 4, 5];
-    var rectHeight = 34; //Math.floor(100 / 6);
+    var rectHeight = 34;
     
     this.createBars = function(trackinfo) {
         
-        width = document.getElementById("detailsSVGDiv").clientWidth;
+        width = document.getElementById("detailsSVG").clientWidth;
         
         xScale = d3.scale.linear()
         .domain([0, 1])
         .range([barBorder, width - barBorder * 2]); //starts at 100 to allow space for names
+        
+        pitchScale = d3.scale.linear()
+        .domain([0, 12])
+        .range([barBorder, width - barBorder * 2]);
         
         var dataset = []; //temporary container
             //populate dataset with object info
             for(var i = 0; i < 6; i++){
               dataset[i] = trackinfo[audio_features[i]];
             }
-            
-            //grey border bars
-            svg.selectAll("rect.border")
-              .data(greyrects)
-              .enter()
-              .append("rect")
+        
+        var barDiv = svg.selectAll("g.barDiv").data(dataset);
+        
+        var barEnter = barDiv.enter().append("g")
+                        .attr("class", "barDiv")
+                        .attr("x", 0)
+                        .attr("y", 0);
+                        
+        
+        barEnter.append("rect")
               .attr("class", "border")
               .attr("x", 0)
-              .attr("y", function(d, i){
-                return i * (rectHeight);
+              .attr("y", function(d, i) {
+                return i * rectHeight;
               })
               .attr("width", width)
               .attr("height", function(d, i) {
-                return (rectHeight) - barPadding;
+                return rectHeight - barPadding;
               })
               .attr("fill", "#282828");
-            
-              //xanex bars
-            svg.selectAll("rect.bar")
-               .data(dataset)
-               .enter()
-               .append("rect")
+        
+        barEnter.append("rect")
                 .style("stroke-width", "0px")
                .attr("class", "bar")
                .attr("x", barBorder)
                .attr("y", function(d, i) {
-                  return i * rectHeight + barBorder;
+                  return (i * rectHeight) + barBorder;
                })
                .attr("width", function(d, i) {
                     if(i == 0){
                     return xScale(d/100);
                   }else if(i > 0 && i < 4){
                     return xScale(d);
-                  }else{
+                  }else if(i == 4) {
+                      return pitchScale(d);
+                  } else {
                     return xScale(1);
                   }
                 })
@@ -82,32 +88,28 @@ var detailsTabNS = new function() {
                .attr("fill", function(d,i) {
                     return colorScale(i);
                 });
-               
-               
-            svg.selectAll("text")
-               .data(dataset)
-               .enter()
-               .append("text")
+            
+            barEnter.append("text")
                .text(function(d, i) {
                   if(i == 0){
                     return audio_features[i] + " (" + Math.floor(d) + "%)";
                   }else if(i > 0 && i < 4){
                     return audio_features[i] + " (" + Math.floor(d * 100) + "%)";
                   }else if(i == 4){
-                    return "key: " + pitchclass[d];
+                    return "Key: " + pitchclass[d];
                   }else if(i == 5){
-                    if(d == 0){
-                      return "minor";
-                    }else{
-                      return "major";
+                    if (d == 0) {
+                      return "Minor";
+                    } else{
+                      return "Major";
                     }
                   }
                   
                })
-               .attr("dy", "0.49em")
+               .attr("dy", "0.5em")
                .attr("x", barBorder * 2)
                .attr("y", function(d, i) {
-                  return (i * (rectHeight)) + (rectHeight / 2);
+                  return (i * rectHeight) + (rectHeight - barPadding)/2;
                })
                .attr("font-family", "sans-serif")
                .attr("font-size", "10px")

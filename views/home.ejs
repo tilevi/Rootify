@@ -55,9 +55,7 @@
                     <div class="tabcontentinner" id="detailsTab">
                         <div id="headerImage" width="100%"></div>
                         <div id="spotifyTracks" width="100%"></div>
-                        <div id="detailsSVGDiv" width="100%">
-                            <svg id="detailsSVG" width="100%" height="200px"></svg>
-                        </div>
+                        <svg id="detailsSVG" width="100%" height="204px"></svg>
                     </div>
                 </div>
             </div>
@@ -146,14 +144,12 @@
         <script type="text/javascript">
             
             var treeDiv = document.getElementById("tree-container");
-            var barDiv = document.getElementById("detailsSVGDiv");
-            
             var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
             
             var viewerWidth;
             var viewerHeight;
             
-            function redraw(){
+            function redraw() {
                 
                 // Extract the width and height that was computed by CSS.
                 viewerWidth = treeDiv.clientWidth;
@@ -164,13 +160,6 @@
                 .attr("width", viewerWidth)
                 .attr("height", viewerHeight)
                 .attr("class", "overlay");
-                
-                viewerWidth2 = barDiv.clientWidth;
-                viewerHeight2 = barDiv.clientHeight;
-                
-                d3.select("#detailsSVG")
-                .attr("width", viewerWidth2)
-                .attr("height", viewerHeight2);
             }
 
             // Draw for the first time to initialize.

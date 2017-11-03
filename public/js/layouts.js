@@ -96,7 +96,7 @@ var getAudioFeatures = function(err, data, source) {
             while (j < tdata.audio_features.length) {
                 var item = tdata.audio_features[j];
                 if (item != null) {
-                    audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence }
+                    audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence, "tonic": item.key, "mode": item.mode }
                 }
                 j++;
             }
@@ -205,7 +205,7 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
             if (obj != null && blacklist.indexOf(obj.id) === -1) {
                 if (typ == "track") {
                     var audioFeat = audioFeatures[obj.id];
-                    source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence } );
+                    source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence, "tonic": audioFeat.tonic, "mode": audioFeat.mode } );
                 } else {
                    source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity } ); 
                 }
@@ -644,8 +644,8 @@ function update(source, switchM) {
                         Danceability: d.dance,
                         Energy: d.energy,
                         Happiness: d.valence,
-                        Key: 7,
-                        Mode: 0
+                        Key: d.tonic,
+                        Mode: d.mode
                     };
                     
                     detailsTabNS.createBars(trackInfo);
