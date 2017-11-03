@@ -55,7 +55,9 @@
                     <div class="tabcontentinner" id="detailsTab">
                         <div id="headerImage" width="100%"></div>
                         <div id="spotifyTracks" width="100%"></div>
-                        <svg id="detailsSVG" width="100%" height="70px"></svg>
+                        <div id="detailsSVGDiv" width="100%">
+                            <svg id="detailsSVG" width="100%" height="200px"></svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -108,6 +110,7 @@
 
         <!-- Tree Container -->
         <div id="tree-container">
+            
             <script type="text/javascript">
 
             
@@ -143,6 +146,8 @@
         <script type="text/javascript">
             
             var treeDiv = document.getElementById("tree-container");
+            var barDiv = document.getElementById("detailsSVGDiv");
+            
             var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
             
             var viewerWidth;
@@ -159,6 +164,13 @@
                 .attr("width", viewerWidth)
                 .attr("height", viewerHeight)
                 .attr("class", "overlay");
+                
+                viewerWidth2 = barDiv.clientWidth;
+                viewerHeight2 = barDiv.clientHeight;
+                
+                d3.select("#detailsSVG")
+                .attr("width", viewerWidth2)
+                .attr("height", viewerHeight2);
             }
 
             // Draw for the first time to initialize.
@@ -168,6 +180,7 @@
             window.addEventListener("resize", redraw);
         </script>
         
+        <script type="text/javascript" src="/js/detailsTab.js"></script>
         <script type="text/javascript" src="/js/layouts.js"></script>
 
         </div>

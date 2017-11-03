@@ -638,6 +638,17 @@ function update(source, switchM) {
                     return d.url;
                 }).on("click", function(d) {
                     handleSelection(this, "rect");
+                    
+                    var trackInfo = {
+                        Popularity: d.popularity,
+                        Danceability: d.dance,
+                        Energy: d.energy,
+                        Happiness: d.valence,
+                        Key: 7,
+                        Mode: 0
+                    };
+                    
+                    detailsTabNS.createBars(trackInfo);
                     loadSpotifyTracks([d.tid]);
                 });
         }

@@ -231,7 +231,7 @@ a {
 
 /* ------------- Main Body of the Tree Container ------------ */
 #tree-container {
-    position: relative;
+    position: fixed;
     margin-top:0;
     width: 82%;
     height: 87vh;
@@ -253,7 +253,7 @@ a {
 
 }
 
-.node circle, rect {
+.node circle, .node rect {
     fill: #282828;
     stroke: #fff;
     stroke-width: 2.5px;
