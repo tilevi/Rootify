@@ -643,9 +643,8 @@ function update(source, switchM) {
                         Popularity: d.popularity,
                         Danceability: d.dance,
                         Energy: d.energy,
-                        Happiness: d.valence,
-                        Key: d.tonic,
-                        Mode: d.mode
+                        Positivity: d.valence,
+                        Key: { "key": d.tonic, "mode": d.mode },
                     };
                     
                     detailsTabNS.createBars(trackInfo);

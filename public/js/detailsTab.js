@@ -1,59 +1,73 @@
 var detailsTabNS = new function() {
     
-    var c10 = d3.scale.category10();
-    
+    // Padding is the distance between each grey bar
     var barPadding = 2;
+    // Border is the margin for each colored bar
     var barBorder = 4;
     
-    //colors for the bars
-    var audio_features = ["Popularity", "Danceability", "Energy", "Happiness", "Key", "Mode"];
+    // The height of each grey rectangle (w/ padding!)
+    var rectHeight = 34;
     
     
-    var colors = { blue: "#1F9599", lightblue: "#165873", darkblue: "#124C59", green1: "#428C5C", green2: "#4EA64B", green3: "#ADD96C", green4: "#8EB259" };
+    // Audio feature labels
+    var audio_features = ["Popularity", "Danceability", "Energy", "Positivity", "Key"];
     
+    // Tonic key labels
+    var pitchclass = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    
+    // Colors for the bars
+    var colors = {lightblue: "#1F9599", blue: "#165873", darkblue: "#124C59", green: "#428C5C", lightgreen: "#4EA64B"};
+    
+    
+    // Computes width based on 0-1 domain
+    var xScale;
+    // Computers width based on 0-11 domain
+    var pitchScale;
+    
+    // Ordinal color scale
     var colorScale = d3.scale.ordinal()
-                                .domain(d3.range(0,6))
-                                .range([colors.blue, colors.lightblue, colors.darkblue, colors.green1, colors.green2, colors.green4]);
+                                .domain(d3.range(0,4))
+                                .range([colors.blue, colors.lightblue, colors.darkblue, colors.green, colors.lightgreen]);
     
     
-    
-    var pitchclass = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+    // Reference to the details SVG (which holds the bars)
     var svg = d3.select("#detailsSVG");
     
+    // Width and height of the SVG
     var width = 0;
     var height = 0;
     
-    var xScale;
-    var pitchScale;
-    
-    var rectHeight = 34;
-    
+    // This method is called if we initially click on an artist or track.
     this.createBars = function(trackinfo) {
-        
+        // Grab our SVG width
         width = document.getElementById("detailsSVG").clientWidth;
         
+        // Re-define the xScale based on this width
         xScale = d3.scale.linear()
         .domain([0, 1])
         .range([barBorder, width - barBorder * 2]); //starts at 100 to allow space for names
         
+        // Same with pitchScale
         pitchScale = d3.scale.linear()
         .domain([0, 12])
         .range([barBorder, width - barBorder * 2]);
         
-        var dataset = []; //temporary container
-            //populate dataset with object info
-            for(var i = 0; i < 6; i++){
-              dataset[i] = trackinfo[audio_features[i]];
-            }
+        // We populate the artist or audio feature data into an array
+        var dataset = [];
+        for (var i = 0; i < 5; i++) {
+            dataset[i] = trackinfo[audio_features[i]];
+        }
         
+        // Select all of the non-existent group bars
         var barDiv = svg.selectAll("g.barDiv").data(dataset);
         
+        // Bar ENTER selection
         var barEnter = barDiv.enter().append("g")
                         .attr("class", "barDiv")
                         .attr("x", 0)
                         .attr("y", 0);
                         
-        
+        // Create a grey rectangle around the colored bar
         barEnter.append("rect")
               .attr("class", "border")
               .attr("x", 0)
@@ -66,6 +80,7 @@ var detailsTabNS = new function() {
               })
               .attr("fill", "#282828");
         
+        // Create the color bar inside the grey rectangle
         barEnter.append("rect")
                 .style("stroke-width", "0px")
                .attr("class", "bar")
@@ -78,10 +93,8 @@ var detailsTabNS = new function() {
                     return xScale(d/100);
                   }else if(i > 0 && i < 4){
                     return xScale(d);
-                  }else if(i == 4) {
-                      return pitchScale(d);
-                  } else {
-                    return xScale(1);
+                  }else {
+                      return pitchScale(d.key);
                   }
                 })
                 .attr("height", rectHeight - (barBorder * 2) - barPadding)
@@ -89,24 +102,19 @@ var detailsTabNS = new function() {
                     return colorScale(i);
                 });
             
+            // Create text inside of the colored bar
             barEnter.append("text")
                .text(function(d, i) {
                   if(i == 0){
                     return audio_features[i] + " (" + Math.floor(d) + "%)";
                   }else if(i > 0 && i < 4){
                     return audio_features[i] + " (" + Math.floor(d * 100) + "%)";
-                  }else if(i == 4){
-                    return "Key: " + pitchclass[d];
-                  }else if(i == 5){
-                    if (d == 0) {
-                      return "Minor";
-                    } else{
-                      return "Major";
-                    }
+                  }else {
+                    return "Key: " + pitchclass[d.key] + " " + (d.mode == 0 ? "Minor" : "Major");
                   }
                   
                })
-               .attr("dy", "0.5em")
+               .attr("dy", "0.5em") // Centers it vertically
                .attr("x", barBorder * 2)
                .attr("y", function(d, i) {
                   return (i * rectHeight) + (rectHeight - barPadding)/2;
@@ -116,9 +124,10 @@ var detailsTabNS = new function() {
                .attr("fill", "white");
     }
     
+    // Most of the code below needs to be re-written.
+    
     this.updateBars = function() {
-        
-        // Grab SVG width and height
+        /*
         width = svg.attr("width");
         height = svg.attr("height");
         
@@ -158,6 +167,6 @@ var detailsTabNS = new function() {
                     return "major";
                   }
                 }
-             });
+             });*/
     };
 };
