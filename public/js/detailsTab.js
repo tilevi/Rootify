@@ -184,6 +184,12 @@ var detailsTabNS = new function() {
         var barDiv = svg.selectAll("g.barDiv").data(dataset, function(d, i) { return audio_features[i]; });
         
         barDiv.select("rect.bar")
+            .transition()
+            .delay(function(d, i) {
+                    return i * 100;
+            })
+            .duration(500)
+            .ease("linear")
             .attr("width", function(d, i) {
                     if(i == 0){
                     return xScale(d/100);
