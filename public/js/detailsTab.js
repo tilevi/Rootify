@@ -52,6 +52,10 @@ var detailsTabNS = new function() {
         return selected;
     }
     
+    this.clearSelection = function() {
+        selected = { typ: null, id: null };
+    }
+    
     // Initially, the bars do not exist.
     var created = false;
     

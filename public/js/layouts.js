@@ -1036,6 +1036,7 @@ document.getElementById("short-term").addEventListener("click", function() {
 });
 
 document.getElementById("reset_tree").addEventListener("click", function() {
+    detailsTabNS.clearSelection();
     handleSelection(null, null);
     
     root.children.forEach(function(d) {
