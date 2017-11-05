@@ -110,9 +110,11 @@ var getAudioFeatures = function(err, data, source) {
 }
 
 var handleSelection = function(node, typ) {
+    if (node == null) {
+        d3.select("#spotifyTracks").html("");
+    }
     
     d3.select("#headerImage").style("height", "0px");
-    d3.select("#spotifyTracks").html("");
     d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
     
     if (selectedNode != node) {
@@ -134,6 +136,9 @@ var handleSelection = function(node, typ) {
 }
 
 var loadSpotifyTracks = function(trackArr) {
+    
+    // Clear the tracks
+    d3.select("#spotifyTracks").html("");
     
     var html = "";
     var i = 0;
@@ -592,10 +597,24 @@ function update(source, switchM) {
                     d3.select("#headerImage").style("height", "100px");
                     d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
                     
-                    if (d.tracks) {
-                        loadSpotifyTracks(d.tracks);
+                    var selected = detailsTabNS.getSelected();
+                    
+                    if (selected.typ != "artist" || selected.id != d.aid) {
+                        if (d.tracks) {
+                            loadSpotifyTracks(d.tracks);
+                        } else {
+                            getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                        }
+                    }
+                
+                    var trackInfo = {
+                        Popularity: d.popularity
+                    };
+                    
+                    if (detailsTabNS.barsExist()) {
+                        detailsTabNS.updateBars(trackInfo, d.aid, "artist");
                     } else {
-                        getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                        detailsTabNS.createBars(trackInfo, d.aid, "artist");
                     }
                 });
         }
@@ -638,6 +657,11 @@ function update(source, switchM) {
                     return d.url;
                 }).on("click", function(d) {
                     handleSelection(this, "rect");
+                    var selected = detailsTabNS.getSelected();
+                    
+                    if (selected.typ != "track" || selected.id != d.tid) {
+                        loadSpotifyTracks([d.tid]);
+                    }
                     
                     var trackInfo = {
                         Popularity: d.popularity,
@@ -652,8 +676,6 @@ function update(source, switchM) {
                     } else {
                         detailsTabNS.createBars(trackInfo, d.tid, "track");
                     }
-                    
-                    loadSpotifyTracks([d.tid]);
                 });
         }
         
