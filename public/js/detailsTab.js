@@ -154,24 +154,8 @@ var detailsTabNS = new function() {
                .attr("fill", "white");
     }
     
-    var showAndHideBars = function(typ) {
-        // If we switched types, then hide the appropriate bars.
-        if (typ != selected.typ) {
-            var maxIndex = (typ == "artist" ? 0 : 4);
-            svg.selectAll("g.barDiv").each(function(d, i) {
-                if (i > maxIndex) {
-                    d3.select(this).style("opacity", 0);
-                } else {
-                    d3.select(this).style("opacity", 1);
-                }
-            });
-        }
-    }
-    
     // Update bars code
     this.updateBars = function(trackinfo, id, typ) {
-        showAndHideBars(typ);
-        
         // Update who/what we selected.
         selected = { "id": id, "typ": typ };
         
@@ -195,7 +179,9 @@ var detailsTabNS = new function() {
         }
         
         // Select all of the non-existent group bars
+        // Notice how the second line hides the bars if they are not "Popularity" and we selected an artist.
         var barDiv = svg.selectAll("g.barDiv")
+                        .style("opacity", function(d, i) { if (i > 0 && typ == "artist") { return 0; } return 1;})
                         .data(dataset, function(d, i) { return audio_features[i]; });
         
         barDiv.select("rect.bar")
