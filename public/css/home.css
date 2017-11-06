@@ -96,6 +96,11 @@ a {
     box-shadow: -1px 4px 16px -5px rgba(0, 0, 0, 0.5);
 }
 
+#at-container {
+    width: 100%;
+    height: 204px;
+}
+
 .tabnav {
   display: flex;
   list-style: none;

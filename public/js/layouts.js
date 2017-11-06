@@ -110,13 +110,6 @@ var getAudioFeatures = function(err, data, source) {
 }
 
 var handleSelection = function(node, typ) {
-    if (node == null) {
-        d3.select("#spotifyTracks").html("");
-    }
-    
-    d3.select("#headerImage").style("height", "0px");
-    d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
-    
     if (selectedNode != node) {
         if (selectedNode != null) {
             var parNode = d3.select(selectedNode.parentNode);
@@ -133,6 +126,15 @@ var handleSelection = function(node, typ) {
             selectedNode = node;
         }
     }
+    
+    if (node == null) {
+        d3.select("#spotifyTracks").html("");
+        selectedNode = null;
+        detailsTabNS.clearSelection();
+    }
+    
+    d3.select("#headerImage").style("height", "0px");
+    d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
 }
 
 var loadSpotifyTracks = function(trackArr) {
@@ -477,7 +479,8 @@ function update(source, switchM) {
                 .style("stroke", "#ccc");
                 
                 if (!d.root) {
-                    d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0);
+                    d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0)
+                        .style("pointer-events", "none");
 
                     d3This.append('path')
                         .classed("triangleUp", true)
@@ -504,8 +507,9 @@ function update(source, switchM) {
 
                 var triDown = d3This.select(".triangleDown");
                 if (triDown.length > 0 && triDown[0][0] != null) {
-                    triDown.style("opacity", 1);
-                    triDown.style("fill-opacity", 1);
+                    triDown.style("opacity", 1)
+                            .style("pointer-events", "auto")
+                            .style("fill-opacity", 1);
                 }
             }
         }
@@ -574,6 +578,7 @@ function update(source, switchM) {
                 .attr("stroke", "black")
                 .attr("stroke-width", "1px")
                 .style("opacity", d.children == null ? 1 : 0)
+                .style("pointer-events", d.children == null ? "auto" : "none")
                 .on("click", click);
         }
         
@@ -1036,7 +1041,6 @@ document.getElementById("short-term").addEventListener("click", function() {
 });
 
 document.getElementById("reset_tree").addEventListener("click", function() {
-    detailsTabNS.clearSelection();
     handleSelection(null, null);
     
     root.children.forEach(function(d) {

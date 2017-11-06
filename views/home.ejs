@@ -4,20 +4,18 @@
 		<title>Rootify</title>
         
         <!-- jQuery -->
-		<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
-		
-		<!-- D3.js v3 -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        
+        <!-- D3.js v3 -->
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		
 		<!-- Spotify Web API (JS client-side wrapper) -->
 		<script src="/js/spotify-web-api.js"></script>
 
-
         <link rel="stylesheet" type="text/css" href="/css/home.css">
 	</head>
     
 	<body>
-
         <!-- Header  -->
         <div id="tophead">
             <div class="navbar">
@@ -45,24 +43,25 @@
                         Generate
                     </a>
                 </div>
+                
+                <!-- Tabs Content  -->
+                <div class="c-tab is-active">
+                    <div id="overflowss" class="tabcontent">
+                        <h2> Details </h2>
+                        <div class="tabcontentinner" id="detailsTab">
+                            <div id="headerImage" width="100%"></div>
+                            <div id="spotifyTracks" width="100%"></div>
 
-        
-
-            <!-- Tabs Content  -->
-            <div class="c-tab is-active">
-                <div id="overflowss" class="tabcontent">
-                    <h2> Details </h2>
-                    <div class="tabcontentinner" id="detailsTab">
-                        <div id="headerImage" width="100%"></div>
-                        <div id="spotifyTracks" width="100%"></div>
-                        <svg id="detailsSVG" width="100%" height="204px"></svg>
+                            <div id="at-container">
+                                <svg id="detailsSVG"></svg>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="c-tab">
-                <div id="overflowss" class="tabcontent">
-                    <h2> Selected </h2>
+                <div class="c-tab">
+                    <div id="overflowss" class="tabcontent">
+                        <h2> Selected </h2>
                         <div class="tabcontentinner">
                             <p> 1. Selected Artist here
                             <p> 2. Selected Track here
@@ -70,60 +69,53 @@
                             <p> 4. Selected Track here
                             <p> 5. Selected Artist here
                         </div>
-    
-                  <h2> Generated Playlist </h2>
-                         <div class="tabcontentinnerdif">
+                        
+                        <h2> Generated Playlist </h2>
+                             <div class="tabcontentinnerdif">
+                                <p> 1. Track
+                                <p> 2. Track
+                                <p> 3. Track
+                                <p> 4. Track
+                                <p> 5. Track
+                                <p> 6. Track
+                                <p> 7. Track
+                                <p> 8. Track
+                                <p> 9. Track
+                                <p> 10. Track
+                                <p> 11. Track
+                                <p> 12. Track
+                                <p> 13. Track
+                                <p> 14. Track
+                                <p> 15. Track
+                                <p> 16. Track
+                                <p> 17. Track
+                                <p> 18. Track
+                                <p> 19. Track
+                                <p> 20. Track
+                                <p> 21. Track
+                            </div>
 
-                            <p> 1. Track
-                            <p> 2. Track
-                            <p> 3. Track
-                            <p> 4. Track
-                            <p> 5. Track
-                            <p> 6. Track
-                            <p> 7. Track
-                            <p> 8. Track
-                            <p> 9. Track
-                            <p> 10. Track
-                            <p> 11. Track
-                            <p> 12. Track
-                            <p> 13. Track
-                            <p> 14. Track
-                            <p> 15. Track
-                            <p> 16. Track
-                            <p> 17. Track
-                            <p> 18. Track
-                            <p> 19. Track
-                            <p> 20. Track
-                            <p> 21. Track                                                            
-                         </div>
-
-
-                    <!-- Button  -->
-                    <a class="playlistbtn" href="#">Generate Playlist</a>
+                        <!-- Button  -->
+                        <a class="playlistbtn" href="#">Generate Playlist</a>
+                    </div>
                 </div>
             </div>
-            </div>
-
         </div>
 
         <!-- Tree Container -->
-        <div id="tree-container">
+        <div id="tree-container"></div>
             
-            <script type="text/javascript">
-
-            
-            function getCookie(name)
-              {
+        <script type="text/javascript">
+            function getCookie(name) {
                 var re = new RegExp(name + "=([^;]+)");
                 var value = re.exec(document.cookie);
                 return (value != null) ? unescape(value[1]) : null;
-              }
-
+            }
+            
             function deleteCookie(name) {
                 document.cookie = name +'=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             }
             
-
             var spotifyApi = new SpotifyWebApi();
             var access_token = "<%- access_token -%>";
             //var access_token = "<%- access_token -%>";
@@ -140,17 +132,23 @@
             }
         </script>
         
+        <!-- Details tab -->
+        <script type="text/javascript" src="/js/detailsTab.js"></script>
         
+        <!-- Resize code -->
         <script type="text/javascript">
             
             var treeDiv = document.getElementById("tree-container");
+            var atDiv = document.getElementById("at-container");
+            
             var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
             
             var viewerWidth;
             var viewerHeight;
             
-            function redraw() {
-                
+            var viewerW2, viewerH2;
+            
+            function redraw() {                
                 // Extract the width and height that was computed by CSS.
                 viewerWidth = treeDiv.clientWidth;
                 viewerHeight = treeDiv.clientHeight;
@@ -160,6 +158,15 @@
                 .attr("width", viewerWidth)
                 .attr("height", viewerHeight)
                 .attr("class", "overlay");
+                
+                viewerW2 = atDiv.clientWidth;
+                viewerH2 = atDiv.clientHeight;
+                
+                d3.select("#detailsSVG")
+                    .attr("width", viewerW2)
+                    .attr("height", viewerH2);
+                
+                detailsTabNS.updateBars();
             }
 
             // Draw for the first time to initialize.
@@ -169,25 +176,18 @@
             window.addEventListener("resize", redraw);
         </script>
         
-        <script type="text/javascript" src="/js/detailsTab.js"></script>
+        <!-- Tree layout -->
         <script type="text/javascript" src="/js/layouts.js"></script>
-
-        </div>
         
-        
-        
-
         <!-- TAB JS -->
         <script src="/js/tabs.js"></script>
-        
         <script>
-          var myTabs = tabs({
-            el: '#tabs',
-            tabNavigationLinks: '.tablink',
-            tabContentContainers: '.c-tab'
-          });
-          myTabs.init();
+            var myTabs = tabs({
+                el: '#tabs',
+                tabNavigationLinks: '.tablink',
+                tabContentContainers: '.c-tab'
+            });
+            myTabs.init();
         </script>
-
 	</body>
 </html>

@@ -42,6 +42,8 @@ var detailsTabNS = new function() {
         "typ": ""
     }
     
+    var selectedTrackInfo = null;
+    
     // This method returns true if we are displaying information to the user.
     this.notDisplayingInfo = function() {
         return (selected.id == "" || selected.typ == "");
@@ -69,11 +71,14 @@ var detailsTabNS = new function() {
         if (created) { return; }
         created = true;
         
+        // Store the track information (for use when resizing)
+        selectedTrackInfo = Object.assign({}, trackinfo);
+        
         // Update who/what we selected.
         selected = { "id": id, "typ": typ };
         
         // Grab our SVG width
-        width = document.getElementById("detailsSVG").clientWidth;
+        width = d3.select("#detailsSVG").attr("width");
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
@@ -160,11 +165,22 @@ var detailsTabNS = new function() {
     
     // Update bars code
     this.updateBars = function(trackinfo, id, typ) {
+        if (trackinfo == null) {
+            trackinfo = selectedTrackInfo;
+            id = selected.id;
+            typ = selected.typ;
+        } else {
+            selectedTrackInfo = Object.assign({}, trackinfo);
+        }
+        
+        // If we don't have any track information, then don't continue.
+        if (trackinfo == null) { return; }
+        
         // Update who/what we selected.
         selected = { "id": id, "typ": typ };
         
         // Grab our SVG width
-        width = document.getElementById("detailsSVG").clientWidth;
+        width = d3.select("#detailsSVG").attr("width");
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
@@ -187,6 +203,9 @@ var detailsTabNS = new function() {
         var barDiv = svg.selectAll("g.barDiv")
                         .style("opacity", function(d, i) { if (i > 0 && typ == "artist") { return 0; } return 1;})
                         .data(dataset, function(d, i) { return audio_features[i]; });
+        
+        barDiv.select("rect.border")
+                .attr("width", width);
         
         barDiv.select("rect.bar")
             .transition()
