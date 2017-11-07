@@ -1,4 +1,4 @@
-var detailsTabNS = new function() {
+var barGraphs = function() {
     // Padding is the distance between each grey bar
     var barPadding = 2;
     // Border is the margin for each colored bar
@@ -44,6 +44,12 @@ var detailsTabNS = new function() {
     
     var selectedTrackInfo = null;
     
+    // Setter for the type of bars
+    var type = null;
+    this.setType = function(type) {
+        this.typ = type;
+    }
+    
     // This method returns true if we are displaying information to the user.
     this.notDisplayingInfo = function() {
         return (selected.id == "" || selected.typ == "");
@@ -62,14 +68,19 @@ var detailsTabNS = new function() {
     var created = false;
     
     this.barsExist = function() {
-        return created;
+        return this.created;
     }
     
     // This method is called if we initially click on an artist or track.
     this.createBars = function(trackinfo, id, typ) {
         // Return if we already created the bars
-        if (created) { return; }
-        created = true;
+        if (this.created) { return; }
+        this.created = true;
+        
+        // Resize the <div>
+        var newHeight = (this.typ == "track" ? "170px" : "34px");
+        d3.select("#at-container").style("height", newHeight);
+        d3.select("#detailsSVG").style("height", newHeight);
         
         // Store the track information (for use when resizing)
         selectedTrackInfo = Object.assign({}, trackinfo);
@@ -181,6 +192,11 @@ var detailsTabNS = new function() {
         
         // Grab our SVG width
         width = d3.select("#detailsSVG").attr("width");
+        
+        // Resize the <div>
+        var newHeight = (this.typ == "track" ? "170px" : "34px");
+        d3.select("#at-container").style("height", newHeight);
+        d3.select("#detailsSVG").style("height", newHeight);
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()

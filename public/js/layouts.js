@@ -123,14 +123,17 @@ var handleSelection = function(node, typ) {
         
         if (node != null) {
             d3.select(node.parentNode).select(typ).style("stroke", "#4B9877");
+            // Set the selected node element
             selectedNode = node;
+            // Set the selected type
+            selectedType = typ;
         }
     }
     
     if (node == null) {
         d3.select("#spotifyTracks").html("");
         selectedNode = null;
-        detailsTabNS.clearSelection();
+        trackBars.clearSelection();
     }
     
     d3.select("#headerImage").style("height", "0px");
@@ -214,7 +217,7 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
                     var audioFeat = audioFeatures[obj.id];
                     source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence, "tonic": audioFeat.tonic, "mode": audioFeat.mode } );
                 } else {
-                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity } ); 
+                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, genres: obj.genres } ); 
                 }
 
                 blacklist.push(obj.id);
@@ -529,7 +532,6 @@ function update(source, switchM) {
             return "translate(" + source.x0 + "," + source.y0 + ")";
         });
     
-    
     // We will return this variable at the end of this function.
     // If this is set to true, we should pan our view.
     var shouldPan = false;
@@ -602,7 +604,7 @@ function update(source, switchM) {
                     d3.select("#headerImage").style("height", "100px");
                     d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
                     
-                    var selected = detailsTabNS.getSelected();
+                    var selected = trackBars.getSelected();
                     
                     if (selected.typ != "artist" || selected.id != d.aid) {
                         if (d.tracks) {
@@ -611,15 +613,16 @@ function update(source, switchM) {
                             getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
                         }
                     }
-                
+                    
                     var trackInfo = {
                         Popularity: d.popularity
                     };
                     
-                    if (detailsTabNS.barsExist()) {
-                        detailsTabNS.updateBars(trackInfo, d.aid, "artist");
+                    if (artistBars.barsExist() || trackBars.barsExist()) {
+                        console.log("updating artist bars.");
+                        artistBars.updateBars(trackInfo, d.aid, "artist");
                     } else {
-                        detailsTabNS.createBars(trackInfo, d.aid, "artist");
+                        artistBars.createBars(trackInfo, d.aid, "artist");
                     }
                 });
         }
@@ -662,7 +665,7 @@ function update(source, switchM) {
                     return d.url;
                 }).on("click", function(d) {
                     handleSelection(this, "rect");
-                    var selected = detailsTabNS.getSelected();
+                    var selected = trackBars.getSelected();
                     
                     if (selected.typ != "track" || selected.id != d.tid) {
                         loadSpotifyTracks([d.tid]);
@@ -676,10 +679,10 @@ function update(source, switchM) {
                         Key: { "key": d.tonic, "mode": d.mode },
                     };
                     
-                    if (detailsTabNS.barsExist()) {
-                        detailsTabNS.updateBars(trackInfo, d.tid, "track");
+                    if (trackBars.barsExist() || artistBars.barsExist()) {
+                        trackBars.updateBars(trackInfo, d.tid, "track");
                     } else {
-                        detailsTabNS.createBars(trackInfo, d.tid, "track");
+                        trackBars.createBars(trackInfo, d.tid, "track");
                     }
                 });
         }
