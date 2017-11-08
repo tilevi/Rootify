@@ -1,4 +1,4 @@
-var barGraphs = function() {
+var BarManager = function() {
     // Padding is the distance between each grey bar
     var barPadding = 2;
     // Border is the margin for each colored bar
@@ -43,36 +43,39 @@ var barGraphs = function() {
     }
     
     var selectedTrackInfo = null;
-    
-    // Setter for the type of bars
-    var type = null;
-    this.setType = function(type) {
-        typ = type;
-    }
-    
     var selected = {id: null, typ: null};
     
-    // Return the selected item (either an artist or track)
-    this.getSelected = function() {
-        return selected;
+    var created = false;
+    
+    this.showBars = function(trackInfo, obj) {
+        if (created) {
+            this.updateBars(trackInfo, obj);
+        } else {
+            this.createBars(trackInfo, obj);
+        }
+    }
+    
+    this.artistNotLoaded = function(id) {
+        return (!(selected.typ == "artist" && selected.id == id));
+    }
+    
+    this.trackNotLoaded = function(id) {
+        return (!(selected.typ == "track" && selected.id == id));
     }
     
     this.clearSelection = function() {
         selected = { typ: null, id: null };
     }
     
-    // Initially, the bars do not exist.
-    var created = false;
-    
-    this.barsExist = function() {
-        return created;
-    }
-    
     // This method is called if we initially click on an artist or track.
-    this.createBars = function(trackinfo, id, typ) {
+    this.createBars = function(trackinfo, obj) {    
         // Return if we already created the bars
         if (created) { return; }
         created = true;
+        
+        var id = obj.id;
+        var typ = obj.typ;
+        
         selected = {id: id, typ: typ};
         
         // Resize the <div>
@@ -134,30 +137,25 @@ var barGraphs = function() {
                   return (i * rectHeight) + barBorder;
                })
                .attr("width", function(d, i) {
-                    if(i == 0){
-                    return xScale(d/100);
-                  }else if(i > 0 && i < 4){
-                    return xScale(d);
-                  }else {
-                      return pitchScale(d.key);
-                  }
+                    if (i < 4) {
+                        return xScale(d);
+                    } else {
+                        return pitchScale(d.key);
+                    }
                 })
                 .attr("height", rectHeight - (barBorder * 2) - barPadding)
-               .attr("fill", function(d,i) {
+                .attr("fill", function(d,i) {
                     return colorScale(i);
                 });
             
             // Create text inside of the colored bar
             barEnter.append("text")
                .text(function(d, i) {
-                  if(i == 0){
-                    return audio_features[i] + " (" + Math.floor(d) + "%)";
-                  }else if(i > 0 && i < 4){
+                  if (i < 4){
                     return audio_features[i] + " (" + Math.floor(d * 100) + "%)";
                   }else {
                     return "Key: " + pitchclass[d.key] + " " + (d.mode == 0 ? "Minor" : "Major");
                   }
-                  
                })
                .attr("dy", "0.5em") // Centers it vertically
                .attr("x", barBorder * 2)
@@ -170,15 +168,25 @@ var barGraphs = function() {
     }
     
     // Update bars code
-    this.updateBars = function(trackinfo, id, typ) {
+    this.updateBars = function(trackinfo, obj) {
+        var id;
+        var typ;
+        
         if (trackinfo == null) {
             id = selected.id;
             typ = selected.typ;
             trackinfo = selectedTrackInfo;
         } else {
+            id = obj.id;
+            typ = obj.typ;
+            
             selected = {id: id, typ: typ};
             // Store the track information (for use when resizing)
             selectedTrackInfo = Object.assign({}, trackinfo);
+        }
+        
+        if (trackinfo == null) {
+            return;
         }
         
         // Grab our SVG width
@@ -215,37 +223,24 @@ var barGraphs = function() {
                 .attr("width", width);
         
         barDiv.select("rect.bar")
-            .transition()
-            .delay(function(d, i) {
-                    return i * 100;
-            })
-            .duration(500)
-            .ease("linear")
-            .attr("width", function(d, i) {
-                if (i == 0) {
-                    return xScale(d/100);
-                } else {
-                    if (typ == "track") {
-                        if (i < 4) {
-                            return xScale(d);
-                        } else {
-                            return pitchScale(d.key);
-                        }
+                .transition()
+                .delay(function(d, i) {
+                    return i * 200;
+                })
+                .duration(250)
+                .attr("width", function(d, i) {
+                    if (i < 4) {
+                        return xScale(d);
+                    } else {
+                        return pitchScale(d.key);
                     }
-                }
-            });
+                });
         
         barDiv.select("text").text(function(d, i) {
-            if(i == 0) {
-                return audio_features[i] + " (" + Math.floor(d) + "%)";
+            if (i < 4) {
+                return audio_features[i] + " (" + Math.floor(d * 100) + "%)";
             } else {
-                if (typ == "track") {
-                    if (i < 4) {
-                        return audio_features[i] + " (" + Math.floor(d * 100) + "%)";
-                    } else {
-                        return "Key: " + pitchclass[d.key] + " " + (d.mode == 0 ? "Minor" : "Major");
-                    }
-                }
+                return "Key: " + pitchclass[d.key] + " " + (d.mode == 0 ? "Minor" : "Major");
             }
         });
     };

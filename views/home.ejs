@@ -157,10 +157,7 @@
             var viewerW2, viewerH2;
             
             // For the bars in the 'Details' tab
-            var trackBars = new barGraphs();
-            var artistBars = new barGraphs();
-            trackBars.setType('track');
-            artistBars.setType('artist');
+            var barManager = new BarManager();
             
             function redraw() {
                 // Extract the width and height that was computed by CSS.
@@ -181,12 +178,7 @@
                     .attr("width", viewerW2)
                     .attr("height", viewerH2);
                 
-                // Update the bars
-                if (selectedType == "track") {
-                    trackBars.updateBars();
-                } else if (selectedType == "artist") {
-                    artistBars.updateBars();
-                }
+                barManager.updateBars();
             }
 
             // Draw for the first time to initialize.
