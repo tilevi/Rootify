@@ -226,7 +226,7 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
         }
         
         if (firstCount == 0) {
-            source.children.push( {"index": count, "name": "SPACER", "tid": "spacer", "spacer": true } );
+            source.children.push( {"index": count, "name": "SPACER", "spacer": true } );
             blacklist.push("INVALID");
             count = count + 1;
 
@@ -425,6 +425,9 @@ var lineFunction = d3.svg.line()
         - switchM (if specified, after node exit, we set the children and update)
 */
 
+var sizeScale = d3.scale.linear()
+                    .domain([0,0.95]).range([15, 50]).clamp(true);
+
 function update(source, switchM) {
     tree = tree.nodeSize([64, 64]);
     
@@ -459,7 +462,50 @@ function update(source, switchM) {
     
     // For each node in the set..
     node.each(function(d) {
+        var num = 1;
+        
+        if (d.aid || d.tid) {
+            for (var key in scaleOptions) {
+                var value = scaleOptions[key];
+                if (value) {
+                    if (key == "popCheck") {
+                        num = num * (d.popularity/100);
+                    } else {
+                        if (d.tid) {
+                            if (key == "energyCheck") {
+                                num = num * d.energy;
+                            } else if (key == "danceCheck") {
+                                num = num * d.dance;
+                            } else {
+                                num = num * d.valence;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        var newSize = sizeScale(num);
+        //console.log(newSize);
+        
         var d3This = d3.select(this);
+        
+        d3This.select("rect").attr('x', -newSize/2)
+                .attr('y', -newSize/2)
+                .attr('width', newSize)
+                .attr('height', newSize)
+                .attr('rx', 6)
+                .attr('ry', 6);
+        
+        d3This.select('image')
+                .attr('x', -(newSize-6)/2)
+                .attr('y', -(newSize-6)/2)
+                .attr('width', newSize-6)
+                .attr('height', newSize-6)
+        
+        
+        
+        
         var line = d3This.select("path.line");
         
         if (d.children) {
@@ -626,8 +672,7 @@ function update(source, switchM) {
                         d3.select("#detailsGenres").style("display", "none");
                     }
                 });
-        }
-        else if (d.root) {
+        } else if (d.root) {
             
             d3This.style("cursor","none").style("pointer-events", "none");
             
@@ -647,8 +692,7 @@ function update(source, switchM) {
                     return me.url;
                 })
                .attr("clip-path", "url(#clip-root)");
-        }
-        else if (!d.spacer) {
+        } else if (!d.spacer) {
             d3This.append('rect')
                 .attr('x', -25)
                 .attr('y', -25)

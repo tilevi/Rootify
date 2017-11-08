@@ -26,6 +26,23 @@
                 <a id="long-term">Long-Term</a>
                 
                 <a style="margin-left: 25px;" id="reset_tree">Reset Tree</a>
+                
+                <label style="color: white;"><input type='checkbox' id="popCheck" onclick='handleClick(this);'>Popularity</label>
+                <br>
+                <label style="color: white;"><input type='checkbox' id="energyCheck" onclick='handleClick(this);'>Energy</label>
+                <br>
+                <label style="color: white;"><input type='checkbox' id="danceCheck" onclick='handleClick(this);'>Danceability</label>
+                <br>
+                <label style="color: white;"><input type='checkbox' id="posCheck" onclick='handleClick(this);'>Positivity</label>
+                
+                <script type="application/javascript">
+                    var scaleOptions = { popCheck: false, energyCheck: false, danceCheck: false, posCheck: false };
+                    
+                    function handleClick(cb) {
+                        scaleOptions[cb.id] = cb.checked;
+                        console.log(scaleOptions);
+                    }
+                </script>
             </div>
         </div>
         
