@@ -122,7 +122,7 @@ var handleSelection = function(node, typ) {
         }
         
         if (node != null) {
-            d3.select(node.parentNode).select(typ).style("stroke", "#4B9877");
+            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
             // Set the selected node element
             selectedNode = node;
             // Set the selected type
@@ -132,17 +132,15 @@ var handleSelection = function(node, typ) {
     
     if (node == null) {
         d3.select("#spotifyTracks").html("");
+        d3.select("#detailsGenres").style("display", "none");
         selectedNode = null;
-        trackBars.clearSelection();
     }
     
-    d3.select("#headerImage").style("height", "0px");
+    //d3.select("#headerImage").style("height", "0px");
     d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
 }
 
 var loadSpotifyTracks = function(trackArr) {
-    
-    // Clear the tracks
     d3.select("#spotifyTracks").html("");
     
     var html = "";
@@ -599,14 +597,12 @@ function update(source, switchM) {
                 })
                 .attr("clip-path", "url(#clip)")
                 .on("click", function(d) {
-                    handleSelection(this, "circle");
+                    handleSelection(this, "artist");
                     
-                    d3.select("#headerImage").style("height", "100px");
-                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                    //d3.select("#headerImage").style("height", "200px");
+                    //d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
                     
-                    var selected = trackBars.getSelected();
-                    
-                    if (selected.typ != "artist" || selected.id != d.aid) {
+                    if (selectedType != "track" || artistBars.getSelected().id != d.tid) {
                         if (d.tracks) {
                             loadSpotifyTracks(d.tracks);
                         } else {
@@ -615,14 +611,24 @@ function update(source, switchM) {
                     }
                     
                     var trackInfo = {
-                        Popularity: d.popularity
+                        Popularity: d.popularity,
+                        Danceability: 0,
+                        Energy: 0,
+                        Positivity: 0,
+                        Key: { "key": 0, "mode": 0 }
                     };
                     
                     if (artistBars.barsExist() || trackBars.barsExist()) {
-                        console.log("updating artist bars.");
                         artistBars.updateBars(trackInfo, d.aid, "artist");
                     } else {
                         artistBars.createBars(trackInfo, d.aid, "artist");
+                    }
+                    
+                    // If there are genres for this artist, list them
+                    if (d.genres.length > 0) {
+                        d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+                    } else {
+                        d3.select("#detailsGenres").style("display", "none");
                     }
                 });
         }
@@ -664,10 +670,12 @@ function update(source, switchM) {
                 .attr("xlink:href", function(d) {
                     return d.url;
                 }).on("click", function(d) {
-                    handleSelection(this, "rect");
-                    var selected = trackBars.getSelected();
+                    handleSelection(this, "track");
                     
-                    if (selected.typ != "track" || selected.id != d.tid) {
+                    console.log(trackBars.getSelected());
+                    
+                    if (selectedType != "track" || trackBars.getSelected().id != d.tid) {
+                        console.log("Loading track info..");
                         loadSpotifyTracks([d.tid]);
                     }
                     
@@ -684,6 +692,8 @@ function update(source, switchM) {
                     } else {
                         trackBars.createBars(trackInfo, d.tid, "track");
                     }
+                
+                    d3.select("#detailsGenres").style("display", "none");
                 });
         }
         

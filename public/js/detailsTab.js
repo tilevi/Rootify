@@ -50,10 +50,7 @@ var barGraphs = function() {
         this.typ = type;
     }
     
-    // This method returns true if we are displaying information to the user.
-    this.notDisplayingInfo = function() {
-        return (selected.id == "" || selected.typ == "");
-    }
+    var selected = {id: null, typ: null};
     
     // Return the selected item (either an artist or track)
     this.getSelected = function() {
@@ -61,7 +58,7 @@ var barGraphs = function() {
     }
     
     this.clearSelection = function() {
-        selected = { typ: null, id: null };
+        this.selected = { typ: null, id: null };
     }
     
     // Initially, the bars do not exist.
@@ -76,6 +73,7 @@ var barGraphs = function() {
         // Return if we already created the bars
         if (this.created) { return; }
         this.created = true;
+        this.selected = {id: id, typ: typ};
         
         // Resize the <div>
         var newHeight = (this.typ == "track" ? "170px" : "34px");
@@ -84,9 +82,6 @@ var barGraphs = function() {
         
         // Store the track information (for use when resizing)
         selectedTrackInfo = Object.assign({}, trackinfo);
-        
-        // Update who/what we selected.
-        selected = { "id": id, "typ": typ };
         
         // Grab our SVG width
         width = d3.select("#detailsSVG").attr("width");
@@ -177,18 +172,14 @@ var barGraphs = function() {
     // Update bars code
     this.updateBars = function(trackinfo, id, typ) {
         if (trackinfo == null) {
+            id = this.selected.id;
+            typ = this.selected.typ;
             trackinfo = selectedTrackInfo;
-            id = selected.id;
-            typ = selected.typ;
         } else {
+            this.selected = {id: id, typ: typ};
+            // Store the track information (for use when resizing)
             selectedTrackInfo = Object.assign({}, trackinfo);
         }
-        
-        // If we don't have any track information, then don't continue.
-        if (trackinfo == null) { return; }
-        
-        // Update who/what we selected.
-        selected = { "id": id, "typ": typ };
         
         // Grab our SVG width
         width = d3.select("#detailsSVG").attr("width");
@@ -217,7 +208,7 @@ var barGraphs = function() {
         // Select all of the non-existent group bars
         // Notice how the second line hides the bars if they are not "Popularity" and we selected an artist.
         var barDiv = svg.selectAll("g.barDiv")
-                        .style("opacity", function(d, i) { if (i > 0 && typ == "artist") { return 0; } return 1;})
+                        .style("opacity", function(d, i) { if (i > 0 && this.typ == "artist") { return 0; } return 1;})
                         .data(dataset, function(d, i) { return audio_features[i]; });
         
         barDiv.select("rect.border")

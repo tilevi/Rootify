@@ -13,16 +13,6 @@ a {
 
 }
 
-#headerImage {
-    width: 100%;
-    height: 100px;
-    background-image: url('');
-    background-size: center;
-    background-repeat: no-repeat;
-    background-position: 50% 50%;
-    margin: 0px 0px 5px 0px;
-    
-}
 
 /* ------------- Header ------------ */
 #tophead {
@@ -232,6 +222,18 @@ a {
     display: block;
     margin: 0 auto;
 
+}
+
+#detailsGenres {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: 500;
+    line-height: 16px;
+    background-color: #282828;
+    display: none;
+    padding: 5px 10px 5px 10px;
 }
 
 /* ------------- Main Body of the Tree Container ------------ */
