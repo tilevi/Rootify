@@ -47,7 +47,7 @@ var barGraphs = function() {
     // Setter for the type of bars
     var type = null;
     this.setType = function(type) {
-        this.typ = type;
+        typ = type;
     }
     
     var selected = {id: null, typ: null};
@@ -58,25 +58,25 @@ var barGraphs = function() {
     }
     
     this.clearSelection = function() {
-        this.selected = { typ: null, id: null };
+        selected = { typ: null, id: null };
     }
     
     // Initially, the bars do not exist.
     var created = false;
     
     this.barsExist = function() {
-        return this.created;
+        return created;
     }
     
     // This method is called if we initially click on an artist or track.
     this.createBars = function(trackinfo, id, typ) {
         // Return if we already created the bars
-        if (this.created) { return; }
-        this.created = true;
-        this.selected = {id: id, typ: typ};
+        if (created) { return; }
+        created = true;
+        selected = {id: id, typ: typ};
         
         // Resize the <div>
-        var newHeight = (this.typ == "track" ? "170px" : "34px");
+        var newHeight = (typ == "track" ? "170px" : "34px");
         d3.select("#at-container").style("height", newHeight);
         d3.select("#detailsSVG").style("height", newHeight);
         
@@ -172,11 +172,11 @@ var barGraphs = function() {
     // Update bars code
     this.updateBars = function(trackinfo, id, typ) {
         if (trackinfo == null) {
-            id = this.selected.id;
-            typ = this.selected.typ;
+            id = selected.id;
+            typ = selected.typ;
             trackinfo = selectedTrackInfo;
         } else {
-            this.selected = {id: id, typ: typ};
+            selected = {id: id, typ: typ};
             // Store the track information (for use when resizing)
             selectedTrackInfo = Object.assign({}, trackinfo);
         }
@@ -185,7 +185,7 @@ var barGraphs = function() {
         width = d3.select("#detailsSVG").attr("width");
         
         // Resize the <div>
-        var newHeight = (this.typ == "track" ? "170px" : "34px");
+        var newHeight = (typ == "track" ? "170px" : "34px");
         d3.select("#at-container").style("height", newHeight);
         d3.select("#detailsSVG").style("height", newHeight);
         
@@ -208,7 +208,7 @@ var barGraphs = function() {
         // Select all of the non-existent group bars
         // Notice how the second line hides the bars if they are not "Popularity" and we selected an artist.
         var barDiv = svg.selectAll("g.barDiv")
-                        .style("opacity", function(d, i) { if (i > 0 && this.typ == "artist") { return 0; } return 1;})
+                        .style("opacity", function(d, i) { if (i > 0 && typ == "artist") { return 0; } return 1;})
                         .data(dataset, function(d, i) { return audio_features[i]; });
         
         barDiv.select("rect.border")

@@ -567,8 +567,6 @@ function update(source, switchM) {
                     .duration(duration)
                     .style("opacity", 1);
             }
-            
-
         } if (!d.root && !d.spacer) {
             d3This.append('path')
                 .classed("triangleDown", true)
@@ -597,18 +595,19 @@ function update(source, switchM) {
                 })
                 .attr("clip-path", "url(#clip)")
                 .on("click", function(d) {
-                    handleSelection(this, "artist");
                     
-                    //d3.select("#headerImage").style("height", "200px");
-                    //d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
-                    
-                    if (selectedType != "track" || artistBars.getSelected().id != d.tid) {
+                    if (selectedType != "artist" || artistBars.getSelected().id != d.aid) {
                         if (d.tracks) {
                             loadSpotifyTracks(d.tracks);
                         } else {
                             getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
                         }
                     }
+                    
+                    handleSelection(this, "artist");
+                    
+                    //d3.select("#headerImage").style("height", "200px");
+                    //d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
                     
                     var trackInfo = {
                         Popularity: d.popularity,
@@ -670,14 +669,11 @@ function update(source, switchM) {
                 .attr("xlink:href", function(d) {
                     return d.url;
                 }).on("click", function(d) {
-                    handleSelection(this, "track");
-                    
-                    console.log(trackBars.getSelected());
-                    
                     if (selectedType != "track" || trackBars.getSelected().id != d.tid) {
-                        console.log("Loading track info..");
                         loadSpotifyTracks([d.tid]);
                     }
+                    
+                    handleSelection(this, "track");
                     
                     var trackInfo = {
                         Popularity: d.popularity,
