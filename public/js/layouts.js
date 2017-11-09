@@ -116,9 +116,9 @@ var handleSelection = function(node, typ) {
             var parNode = d3.select(selectedNode.parentNode);
             var parCircle = parNode.select("circle"); 
             if (parCircle[0][0] != null) {
-                parCircle.style("stroke", "#fff");
+                parCircle.style("stroke", "#ccc");
             } else {
-                parNode.select("rect").style("stroke", "#fff");
+                parNode.select("rect").style("stroke", "#ccc");
             }
         }
         
@@ -274,6 +274,27 @@ var baseSvg = d3.select("#baseSVG").call(zoomListener);
     One is for our avatar (bigger radius), another is for the nodes (smaller radii).
 */
 
+var customClip = [];
+var custClipResize = [];
+
+for (var i = 0; i <= 15; i++) {
+    customClip[i] = baseSvg.append("defs")
+                    .append("clipPath")
+                    .attr("id", "clip-r-" + (10 + i))
+                    .append("circle")
+                        .attr("cx", 0)
+                        .attr("cy", 0)
+                        .attr("r", (10 + i - 1));
+    
+    custClipResize[i] = baseSvg.append("defs")
+                    .append("clipPath")
+                    .attr("id", "clip-r-resize-" + (10 + i))
+                    .append("circle")
+                        .classed("clipResize", true)
+                        .attr("cx", 0)
+                        .attr("cy", 0)
+                        .attr("r", (10 + i - 1));
+}
 
 baseSvg.append("defs")
     .append("clipPath")
@@ -466,18 +487,33 @@ function resizeNodes() {
         
         d.howTall = newSize/2;
         
-        d3This.select("rect").attr('x', -newSize/2)
+        if (d.aid) {
+            d3This.select("circle").attr("r", newSize/2);
+            
+            var newRadius = Math.floor(newSize/2);
+            
+            d3This.select('image')
+                    .attr("clip-path", "url(#clip-r-" + newRadius + ")");
+            
+            d3This.select('image')
+                .attr('x', -newSize/2)
                 .attr('y', -newSize/2)
                 .attr('width', newSize)
                 .attr('height', newSize)
-                .attr('rx', 6)
-                .attr('ry', 6);
-        
-        d3This.select('image')
-                .attr('x', -(newSize-6)/2)
-                .attr('y', -(newSize-6)/2)
-                .attr('width', newSize-6)
-                .attr('height', newSize-6);
+        } else {
+            d3This.select("rect").attr('x', -newSize/2)
+                    .attr('y', -newSize/2)
+                    .attr('width', newSize)
+                    .attr('height', newSize)
+                    .attr('rx', 6)
+                    .attr('ry', 6);
+
+            d3This.select('image')
+                    .attr('x', -(newSize-6)/2)
+                    .attr('y', -(newSize-6)/2)
+                    .attr('width', newSize-6)
+                    .attr('height', newSize-6);
+        }
         
         d3This.select("path.line")
                 .attr("d", lineFunction(
@@ -487,15 +523,13 @@ function resizeNodes() {
                     ]));
         
         d3This.select("path.triangleDown")
-                .attr("transform", function(d) { return "translate(" + 0 + "," + newSize + ")"; });
+                .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.55) + ")"; });
     });
     
     var link = svgGroup.selectAll("path.link");
     
     // Transition links to their new position.
     link.attr("d", elbow);
-    
-    
 }
 
 function update(source, switchM) {
@@ -608,7 +642,33 @@ function update(source, switchM) {
     var shouldPan = false;
     
     nodeEnter.each(function(d, i) {
+        var num = 1;
+        
+        if (d.aid || d.tid) {
+            for (var key in scaleOptions) {
+                var value = scaleOptions[key];
+                if (value) {
+                    if (key == "popCheck") {
+                        num = num * (d.popularity/100);
+                    } else {
+                        if (d.tid) {
+                            if (key == "energyCheck") {
+                                num = num * d.energy;
+                            } else if (key == "danceCheck") {
+                                num = num * d.dance;
+                            } else {
+                                num = num * d.valence;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        var newSize = sizeScale(num);
         var d3This = d3.select(this);
+        
+        d.howTall = newSize/2;
         
         if (d.children) {
             d3This.append("path")
@@ -644,7 +704,7 @@ function update(source, switchM) {
             d3This.append('path')
                 .classed("triangleDown", true)
                 .attr("d", d3.svg.symbol().type("triangle-down").size(150))
-                .attr("transform", function(d) { return "translate(" + 0 + "," + 27 + ")"; })
+                .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.55) + ")"; })
                 .style("fill", "white")
                 .attr("stroke", "black")
                 .attr("stroke-width", "1px")
@@ -655,18 +715,18 @@ function update(source, switchM) {
         
         if (d.aid) {
             d3This.append('circle')
-                .attr("r", 25)
+                .attr("r", newSize/2)
                 .style("fill", "#282828");
-
+            
             d3This.append('image')
-                .attr('x', -25)
-                .attr('y', -25)
-                .attr('width', 50)
-                .attr('height', 50)
+                .attr('x', -newSize/2)
+                .attr('y', -newSize/2)
+                .attr('width', newSize)
+                .attr('height', newSize)
                 .attr("xlink:href", function(d) {
                     return d.url;
                 })
-                .attr("clip-path", "url(#clip)")
+                .attr("clip-path", "url(#clip-r-" + Math.floor(newSize/2) + ")")
                 .on("click", function(d) {    
                     if (barManager.artistNotLoaded(d.aid)) {
                         if (d.tracks) {
@@ -701,7 +761,7 @@ function update(source, switchM) {
                 });
         } else if (d.root) {
             
-            d3This.style("cursor","none").style("pointer-events", "none");
+            d3This.style("cursor", "none").style("pointer-events", "none");
             
             d3This.append("circle")
                 .attr('class', 'node')
@@ -721,18 +781,18 @@ function update(source, switchM) {
                .attr("clip-path", "url(#clip-root)");
         } else if (!d.spacer) {
             d3This.append('rect')
-                .attr('x', -25)
-                .attr('y', -25)
-                .attr('width', 50)
-                .attr('height', 50)
-                .attr('rx', 6)
-                .attr('ry', 6);
+                .attr('x', -newSize/2)
+                    .attr('y', -newSize/2)
+                    .attr('width', newSize)
+                    .attr('height', newSize)
+                    .attr('rx', 6)
+                    .attr('ry', 6);
             
             d3This.append('image')
-                .attr('x', -22)
-                .attr('y', -22)
-                .attr('width', 44)
-                .attr('height', 44)
+                .attr('x', -(newSize-6)/2)
+                .attr('y', -(newSize-6)/2)
+                .attr('width', newSize-6)
+                .attr('height', newSize-6)
                 .attr("xlink:href", function(d) {
                     return d.url;
                 }).on("click", function(d) {
@@ -805,14 +865,20 @@ function update(source, switchM) {
         If our node exit set is non-empty, we transition them properly. I make a custom clip element that resizes its radius as the transition occurs.
     */
     if (!nodeExit.empty()) {
-        // This custom clip should 
+        
+        d3.selectAll("circle.clipResize")
+            .attr("r", function(d, i) { return (i + 10); })
+            .transition()
+            .duration(duration)
+            .attr("r", 0);
+        
         var customClip = baseSvg.append("defs")
                     .append("clipPath")
                     .attr("id", "clip" + (source.id))
                         .append("circle")
                         .attr("cx", 0)
                         .attr("cy", 0)
-                        .attr("r", 23)
+                        .attr("r", 0)
                         .transition()
                         .duration(duration)
                         .attr("r", 0)
@@ -853,6 +919,9 @@ function update(source, switchM) {
             d3This.selectAll("path").remove();
         }
         
+        d3This.select('image')
+                .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall) + ")");
+        
         var exitVar = d3This
             .transition()
             .duration(duration)
@@ -866,8 +935,7 @@ function update(source, switchM) {
                     .attr("x", 0)
                     .attr("y", 0)
                     .attr("width", 0)
-                    .attr("height", 0)
-                    .attr("clip-path", "url(#" + "clip" + (source.id) + ")");
+                    .attr("height", 0);
         } else {
             exitVar.select("image")
                     .attr("x", 0)
@@ -994,9 +1062,7 @@ loadTopArtists = function(baseCount) {
         
         The bottom line is that we could do asynchorous operations and it would probably be fine but loading times for a Spotify user's top artists and tracks are relatively fast so the savings probably wouldn't be worth it for the design and implementation time.
 */
-
 function loadTopTracks() {
-    
     spotifyApi.getMyTopTracks(
     {
         "limit": 5,
@@ -1006,7 +1072,6 @@ function loadTopTracks() {
         getAudioFeatures(err, data.items, root);
     });
 }
-
 
 // If there's an error, we want to get our refresh token.
 // This will be used primarily for development as our access token may expire.
@@ -1029,35 +1094,28 @@ function setCookie(cname, cvalue, exdays) {
 /*
     This function grabs the Spotify user's information.
 */
-
 var loadMe = function() {
-    
     spotifyApi.getMe({}, function(err, data) {
         if (!err) {
             me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
             loadTopTracks();
         } else {        
             var refresh_token = getCookie("myRefreshToken");
-            if (refresh_token == null) {
-                window.location = "http://localhost:8888";
-            }
-            
-            console.log("Trying: ", refresh_token);
             
             $.ajax({
-                  url: '/refresh_token',
-                  data: {
-                    'refresh_token': refresh_token
-                  }
-                }).done(function(data) {
-                    setCookie('myToken', data.access_token, 5);
-                    spotifyApi.setAccessToken(data.access_token);
-                    loadMe();
-                }).fail(function(err) {
-                    console.log("Failed", err);
-                    window.location = "http://localhost:8888";
-                });
-            }
+                url: '/refresh_token',
+                data: {
+                'refresh_token': refresh_token
+                }
+            }).done(function(data) {
+                setCookie('myToken', data.access_token, 5);
+                spotifyApi.setAccessToken(data.access_token);
+                loadMe();
+            }).fail(function(err) {
+                // If the refresh token doesn't work, just re-route to our homepage.
+                window.location = "http://localhost:8888";
+            });
+        }
     });
 }
 
