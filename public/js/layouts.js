@@ -43,12 +43,13 @@ var tree = d3.layout.tree()
     This is our path generator which creates an elbow shape.
 */
 var difference = 55 - 42;
-
 var verticalSpacing = 78;
 
 function elbow(d, i) {
+    var targetY = d.target.y - (d.target.howTall-2 ? d.target.howTall : 26);
+    
     return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : (verticalSpacing-13)) )
-    + "H" + d.target.x + "V" + ( d.target.y - 26 );
+    + "H" + d.target.x + "V" + ( targetY );
 }
 
 /*
@@ -426,42 +427,17 @@ var lineFunction = d3.svg.line()
 */
 
 var sizeScale = d3.scale.linear()
-                    .domain([0,0.95]).range([15, 50]).clamp(true);
+                    .domain([0.10,0.95]).range([20, 50]).clamp(true);
 
-function update(source, switchM) {
-    tree = tree.nodeSize([64, 64]);
-    
-    // Compute the new tree layout.
-    var nodes = tree.nodes(root).reverse(),
-        links = tree.links(nodes);
-    
-    sortTree();
-
-    // Set widths between levels
-    nodes.forEach(function(d) {
-        // For the root, we have depth 0
-        if (d.depth == 0) {
-            d.y = 0;
-        } else if (d.depth == 1) {
-            // For the first level, we have 100px spacing
-            d.y = 100;
-        } else {
-            // For every level after the first, we have 75px per level
-            d.y = 100 + ((d.depth-1) * 100);
-        }
-    });
-
+function resizeNodes() {
     // Grab the new set
-    node = svgGroup.selectAll("g.node")
-        .data(nodes, function(d) {
-            if (!d.id) {
-                d.id = ++i;
-            }
-            return d.id;
-        });
+    node = svgGroup.selectAll("g.node");
     
     // For each node in the set..
     node.each(function(d) {
+        
+        if (d.root) { return; }
+        
         var num = 1;
         
         if (d.aid || d.tid) {
@@ -486,9 +462,9 @@ function update(source, switchM) {
         }
         
         var newSize = sizeScale(num);
-        //console.log(newSize);
-        
         var d3This = d3.select(this);
+        
+        d.howTall = newSize/2;
         
         d3This.select("rect").attr('x', -newSize/2)
                 .attr('y', -newSize/2)
@@ -501,11 +477,62 @@ function update(source, switchM) {
                 .attr('x', -(newSize-6)/2)
                 .attr('y', -(newSize-6)/2)
                 .attr('width', newSize-6)
-                .attr('height', newSize-6)
+                .attr('height', newSize-6);
         
+        d3This.select("path.line")
+                .attr("d", lineFunction(
+                    [
+                        { "x": 0, "y": (d.howTall ? d.howTall+2 : 26) }, 
+                        { "x": 0, "y": (verticalSpacing - 15) }
+                    ]));
         
-        
-        
+        d3This.select("path.triangleDown")
+                .attr("transform", function(d) { return "translate(" + 0 + "," + newSize + ")"; });
+    });
+    
+    var link = svgGroup.selectAll("path.link");
+    
+    // Transition links to their new position.
+    link.attr("d", elbow);
+    
+    
+}
+
+function update(source, switchM) {
+    tree = tree.nodeSize([64, 64]);
+    
+    // Compute the new tree layout.
+    var nodes = tree.nodes(root).reverse(),
+        links = tree.links(nodes);
+    
+    sortTree();
+
+    // Set widths between levels
+    nodes.forEach(function(d) {
+        // For the root, we have depth 0
+        if (d.depth == 0) {
+            d.y = 0;
+        } else if (d.depth == 1) {
+            // For the first level, we have 100px spacing
+            d.y = 100;
+        } else {
+            // For every level after the first, we have 75px per level
+            d.y = 100 + ((d.depth-1) * 100);
+        }
+    });
+    
+    // Grab the new set
+    node = svgGroup.selectAll("g.node")
+        .data(nodes, function(d) {
+            if (!d.id) {
+                d.id = ++i;
+            }
+            return d.id;
+        });
+    
+    // For each node in the set..
+    node.each(function(d) {
+        var d3This = d3.select(this);
         var line = d3This.select("path.line");
         
         if (d.children) {
@@ -515,7 +542,7 @@ function update(source, switchM) {
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : 26) }, 
+                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall+2 : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
@@ -588,7 +615,7 @@ function update(source, switchM) {
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : 26) }, 
+                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall+2 : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
@@ -852,7 +879,6 @@ function update(source, switchM) {
         exitVar.select("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0);
     });
     
-    
     /*
         Handle the ENTER links.
     */
@@ -981,6 +1007,25 @@ function loadTopTracks() {
     });
 }
 
+
+// If there's an error, we want to get our refresh token.
+// This will be used primarily for development as our access token may expire.
+
+// Source: http://www.the-art-of-web.com/javascript/getcookie/
+function getCookie(name)
+{
+    var re = new RegExp(name + "=([^;]+)");
+    var value = re.exec(document.cookie);
+    return (value != null) ? unescape(value[1]) : null;
+}
+
+function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    var expires = "expires="+ d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+}
+
 /*
     This function grabs the Spotify user's information.
 */
@@ -991,27 +1036,13 @@ var loadMe = function() {
         if (!err) {
             me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
             loadTopTracks();
-        } else {
-            
-            // If there's an error, we want to get our refresh token.
-            // This will be used primarily for development as our access token may expire.
-            
-            // Source: http://www.the-art-of-web.com/javascript/getcookie/
-            function getCookie(name)
-            {
-                var re = new RegExp(name + "=([^;]+)");
-                var value = re.exec(document.cookie);
-                return (value != null) ? unescape(value[1]) : null;
-            }
-            
-            function setCookie(cname, cvalue, exdays) {
-                var d = new Date();
-                d.setTime(d.getTime() + (exdays*24*60*60*1000));
-                var expires = "expires="+ d.toUTCString();
-                document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-            }
-            
+        } else {        
             var refresh_token = getCookie("myRefreshToken");
+            if (refresh_token == null) {
+                window.location = "http://localhost:8888";
+            }
+            
+            console.log("Trying: ", refresh_token);
             
             $.ajax({
                   url: '/refresh_token',
@@ -1022,12 +1053,18 @@ var loadMe = function() {
                     setCookie('myToken', data.access_token, 5);
                     spotifyApi.setAccessToken(data.access_token);
                     loadMe();
+                }).fail(function(err) {
+                    console.log("Failed", err);
+                    window.location = "http://localhost:8888";
                 });
-        }
+            }
     });
 }
 
 // Load the Spotify user's associated information
+var myTok = getCookie('myToken');
+alert(myTok);
+spotifyApi.setAccessToken(myTok);
 loadMe();
 
 /*
