@@ -1062,9 +1062,6 @@ var loadMe = function() {
 }
 
 // Load the Spotify user's associated information
-var myTok = getCookie('myToken');
-alert(myTok);
-spotifyApi.setAccessToken(myTok);
 loadMe();
 
 /*
