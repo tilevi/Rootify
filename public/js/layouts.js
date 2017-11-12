@@ -142,8 +142,6 @@ var handleSelection = function(node, typ) {
 }
 
 var loadSpotifyTracks = function(trackArr) {
-    d3.select("#spotifyTracks").html("");
-    
     var html = "";
     var i = 0;
     var height = trackArr.length == 1 ? 355 : 75;
@@ -727,14 +725,14 @@ function update(source, switchM) {
                     return d.url;
                 })
                 .attr("clip-path", "url(#clip-r-" + Math.floor(newSize/2) + ")")
-                .on("click", function(d) {    
-                    if (barManager.artistNotLoaded(d.aid)) {
-                        if (d.tracks) {
-                            loadSpotifyTracks(d.tracks);
-                        } else {
-                            getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
-                        }
-                        
+                .on("click", function(d) {
+                    if (d.tracks) {
+                        loadSpotifyTracks(d.tracks);
+                    } else {
+                        getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                    }
+                    
+                    if (barManager.artistNotLoaded(d.aid)) {                        
                         var trackInfo = {
                             Popularity: d.popularity / 100,
                             Danceability: 0,
@@ -796,9 +794,9 @@ function update(source, switchM) {
                 .attr("xlink:href", function(d) {
                     return d.url;
                 }).on("click", function(d) {
-                    if (barManager.trackNotLoaded(d.tid)) {
-                        loadSpotifyTracks([d.tid]);
-                        
+                    loadSpotifyTracks([d.tid]);
+                    
+                    if (barManager.trackNotLoaded(d.tid)) {                    
                         var trackInfo = {
                             Popularity: d.popularity / 100,
                             Danceability: d.dance,
