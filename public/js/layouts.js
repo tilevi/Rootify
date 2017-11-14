@@ -728,7 +728,8 @@ function update(source, switchM) {
                 .on("click", function(d) {
                     if (d.tracks) {
                         loadSpotifyTracks(d.tracks);
-                    } else {
+                    } 
+                    else {
                         getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
                     }
                     
@@ -744,7 +745,19 @@ function update(source, switchM) {
                         barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
                     }
                     
+                    var artistID = d.aid;
                     handleSelection(this, "artist");
+                
+                    d3.select("#selectedArtists")
+                        .append("div")
+                        .attr("class","trackBox")
+                        .append("text")
+                        .text("Tests.")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "10px")
+                
+                   
+                
                     
                     d3.select("#headerImage")
                         .style("height", "200px")
@@ -824,7 +837,7 @@ function update(source, switchM) {
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "10px")
                 
-                
+                   
                 
                 
                     d3.select("#detailsGenres").style("display", "none");
