@@ -746,8 +746,13 @@ function update(source, switchM) {
                     
                     handleSelection(this, "artist");
                     
-                    d3.select("#headerImage").style("height", "200px").style("width","100");
-                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')").style("background-repeat", "no-repeat").style("background-size", "cover");
+                    d3.select("#headerImage")
+                        .style("height", "200px")
+                        .style("width","100");
+                    d3.select("#headerImage")
+                        .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
+                        .style("background-repeat", "no-repeat")
+                        .style("background-size", "cover");
                                 
                     
                     // If there are genres for this artist, list them
