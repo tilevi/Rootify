@@ -820,6 +820,8 @@ function update(source, switchM) {
                         .attr("font-size", "10px")
                 
                 
+                
+                
                     d3.select("#detailsGenres").style("display", "none");
                 });
         }
