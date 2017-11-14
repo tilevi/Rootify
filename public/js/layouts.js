@@ -137,7 +137,7 @@ var handleSelection = function(node, typ) {
         selectedNode = null;
     }
     
-    //d3.select("#headerImage").style("height", "0px");
+    d3.select("#headerImage").style("height", "0px");
     d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
 }
 
@@ -746,8 +746,8 @@ function update(source, switchM) {
                     
                     handleSelection(this, "artist");
                     
-                    //d3.select("#headerImage").style("height", "200px");
-                    //d3.select("#headerImage").style("background-image", "url('" + d.url + "')");
+                    d3.select("#headerImage").style("height", "200px").style("width","100");
+                    d3.select("#headerImage").style("background-image", "url('" + d.url + "')").style("background-repeat", "no-repeat").style("background-size", "cover");
                                 
                     
                     // If there are genres for this artist, list them
