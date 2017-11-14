@@ -808,7 +808,18 @@ function update(source, switchM) {
                         barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
                     }
                     
-                    handleSelection(this, "track");                    
+                    var trackID = d.tid;
+                    handleSelection(this, "track");
+                
+                    d3.select("#selectedTracks")
+                        .append("div")
+                        .attr("class","trackBox")
+                        .append("text")
+                        .text("Tests.")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "10px")
+                
+                
                     d3.select("#detailsGenres").style("display", "none");
                 });
         }
