@@ -6,13 +6,20 @@
         <!-- jQuery -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
         
+        <!-- jQuery UI -->
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        
         <!-- D3.js v3 -->
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		
 		<!-- Spotify Web API (JS client-side wrapper) -->
 		<script src="/js/spotify-web-api.js"></script>
-
+        
+        <!-- Main CSS -->
         <link rel="stylesheet" type="text/css" href="/css/home.css">
+        
+        <!-- jQuery CSS -->
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 	</head>
     
 	<body>
@@ -35,8 +42,97 @@
                 <br>
                 <label style="color: white;"><input type='checkbox' id="posCheck" onclick='handleClick(this);'>Positivity</label>
                 
+                <div>
+                    <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
+                    <div id="pop_slider" class="range-slider"></div>
+                    
+                    <div id="dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
+                    <div id="dance_slider" class="range-slider"></div>
+                    
+                    <div id="energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
+                    <div id="energy_slider" class="range-slider"></div>
+                    
+                    <div id="valence_slider_text" class="range-slider-text">Positivity: 0 - 100</div>
+                    <div id="valence_slider" class="range-slider"></div>
+                </div>
+                
                 <script type="application/javascript">
-                    var scaleOptions = { popCheck: false, energyCheck: false, danceCheck: false, posCheck: false };
+                    var filterOptions = {
+                        pop_slider: { typ: "popularity", values: [0, 100] }, 
+                        dance_slider: { typ: "dance", values: [0, 100] }, 
+                        energy_slider: { typ: "energy", values: [0, 100] }, 
+                        valence_slider: { typ: "valence", values: [0, 100] }
+                    };
+                    
+                    function filterNode(d, element) {
+                        if (d.root || d.spacer) { return; }
+                        var pass = true;
+
+                        for (var key in filterOptions) {
+                            var typ = filterOptions[key].typ;
+                            var range = filterOptions[key].values;
+                            
+                            var featValue = d[typ] * 100;
+                            var min = range[0];
+                            var max = range[1];
+                            
+                            if (featValue < min || featValue > max) {
+                                pass = false;
+                                break;
+                            }
+                        }
+
+                        d3.select(element).select("image").style("opacity", pass ? 1 : 0.05);
+                    }
+                    
+                    function filterNodes() {
+                        var node = svgGroup.selectAll("g.node");
+    
+                        // For each node in the set..
+                        node.each(function(d) {
+                            filterNode(d, this);
+                        });
+                    }
+                    
+                    function upperCaseFirstLetter(string) {
+                        return string.charAt(0).toUpperCase() + string.slice(1);
+                    }
+                    
+                    $( function() {
+                        for (var key in filterOptions) {
+                            $( "#" + key ).slider({
+                                range: true,
+                                min: 0,
+                                max: 100,
+                                values: [0, 100],
+                                change: function (event, ui) {
+                                    var min = ui.values[0];
+                                    var max = ui.values[1];
+                                    
+                                    var id = $(this).attr("id");
+                                    filterOptions[id].values = [min, max];
+                                    
+                                    filterNodes();
+                                }, 
+                                slide: function(event, ui) {
+                                    var min = ui.values[0];
+                                    var max = ui.values[1];
+                                    var id = $(this).attr("id");
+
+                                    var typ = filterOptions[id].typ;
+                                    
+                                    $("#" + id + "_text").html(upperCaseFirstLetter(typ) + ": " + min + " - " + max); 
+                                }
+                            });
+                        }
+                    });
+                    
+                    var scaleOptions = {
+                        popCheck: false, 
+                        energyCheck: false, 
+                        danceCheck: false, 
+                        posCheck: false
+                    };
                     
                     function handleClick(cb) {
                         scaleOptions[cb.id] = cb.checked;

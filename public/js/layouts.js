@@ -212,9 +212,9 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
             if (obj != null && blacklist.indexOf(obj.id) === -1) {
                 if (typ == "track") {
                     var audioFeat = audioFeatures[obj.id];
-                    source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence, "tonic": audioFeat.tonic, "mode": audioFeat.mode } );
+                    source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity / 100, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence, "tonic": audioFeat.tonic, "mode": audioFeat.mode } );
                 } else {
-                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity, genres: obj.genres } ); 
+                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity / 100, genres: obj.genres } ); 
                 }
 
                 blacklist.push(obj.id);
@@ -463,17 +463,14 @@ function resizeNodes() {
             for (var key in scaleOptions) {
                 var value = scaleOptions[key];
                 if (value) {
-                    if (key == "popCheck") {
-                        num = num * (d.popularity/100);
-                    } else {
-                        if (d.tid) {
-                            if (key == "energyCheck") {
-                                num = num * d.energy;
-                            } else if (key == "danceCheck") {
-                                num = num * d.dance;
-                            } else {
-                                num = num * d.valence;
-                            }
+                    num = num * d.popularity;
+                    if (d.tid) {
+                        if (key == "energyCheck") {
+                            num = num * d.energy;
+                        } else if (key == "danceCheck") {
+                            num = num * d.dance;
+                        } else {
+                            num = num * d.valence;
                         }
                     }
                 }
@@ -646,19 +643,17 @@ function update(source, switchM) {
             for (var key in scaleOptions) {
                 var value = scaleOptions[key];
                 if (value) {
-                    if (key == "popCheck") {
-                        num = num * (d.popularity/100);
-                    } else {
-                        if (d.tid) {
-                            if (key == "energyCheck") {
-                                num = num * d.energy;
-                            } else if (key == "danceCheck") {
-                                num = num * d.dance;
-                            } else {
-                                num = num * d.valence;
-                            }
+                    num = num * d.popularity;
+
+                    if (d.tid) {
+                        if (key == "energyCheck") {
+                            num = num * d.energy;
+                        } else if (key == "danceCheck") {
+                            num = num * d.dance;
+                        } else {
+                            num = num * d.valence;
                         }
-                    }
+                    } 
                 }
             }
         }
@@ -735,7 +730,7 @@ function update(source, switchM) {
                     
                     if (barManager.artistNotLoaded(d.aid)) {                        
                         var trackInfo = {
-                            Popularity: d.popularity / 100,
+                            Popularity: d.popularity,
                             Danceability: 0,
                             Energy: 0,
                             Positivity: 0,
@@ -816,7 +811,7 @@ function update(source, switchM) {
                     
                     if (barManager.trackNotLoaded(d.tid)) {                    
                         var trackInfo = {
-                            Popularity: d.popularity / 100,
+                            Popularity: d.popularity,
                             Danceability: d.dance,
                             Energy: d.energy,
                             Positivity: d.valence,
@@ -883,6 +878,11 @@ function update(source, switchM) {
             .attr("transform", function(d) {
             return "translate(" + d.x + "," + d.y + ")";
         });
+        
+        /*
+            Filter the nodes.
+        */
+        filterNode(d, this);
     });
     
     // Transition exiting nodes to the parent's new position.

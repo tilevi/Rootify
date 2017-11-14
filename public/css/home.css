@@ -296,3 +296,26 @@ a {
     float:left;
     clear:left;
 }
+
+/*
+    Bottom bar sliders
+*/
+
+.range-slider {
+    width: 150px;
+    background: orange;
+}
+
+.range-slider .ui-slider-range {
+    background: #4B9877;
+}
+
+.ui-slider-handle.ui-corner-all.ui-state-default {
+    background: #282828;
+}
+
+.range-slider-text {
+    margin-top: 5px;
+    height: 20px;
+    color: white;
+}
