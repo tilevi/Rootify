@@ -463,13 +463,15 @@ function resizeNodes() {
             for (var key in scaleOptions) {
                 var value = scaleOptions[key];
                 if (value) {
-                    num = num * d.popularity;
+                    if (key == "popCheck") {
+                        num = num * d.popularity;
+                    }
                     if (d.tid) {
                         if (key == "energyCheck") {
                             num = num * d.energy;
                         } else if (key == "danceCheck") {
                             num = num * d.dance;
-                        } else {
+                        } else if (key == "posCheck") {
                             num = num * d.valence;
                         }
                     }
@@ -643,14 +645,16 @@ function update(source, switchM) {
             for (var key in scaleOptions) {
                 var value = scaleOptions[key];
                 if (value) {
-                    num = num * d.popularity;
+                    if (key == "popCheck") {
+                        num = num * d.popularity;
+                    }
 
                     if (d.tid) {
                         if (key == "energyCheck") {
                             num = num * d.energy;
                         } else if (key == "danceCheck") {
                             num = num * d.dance;
-                        } else {
+                        } else if (key == "posCheck") {
                             num = num * d.valence;
                         }
                     } 
