@@ -32,6 +32,9 @@ var BarManager = function() {
     // Reference to the details SVG (which holds the bars)
     var svg = d3.select("#detailsSVG");
     
+    // Details DIV
+    var atDiv = document.getElementById("at-container");
+    
     // Width and height of the SVG
     var width = 0;
     var height = 0;
@@ -88,6 +91,9 @@ var BarManager = function() {
         
         // Grab our SVG width
         width = d3.select("#detailsSVG").attr("width");
+        if (width < 0) {
+            console.log("The width is negative.");
+        }
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
@@ -122,7 +128,7 @@ var BarManager = function() {
               .attr("y", function(d, i) {
                 return i * rectHeight;
               })
-              .attr("width", width)
+              .attr("width", width > 0 ? width: "100px")
               .attr("height", function(d, i) {
                 return rectHeight - barPadding;
               })
@@ -190,7 +196,7 @@ var BarManager = function() {
         }
         
         // Grab our SVG width
-        width = d3.select("#detailsSVG").attr("width");
+        width = atDiv.clientWidth;
         
         // Resize the <div>
         var newHeight = (typ == "track" ? "170px" : "34px");
