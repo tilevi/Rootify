@@ -753,14 +753,14 @@ function update(source, switchM) {
                         .append("text")
                         .text("Tests.")
                         .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px")
-                
-                   
-                
-                    
+                        .attr("font-size", "10px");
                     d3.select("#headerImage")
                         .style("height", "200px")
-                        .style("width","100");
+                        .style("width","100")
+                        .style("font-size", "2.5em")
+                        .style("line-height", "90%")
+                        .style("padding", "6%")
+                        .text(d.name);
                     d3.select("#headerImage")
                         .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
                         .style("background-repeat", "no-repeat")

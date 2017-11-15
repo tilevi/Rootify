@@ -257,6 +257,24 @@
 
         </div>  
         <!-- End Tree Container !Do not Delete! div make sure the script is in the tree container -->
+
+        <!-- bottom pop out bar -->
+        <div id="bottom-bar">
+            <button type="button" class="btn btn-default">Toggle</button>
+
+            <div id="slideout">
+                <svg width="400" height="200">
+                    <!-- put buttons and shit in here-->
+                </svg>
+            </div>
+        </div>
+
+        <!-- bottom pop up bar script -->
+        <script>
+            $('button').click(function(){
+                $('#slideout').toggleClass('on');
+            });
+        </script>
         
         <!-- Details tab -->
         <script type="text/javascript" src="/js/detailsTab.js"></script>
