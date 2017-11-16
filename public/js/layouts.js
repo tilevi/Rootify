@@ -137,7 +137,9 @@ var handleSelection = function(node, typ) {
         selectedNode = null;
     }
     
-    d3.select("#headerImage").style("height", "0px");
+    if (typ != "artist") {
+        d3.select("#headerImage").style("display", "none");
+    }
     d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
 }
 
@@ -755,6 +757,7 @@ function update(source, switchM) {
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "10px");
                     d3.select("#headerImage")
+                        .style("display", "block")
                         .style("height", "200px")
                         .style("width","100")
                         .style("font-size", "2.5em")
