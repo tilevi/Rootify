@@ -38,8 +38,20 @@ a {
     -o-transition-duration: 0.3s;
     transition-duration: 0.3s;
 }
+
 #slideout.on {
-  top: 200px;
+    top: 200px;
+}
+
+#leftside{
+    width:50%;
+    height:100%
+    float:left;
+}
+#rightside{
+    width:50%;
+    height:100%
+    float:left;
 }
 
 #leftSide {
