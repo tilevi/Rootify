@@ -34,28 +34,6 @@
                 
                 <a style="margin-left: 25px;" id="reset_tree">Reset Tree</a>
                 
-                <label style="color: white;"><input type='checkbox' id="popCheck" onclick='handleClick(this);'>Popularity</label>
-                <br>
-                <label style="color: white;"><input type='checkbox' id="energyCheck" onclick='handleClick(this);'>Energy</label>
-                <br>
-                <label style="color: white;"><input type='checkbox' id="danceCheck" onclick='handleClick(this);'>Danceability</label>
-                <br>
-                <label style="color: white;"><input type='checkbox' id="posCheck" onclick='handleClick(this);'>Positivity</label>
-                
-                <div>
-                    <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
-                    <div id="pop_slider" class="range-slider"></div>
-                    
-                    <div id="dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
-                    <div id="dance_slider" class="range-slider"></div>
-                    
-                    <div id="energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
-                    <div id="energy_slider" class="range-slider"></div>
-                    
-                    <div id="valence_slider_text" class="range-slider-text">Positivity: 0 - 100</div>
-                    <div id="valence_slider" class="range-slider"></div>
-                </div>
-                
                 <script type="application/javascript">
                     var filterOptions = {
                         pop_slider: { typ: "popularity", values: [0, 100] }, 
@@ -261,11 +239,46 @@
         <!-- bottom pop out bar -->
         <div id="bottom-bar">
             <button type="button" class="btn btn-default">Toggle</button>
-
             <div id="slideout">
-                <svg width="400" height="200">
-                    <!-- put buttons and shit in here-->
-                </svg>
+                <div id="leftSide">
+                    
+                    <label class="container2">Popularity
+                        <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                    
+                    <label class="container2">Energy
+                        <input type="checkbox" id="danceCheck"  onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                    
+                    <label class="container2">Danceability
+                        <input type="checkbox" id="danceCheck" onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                    
+                    <label class="container2">Positivity
+                        <input type="checkbox" id="posCheck"  onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                
+                <div id="rightSide">
+                    
+                    
+                    <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
+                    <div id="pop_slider" class="range-slider"></div>
+                    
+                    <div id="dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
+                    <div id="dance_slider" class="range-slider"></div>
+                    
+                    <div id="energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
+                    <div id="energy_slider" class="range-slider"></div>
+                    
+                    <div id="valence_slider_text" class="range-slider-text">Positivity: 0 - 100</div>
+                    <div id="valence_slider" class="range-slider"></div>
+                    
+                </div>
             </div>
         </div>
 
