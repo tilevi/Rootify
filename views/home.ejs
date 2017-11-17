@@ -89,6 +89,23 @@
                     
                     $( function() {
                         for (var key in filterOptions) {
+                            
+                            $( "#filter_" + key ).slider({
+                                range: true, 
+                                min: 0, 
+                                max: 100, 
+                                values: [0, 100], 
+                                slide: function(event, ui) {
+                                    var min = ui.values[0];
+                                    var max = ui.values[1];
+                                    var id = $(this).attr("id");
+                                    
+                                    var typ = filterOptions[id.slice(7)].typ;
+                                    
+                                    $("#" + id + "_text").html(upperCaseFirstLetter(typ) + ": " + min + " - " + max); 
+                                }
+                            });
+                            
                             $( "#" + key ).slider({
                                 range: true,
                                 min: 0,
@@ -309,7 +326,20 @@
                         
                         <h2> Filtering Options </h2>
                         
+                        <div id="generateFilters">
+                            <div id="filter_pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
+                            <div id="filter_pop_slider" class="generate-range-slider"></div>
 
+                            <div id="filter_dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
+                            <div id="filter_dance_slider" class="generate-range-slider"></div>
+
+                            <div id="filter_energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
+                            <div id="filter_energy_slider" class="generate-range-slider"></div>
+
+                            <div id="filter_valence_slider_text" class="range-slider-text">Positivity: 0 - 100</div>
+                            <div id="filter_valence_slider" class="generate-range-slider"></div>
+                        </div>
+                        
                         <!-- Button  -->
                         <a class="playlistbtn" href="#">Generate Playlist</a>
                     </div>

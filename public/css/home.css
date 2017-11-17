@@ -218,6 +218,13 @@ a {
     box-shadow: -1px 4px 16px -5px rgba(0, 0, 0, 0.5);
 }
 
+#generateFilters {
+    width: 87%;
+    height: 170px;
+    margin-left: 5%;
+    margin-right: 8%;
+}
+
 #at-container {
     width: 100%;
     height: 204px;
@@ -448,7 +455,11 @@ a {
     background: orange;
 }
 
-.range-slider .ui-slider-range {
+.generate-range-slider {
+    width: 100%;
+}
+
+.range-slider .ui-slider-range, .generate-range-slider .ui-slider-range  {
     background: #4B9877;
 }
 
