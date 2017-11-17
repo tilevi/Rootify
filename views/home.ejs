@@ -349,6 +349,14 @@
         <!-- TAB JS -->
         <script src="/js/tabs.js"></script>
         <script>
+            
+            var generateTabIsActive = false;
+            
+            function generateTabSwitched(isActive) {
+                generateTabIsActive = isActive;
+                handleSelection(null, null);
+            }
+            
             var myTabs = tabs({
                 el: '#tabs',
                 tabNavigationLinks: '.tablink',

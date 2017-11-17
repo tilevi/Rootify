@@ -63,6 +63,7 @@
         tabContentContainers[activeIndex].classList.remove('is-active');
         tabContentContainers[index].classList.add('is-active');
         activeIndex = index;
+        generateTabSwitched(activeIndex == 1);
       }
     };
 
