@@ -9,6 +9,9 @@
         <!-- jQuery UI -->
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         
+        <!-- Chosen library for select -->
+        <script src="/js/chosen.jquery.js"></script>
+        
         <!-- D3.js v3 -->
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		
@@ -20,6 +23,9 @@
         
         <!-- jQuery CSS -->
         <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        
+        <!-- Chosen CSS -->
+        <link rel="stylesheet" type="text/css" href="/css/chosen.css">
 	</head>
     
 	<body>
@@ -170,9 +176,139 @@
                             
                         </div>
                         
+                          
+                        
+                        <select id="first" data-placeholder="Select genres" class="chosen" style="font-family:Arial !important;" multiple=true tabindex="4">
+                            <option value="acoustic">Acoustic</option>
+                            <option value="afrobeat">Afrobeat</option>
+                            <option value="alt-rock">Alt-rock</option>
+                            <option value="alternative">Alternative</option>
+                            <option value="ambient">Ambient</option>
+                            <option value="anime">Anime</option>
+                            <option value="black-metal">Black-metal</option>
+                            <option value="bluegrass">Bluegrass</option>
+                            <option value="blues">Blues</option>
+                            <option value="bossanova">Bossanova</option>
+                            <option value="brazil">Brazil</option>
+                            <option value="breakbeat">Breakbeat</option>
+                            <option value="british">British</option>
+                            <option value="cantopop">Cantopop</option>
+                            <option value="chicago-house">Chicago-house</option>
+                            <option value="children">Children</option>
+                            <option value="chill">Chill</option>
+                            <option value="classical">Classical</option>
+                            <option value="club">Club</option>
+                            <option value="comedy">Comedy</option>
+                            <option value="country">Country</option>
+                            <option value="dance">Dance</option>
+                            <option value="dancehall">Dancehall</option>
+                            <option value="death-metal">Death-metal</option>
+                            <option value="deep-house">Deep-house</option>
+                            <option value="detroit-techno">Detroit-techno</option>
+                            <option value="disco">Disco</option>
+                            <option value="disney">Disney</option>
+                            <option value="drum-and-bass">Drum-and-bass</option>
+                            <option value="dub">Dub</option>
+                            <option value="dubstep">Dubstep</option>
+                            <option value="edm">EDM</option>
+                            <option value="electro">Electro</option>
+                            <option value="electronic">Electronic</option>
+                            <option value="emo">Emo</option>
+                            <option value="folk">Folk</option>
+                            <option value="forro">Forro</option>
+                            <option value="french">French</option>
+                            <option value="funk">Funk</option>
+                            <option value="garage">Garage</option>
+                            <option value="german">German</option>
+                            <option value="gospel">Gospel</option>
+                            <option value="goth">Goth</option>
+                            <option value="grindcore">Grindcore</option>
+                            <option value="groove">Groove</option>
+                            <option value="grunge">Grunge</option>
+                            <option value="guitar">Guitar</option>
+                            <option value="happy">Happy</option>
+                            <option value="hard-rock">Hard-rock</option>
+                            <option value="hardcore">Hardcore</option>
+                            <option value="hardstyle">Hardstyle</option>
+                            <option value="heavy-metal">Heavy-metal</option>
+                            <option value="hip-hop">Hip-Hop</option>
+                            <option value="holidays">Holidays</option>
+                            <option value="honky-tonk">Honky-tonk</option>
+                            <option value="house">House</option>
+                            <option value="idm">IDM</option>
+                            <option value="indian">Indian</option>
+                            <option value="indie">Indie</option>
+                            <option value="indie-pop">Indie-pop</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="iranian">Iranian</option>
+                            <option value="j-dance">J-dance</option>
+                            <option value="j-idol">J-idol</option>
+                            <option value="j-pop">J-pop</option>
+                            <option value="j-rock">J-rock</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="k-pop">K-pop</option>
+                            <option value="kids">Kids</option>
+                            <option value="latin">Latin</option>
+                            <option value="latino">Latino</option>
+                            <option value="malay">Malay</option>
+                            <option value="mandopop">Mandopop</option>
+                            <option value="metal">Metal</option>
+                            <option value="metal-misc">Metal-misc</option>
+                            <option value="metalcore">Metalcore</option>
+                            <option value="minimal-techno">Minimal-techno</option>
+                            <option value="movies">Movies</option>
+                            <option value="mpb">Mpb</option>
+                            <option value="new-age">New-age</option>
+                            <option value="new-release">New-release</option>
+                            <option value="opera">Opera</option>
+                            <option value="pagode">Pagode</option>
+                            <option value="party">Party</option>
+                            <option value="philippines-opm">Philippines-opm</option>
+                            <option value="piano">Piano</option>
+                            <option value="pop">Pop</option>
+                            <option value="pop-film">Pop-film</option>
+                            <option value="post-dubstep">Post-dubstep</option>
+                            <option value="power-pop">Power-pop</option>
+                            <option value="progressive-house">Progressive-house</option>
+                            <option value="psych-rock">Psych-rock</option>
+                            <option value="punk">Punk</option>
+                            <option value="punk-rock">Punk-rock</option>
+                            <option value="r-n-b">R&B</option>
+                            <option value="rainy-day">Rainy-day</option>
+                            <option value="reggae">Reggae</option>
+                            <option value="reggaeton">Reggaeton</option>
+                            <option value="road-trip">Road-trip</option>
+                            <option value="rock">Rock</option>
+                            <option value="rock-n-roll">Rock-n-roll</option>
+                            <option value="rockabilly">Rockabilly</option>
+                            <option value="romance">Romance</option>
+                            <option value="sad">Sad</option>
+                            <option value="salsa">Salsa</option>
+                            <option value="samba">Samba</option>
+                            <option value="sertanejo">Sertanejo</option>
+                            <option value="show-tunes">Show-tunes</option>
+                            <option value="singer-songwriter">Singer-songwriter</option>
+                            <option value="ska">Ska</option>
+                            <option value="sleep">Sleep</option>
+                            <option value="songwriter">Songwriter</option>
+                            <option value="soul">Soul</option>
+                            <option value="soundtracks">Soundtracks</option>
+                            <option value="spanish">Spanish</option>
+                            <option value="study">Study</option>
+                            <option value="summer">Summer</option>
+                            <option value="swedish">Swedish</option>
+                            <option value="synth-pop">Synth-pop</option>
+                            <option value="tango">Tango</option>
+                            <option value="techno">Techno</option>
+                            <option value="trance">Trance</option>
+                            <option value="trip-hop">Trip-hop</option>
+                            <option value="turkish">Turkish</option>
+                            <option value="work-out">Work-out</option>
+                            <option value="world-music">World-music</option>
+                    </select>
                         
                         <h2> Filtering Options </h2>
-                             
+                        
 
                         <!-- Button  -->
                         <a class="playlistbtn" href="#">Generate Playlist</a>
@@ -185,6 +321,13 @@
         <div id="tree-container">
             
         <script type="text/javascript">
+            
+            $(".chosen").chosen({
+                no_results_text: "No relevant genres found!",
+                width: "99%", 
+                max_selected_options: 5
+            });
+                        
             function getCookie(name) {
                 var re = new RegExp(name + "=([^;]+)");
                 var value = re.exec(document.cookie);
@@ -231,7 +374,7 @@
                     </label>
                     
                     <label class="container2">Energy
-                        <input type="checkbox" id="danceCheck"  onclick='handleClick(this);'>
+                        <input type="checkbox" id="energyCheck"  onclick='handleClick(this);'>
                         <span class="checkmark"></span>
                     </label>
                     

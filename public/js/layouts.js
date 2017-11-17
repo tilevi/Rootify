@@ -885,6 +885,10 @@ function update(source, switchM) {
                         d3.select("#detailsGenres").style("display", "none");
                     }
                 });
+                
+                if (selectedArtist.indexOf(d.aid) != -1) {
+                    d3.select(this).select("circle").style("stroke", "#4B9877");
+                }
         } else if (d.root) {
             
             d3This.style("cursor", "none").style("pointer-events", "none");
@@ -945,6 +949,10 @@ function update(source, switchM) {
                     handleSelection(this, "track", trackID, trackName, trackArtistName);
                     d3.select("#detailsGenres").style("display", "none");
                 });
+            
+                if (selectedTrack.indexOf(d.tid) != -1) {
+                    d3.select(this).select("rect").style("stroke", "#4B9877");
+                }
         }
         
         // If shouldPan is true, a node was already detected outside of our view.
@@ -1056,8 +1064,10 @@ function update(source, switchM) {
             d3This.selectAll("path").remove();
         }
         
-        d3This.select('image')
-                .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall) + ")");
+        if (d.aid) {
+            d3This.select('image')
+                    .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall) + ")");
+        }
         
         var exitVar = d3This
             .transition()
@@ -1339,3 +1349,14 @@ document.getElementById("logout-b").addEventListener("click", function() {
 });
 
 d3.select("#short-term").style("background-color", "#4B9877");
+
+$(".chosen").on('change', function(evt, params) {
+    if (params.selected) {
+        selectedGenre.push(params.selected);
+    } else {
+        var index = selectedGenre.indexOf(params.deselected);
+        if (index != -1) {
+            selectedGenre.splice(index, 1);
+        }
+    }
+});
