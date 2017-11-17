@@ -19,9 +19,8 @@ a {
 
 /* ------------- Bottom Bar ------------ */
 #bottom-bar {
-  position: relative;
-  top: 400px;
-  bottom: 0%;
+  position: fixed;
+  bottom: 0;
   width: 82%;
 }
 
@@ -30,17 +29,25 @@ a {
     color: #333;
     position: relative;
     bottom: 0%;
+    top: 0%;
     left: 0px;
     width: 100%;
     height: 200px;
-    -webkit-transition-duration: 0.3s;
-    -moz-transition-duration: 0.3s;
-    -o-transition-duration: 0.3s;
-    transition-duration: 0.3s;
+    overflow-y: hidden;
+    max-height: 200px;
+
+    transition-property: all;
+    transition-duration: .5s;
+    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
 }
 
 #slideout.on {
-    top: 200px;
+    max-height: 0;
+}
+
+#button_slide {
+    position: relative;
+    left: 50%;
 }
 
 #leftside{
