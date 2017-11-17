@@ -50,15 +50,15 @@ a {
     left: 50%;
 }
 
-#leftside{
-    width:50%;
-    height:100%
-    float:left;
-}
-#rightside{
-    width:50%;
-    height:100%
-    float:left;
+#innerRightDiv {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    
+    width: 50%;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #leftSide {
@@ -69,8 +69,7 @@ a {
 }
 
 #rightSide {
-    margin-left: 2%;
-    width: 48%;
+    width: 50%;
     height: 100%;
     float: left;
 }
@@ -413,14 +412,13 @@ a {
 }
 
 .line {
-    
     cursor: none;
     pointer-events: none;
 }
 
 .trackBox{
-    width:100%;
-    height:40px;
+    width: 90%;
+    height: 40px;
     background: orange;
     float:left;
     clear:left;
@@ -432,6 +430,13 @@ a {
 
 #selectedArtists {
     width: 100%;
+}
+
+#closeButton {
+    float: right;
+    display: inline-block;
+    padding: 2px 5px;
+    background: #ccc;
 }
 
 /*

@@ -81,10 +81,11 @@ function sortTree() {
 sortTree();
 
 /*
-    Artist, track, and genre upper-limit
+    Artist, track, and genre upper-limit.
+    Returns true if the total combination of all of these exceeds 5
 */
-function meetsCap() {
-    return ((1 + selectedArtist.length + selectedTrack.length + selectedGenre.length) <= 5);
+function doesNotMeetCap() {
+    return ((1 + selectedArtist.length + selectedTrack.length + selectedGenre.length) > 5);
 }
 
 /*
@@ -124,15 +125,67 @@ var getAudioFeatures = function(err, data, source) {
     });
 }
 
-var handleSelection = function(node, typ) {
-     if (generateTabIsActive) {
-        
-         console.log(selectedNode);
+var handleSelection = function(node, typ, id, name, artistName) {
+     if (generateTabIsActive && node != null) {
+        var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
          
-        if (node != null && selectedNode.indexOf(node) == -1) {
-            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
+        // If the selected artist is not in the selected artist array
+        if (selectedArr.indexOf(id) == -1) {
             
-            selectedNode.push(node);
+            // If we exceed a maximum combination of 5 artists, tracks and genres, return.
+            if (doesNotMeetCap()) { return; }
+            
+            var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
+            d3.select(selectType)
+            .append("div")
+            .attr("id", "selected_" + id)
+            .attr("class","trackBox")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "10px")
+            .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
+            .append("span").attr("id", "closeButton").html("X").on("click", function() {               
+                var parNode = d3.select(node.parentNode);
+                var parCircle = parNode.select("circle"); 
+                if (parCircle[0][0] != null) {
+                    parCircle.style("stroke", "#ccc");
+                } else {
+                    parNode.select("rect").style("stroke", "#ccc");
+                }
+
+                // Remove the selected node
+                var selNodeIndex = selectedNode.indexOf(node);
+                if (selNodeIndex != -1) {
+                    selectedArr.splice(selectedArr.indexOf(id), 1);
+                    selectedNode.splice(selNodeIndex, 1);
+                    d3.select("#selected_" + id).remove();
+                }
+            });
+            
+            if (node != null) {
+                d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
+            
+                selectedNode.push(node);
+            }
+        
+            selectedArr.push(id);
+        } else {
+            // Removes the track box
+            d3.select("#selected_" + id).remove();
+            selectedArr.splice(selectedArr.indexOf(id), 1);
+            
+            var parNode = d3.select(node.parentNode);
+            var parCircle = parNode.select("circle"); 
+            if (parCircle[0][0] != null) {
+                parCircle.style("stroke", "#ccc");
+            } else {
+                parNode.select("rect").style("stroke", "#ccc");
+            }
+            
+            // Remove the selected node
+            var selNodeIndex = selectedNode.indexOf(node);
+            if (selNodeIndex != -1) {
+                selectedNode.splice(selNodeIndex, 1);
+            }
         }
      } else {
         // This code sets the previously selected node to a white stroke
@@ -157,8 +210,17 @@ var handleSelection = function(node, typ) {
      }
     
     if (node == null) {
+        // Reset all selected artists and tracks (from 'Generate' tab)
+        selectedArtist = [];
+        selectedTrack = [];
+        
+        d3.select("div.trackBox").remove();
+        d3.select("#selectedArtists").html("");
+        d3.select("#selectedTracks").html("");
+        
         d3.select("#spotifyTracks").html("");
         d3.select("#detailsGenres").style("display", "none");
+        
         selectedNode.forEach(function(d) {
             var parNode = d3.select(d.parentNode);
             var parCircle = parNode.select("circle"); 
@@ -313,6 +375,7 @@ var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom).sca
 
 // Our base SVG
 var baseSvg = d3.select("#baseSVG").call(zoomListener);
+baseSvg.on("dblclick.zoom", null);
 
 /*
     Our clip paths.
@@ -797,34 +860,18 @@ function update(source, switchM) {
                     var artistID = d.aid;
                     var artistName = d.name;
                     
-                    handleSelection(this, "artist");
-                    
-                    // If the selected artist is not in the selected artist array
-                    if (selectedArtist.indexOf(artistID) == -1) {
-                        d3.select("#selectedArtists")
-                        .append("div")
-                        .attr("id", "selected_" + artistID)
-                        .attr("class","trackBox")
-                        .append("text")
-                        .text(artistName)
-                        .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px");
-                        
-                        selectedArtist.push(artistID);
-                    } else {
-                        // Removes the track box
-                        d3.select("#selected_" + artistID).remove();
-                        selectedArtist.splice(selectedArtist.indexOf(artistID), 1);
-                    }
-                    
+                    handleSelection(this, "artist", artistID, artistName);
+                                        
                     d3.select("#headerImage")
                         .style("display", "block")
                         .style("height", "200px")
                         .style("width","100")
-                        .style("font-size", "2.5em")
+                        .style("font-size", "1.5em")
+                        .style("font-family", "Arial, Helvetica, sans-serif")
                         .style("line-height", "90%")
                         .style("padding", "6%")
                         .text(d.name);
+                    
                     d3.select("#headerImage")
                         .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
                         .style("background-repeat", "no-repeat")
@@ -892,16 +939,10 @@ function update(source, switchM) {
                     }
                     
                     var trackID = d.tid;
-                    handleSelection(this, "track");
-                
-                    d3.select("#selectedTracks")
-                        .append("div")
-                        .attr("class","trackBox")
-                        .append("text")
-                        .text("Tests.")
-                        .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px");
-                
+                    var trackName = d.name;
+                    var trackArtistName = d.artist;
+                    
+                    handleSelection(this, "track", trackID, trackName, trackArtistName);
                     d3.select("#detailsGenres").style("display", "none");
                 });
         }

@@ -171,30 +171,8 @@
                         </div>
                         
                         
-                        <h2> Recommended Playlist </h2>
-                             <div class="tabcontentinnerdif">
-                                <p> 1. Track
-                                <p> 2. Track
-                                <p> 3. Track
-                                <p> 4. Track
-                                <p> 5. Track
-                                <p> 6. Track
-                                <p> 7. Track
-                                <p> 8. Track
-                                <p> 9. Track
-                                <p> 10. Track
-                                <p> 11. Track
-                                <p> 12. Track
-                                <p> 13. Track
-                                <p> 14. Track
-                                <p> 15. Track
-                                <p> 16. Track
-                                <p> 17. Track
-                                <p> 18. Track
-                                <p> 19. Track
-                                <p> 20. Track
-                                <p> 21. Track
-                            </div>
+                        <h2> Filtering Options </h2>
+                             
 
                         <!-- Button  -->
                         <a class="playlistbtn" href="#">Generate Playlist</a>
@@ -245,6 +223,8 @@
                 
                 <div id="leftSide">
                     
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px"><b>Resize Tracks & Artists</b></h1>
+                    
                     <label class="container2">Popularity
                         <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
                         <span class="checkmark"></span>
@@ -268,6 +248,7 @@
                 
                 <div id="rightSide">
                     
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px"><b>Filter Tracks & Artists</b></h1>
                     
                     <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
                     <div id="pop_slider" class="range-slider"></div>
@@ -287,6 +268,8 @@
 
         <!-- bottom pop up bar script -->
         <script>
+            $('#slideout').toggleClass('on');
+            
             $('button').click(function(){
                 $('#slideout').toggleClass('on');
             });
@@ -356,6 +339,7 @@
             
             function generateTabSwitched(isActive) {
                 generateTabIsActive = isActive;
+                barManager.updateBars();
                 handleSelection(null, null);
             }
             
