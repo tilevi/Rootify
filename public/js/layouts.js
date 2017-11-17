@@ -22,7 +22,7 @@ var shortChildren;
 // Root initially doesn't exist.
 var root = null;
 
-var selectedNode = null;
+var selectedNode = [];
 
 /*
     All of these arrays are used to determine if a certain artist or track already exists in the tree. This is very important because if we have the same artist or track, it's redunant plus we can run into some huge visualization issues.
@@ -32,6 +32,14 @@ var trackID_short = [];
 
 var artistID_long = [];
 var trackID_long = [];
+
+/*
+    Selected artists, tracks, and genres
+*/
+
+var selectedArtist = [];
+var selectedTrack = [];
+var selectedGenre = [];
 
 /*
     Our initial tree layout
@@ -72,6 +80,12 @@ function sortTree() {
 // Initially, sort the tree.
 sortTree();
 
+/*
+    Artist, track, and genre upper-limit
+*/
+function meetsCap() {
+    return ((1 + selectedArtist.length + selectedTrack.length + selectedGenre.length) <= 5);
+}
 
 /*
     Populate children array with tracks.
@@ -111,30 +125,50 @@ var getAudioFeatures = function(err, data, source) {
 }
 
 var handleSelection = function(node, typ) {
-    if (selectedNode != node) {
-        if (selectedNode != null) {
-            var parNode = d3.select(selectedNode.parentNode);
+     if (generateTabIsActive) {
+        
+         console.log(selectedNode);
+         
+        if (node != null && selectedNode.indexOf(node) == -1) {
+            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
+            
+            selectedNode.push(node);
+        }
+     } else {
+        // This code sets the previously selected node to a white stroke
+        if (selectedNode[0] != null) {
+            var parNode = d3.select(selectedNode[0].parentNode);
             var parCircle = parNode.select("circle"); 
             if (parCircle[0][0] != null) {
                 parCircle.style("stroke", "#ccc");
             } else {
                 parNode.select("rect").style("stroke", "#ccc");
             }
+            
+            // Remove the selected node
+            selectedNode.splice(0, 1);
         }
         
         if (node != null) {
             d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
-            // Set the selected node element
-            selectedNode = node;
-            // Set the selected type
-            selectedType = typ;
+            
+            selectedNode.push(node);
         }
-    }
+     }
     
     if (node == null) {
         d3.select("#spotifyTracks").html("");
         d3.select("#detailsGenres").style("display", "none");
-        selectedNode = null;
+        selectedNode.forEach(function(d) {
+            var parNode = d3.select(d.parentNode);
+            var parCircle = parNode.select("circle"); 
+            if (parCircle[0][0] != null) {
+                parCircle.style("stroke", "#ccc");
+            } else {
+                parNode.select("rect").style("stroke", "#ccc");
+            }
+        });
+        selectedNode = [];
     }
     
     if (typ != "artist") {
@@ -214,7 +248,19 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
             if (obj != null && blacklist.indexOf(obj.id) === -1) {
                 if (typ == "track") {
                     var audioFeat = audioFeatures[obj.id];
-                    source.children.push( { "index": baseIndex + i, "name": obj.name, "tid": obj.id, url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity / 100, "energy": audioFeat.energy, "dance": audioFeat.dance, "valence": audioFeat.valence, "tonic": audioFeat.tonic, "mode": audioFeat.mode } );
+                    source.children.push( {
+                        "index": baseIndex + i, 
+                        "name": obj.name, 
+                        artist: obj.artists.length > 0 ? obj.artists[0].name : "N/A", 
+                        "tid": obj.id, 
+                        url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
+                        "popularity": obj.popularity / 100, 
+                        "energy": audioFeat.energy, 
+                        "dance": audioFeat.dance, 
+                        "valence": audioFeat.valence, 
+                        "tonic": audioFeat.tonic, 
+                        "mode": audioFeat.mode 
+                    } );
                 } else {
                    source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity / 100, genres: obj.genres } ); 
                 }
@@ -743,19 +789,34 @@ function update(source, switchM) {
                             Key: { key: 0, mode: 0 }
                         };
                         
-                        barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
+                        if (!generateTabIsActive) {
+                            barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
+                        }
                     }
                     
                     var artistID = d.aid;
+                    var artistName = d.name;
+                    
                     handleSelection(this, "artist");
-                
-                    d3.select("#selectedArtists")
+                    
+                    // If the selected artist is not in the selected artist array
+                    if (selectedArtist.indexOf(artistID) == -1) {
+                        d3.select("#selectedArtists")
                         .append("div")
+                        .attr("id", "selected_" + artistID)
                         .attr("class","trackBox")
                         .append("text")
-                        .text("Tests.")
+                        .text(artistName)
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "10px");
+                        
+                        selectedArtist.push(artistID);
+                    } else {
+                        // Removes the track box
+                        d3.select("#selected_" + artistID).remove();
+                        selectedArtist.splice(selectedArtist.indexOf(artistID), 1);
+                    }
+                    
                     d3.select("#headerImage")
                         .style("display", "block")
                         .style("height", "200px")
@@ -825,7 +886,9 @@ function update(source, switchM) {
                             Key: { key: d.tonic, mode: d.mode },
                         };
             
-                        barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
+                        if (!generateTabIsActive) {
+                            barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
+                        }
                     }
                     
                     var trackID = d.tid;
@@ -837,10 +900,7 @@ function update(source, switchM) {
                         .append("text")
                         .text("Tests.")
                         .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px")
-                
-                   
-                
+                        .attr("font-size", "10px");
                 
                     d3.select("#detailsGenres").style("display", "none");
                 });

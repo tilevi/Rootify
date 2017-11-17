@@ -426,6 +426,14 @@ a {
     clear:left;
 }
 
+#selectedTracks {
+    width: 100%;
+}
+
+#selectedArtists {
+    width: 100%;
+}
+
 /*
     Bottom bar sliders
 */
