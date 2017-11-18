@@ -90,10 +90,7 @@ var BarManager = function() {
         selectedTrackInfo = Object.assign({}, trackinfo);
         
         // Grab our SVG width
-        width = d3.select("#detailsSVG").attr("width");
-        if (width < 0) {
-            console.log("The width is negative.");
-        }
+        width = atDiv.clientWidth;
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
@@ -120,10 +117,10 @@ var BarManager = function() {
                         .attr("class", "barDiv")
                         .attr("x", 0)
                         .attr("y", 0);
-                        
+        
         // Create a grey rectangle around the colored bar
         barEnter.append("rect")
-              .attr("class", "border")
+              .attr("class", "greyBar")
               .attr("x", 0)
               .attr("y", function(d, i) {
                 return i * rectHeight;
@@ -136,8 +133,8 @@ var BarManager = function() {
         
         // Create the color bar inside the grey rectangle
         barEnter.append("rect")
+                .attr("class", "colorBar")
                 .style("stroke-width", "0px")
-               .attr("class", "bar")
                .attr("x", barBorder)
                .attr("y", function(d, i) {
                   return (i * rectHeight) + barBorder;
@@ -150,7 +147,7 @@ var BarManager = function() {
                     }
                 })
                 .attr("height", rectHeight - (barBorder * 2) - barPadding)
-                .attr("fill", function(d,i) {
+                .attr("fill", function(d, i) {
                     return colorScale(i);
                 });
             
@@ -206,12 +203,12 @@ var BarManager = function() {
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
         .domain([0, 1])
-        .range([0, width - barBorder * 2]); //starts at 100 to allow space for names
+        .range([0, width - barBorder * 2]).clamp(true); //starts at 100 to allow space for names
         
         // Same with pitchScale
         pitchScale = d3.scale.linear()
         .domain([0, 12])
-        .range([0, width - barBorder * 2]);
+        .range([0, width - barBorder * 2]).clamp(true);
         
         // We populate the artist or audio feature data into an array
         var dataset = [];
@@ -225,10 +222,10 @@ var BarManager = function() {
                         .style("opacity", function(d, i) { if (i > 0 && typ == "artist") { return 0; } return 1;})
                         .data(dataset, function(d, i) { return audio_features[i]; });
         
-        barDiv.select("rect.border")
+        barDiv.select("rect.greyBar")
                 .attr("width", width);
         
-        barDiv.select("rect.bar")
+        barDiv.select("rect.colorBar")
                 .transition()
                 .delay(function(d, i) {
                     return i * 200;

@@ -125,25 +125,71 @@ var getAudioFeatures = function(err, data, source) {
     });
 }
 
+var lastSelected = null;
+
 var handleSelection = function(node, typ, id, name, artistName) {
-     if (generateTabIsActive && node != null) {
-        var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
+     if (node != null) {
          
-        // If the selected artist is not in the selected artist array
-        if (selectedArr.indexOf(id) == -1) {
+        if (generateTabIsActive) {
+        
+            var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
             
-            // If we exceed a maximum combination of 5 artists, tracks and genres, return.
-            if (doesNotMeetCap()) { return; }
-            
-            var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
-            d3.select(selectType)
-            .append("div")
-            .attr("id", "selected_" + id)
-            .attr("class","trackBox")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "10px")
-            .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
-            .append("span").attr("id", "closeButton").html("X").on("click", function() {               
+            // If the selected artist is not in the selected artist array
+            if (selectedArr.indexOf(id) == -1) {
+
+                // If we exceed a maximum combination of 5 artists, tracks and genres, return.
+                if (doesNotMeetCap()) { return; }
+
+                var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
+                d3.select(selectType)
+                .append("div")
+                .attr("id", "selected_" + id)
+                .attr("class", "trackBox")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "10px")
+                .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
+                .append("span").attr("id", "closeButton").html("X").on("click", function() {               
+                    var parNode = d3.select(node.parentNode);
+                    var parCircle = parNode.select("circle"); 
+                    if (parCircle[0][0] != null) {
+                        parCircle.style("stroke", "#ccc");
+                    } else {
+                        parNode.select("rect").style("stroke", "#ccc");
+                    }
+
+                    // Remove the selected node
+                    var selNodeIndex = selectedNode.indexOf(node);
+                    if (selNodeIndex != -1) {
+                        selectedArr.splice(selectedArr.indexOf(id), 1);
+                        selectedNode.splice(selNodeIndex, 1);
+                        d3.select("#selected_" + id).remove();
+                    }
+                });
+
+                if (lastSelected != null) {
+                    var color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                    var parNode = d3.select(lastSelected.parentNode);
+                    var parCircle = parNode.select("circle"); 
+                    if (parCircle[0][0] != null) {
+                        parCircle.style("stroke", color);
+                    } else {
+                        parNode.select("rect").style("stroke", color);
+                    }
+                }
+
+                if (node != null) {
+                    d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#FF8C00");
+                    
+                    lastSelected = node;
+                    selectedNode.push(node);
+                }
+
+                selectedArr.push(id);
+            } else {
+                // Removes the track box
+                d3.select("#selected_" + id).remove();
+                selectedArr.splice(selectedArr.indexOf(id), 1);
+
                 var parNode = d3.select(node.parentNode);
                 var parCircle = parNode.select("circle"); 
                 if (parCircle[0][0] != null) {
@@ -155,57 +201,25 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 // Remove the selected node
                 var selNodeIndex = selectedNode.indexOf(node);
                 if (selNodeIndex != -1) {
-                    selectedArr.splice(selectedArr.indexOf(id), 1);
                     selectedNode.splice(selNodeIndex, 1);
-                    d3.select("#selected_" + id).remove();
                 }
-            });
-            
-            if (node != null) {
-                d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
-            
-                selectedNode.push(node);
             }
-        
-            selectedArr.push(id);
         } else {
-            // Removes the track box
-            d3.select("#selected_" + id).remove();
-            selectedArr.splice(selectedArr.indexOf(id), 1);
             
-            var parNode = d3.select(node.parentNode);
-            var parCircle = parNode.select("circle"); 
-            if (parCircle[0][0] != null) {
-                parCircle.style("stroke", "#ccc");
-            } else {
-                parNode.select("rect").style("stroke", "#ccc");
+            if (lastSelected != null) {
+                var color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                var parNode = d3.select(lastSelected.parentNode);
+                var parCircle = parNode.select("circle"); 
+                if (parCircle[0][0] != null) {
+                    parCircle.style("stroke", color);
+                } else {
+                    parNode.select("rect").style("stroke", color);
+                }
             }
             
-            // Remove the selected node
-            var selNodeIndex = selectedNode.indexOf(node);
-            if (selNodeIndex != -1) {
-                selectedNode.splice(selNodeIndex, 1);
-            }
-        }
-     } else {
-        // This code sets the previously selected node to a white stroke
-        if (selectedNode[0] != null) {
-            var parNode = d3.select(selectedNode[0].parentNode);
-            var parCircle = parNode.select("circle"); 
-            if (parCircle[0][0] != null) {
-                parCircle.style("stroke", "#ccc");
-            } else {
-                parNode.select("rect").style("stroke", "#ccc");
-            }
+            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#FF8C00");
             
-            // Remove the selected node
-            selectedNode.splice(0, 1);
-        }
-        
-        if (node != null) {
-            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
-            
-            selectedNode.push(node);
+            lastSelected = node;
         }
      }
     
@@ -231,6 +245,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
             }
         });
         selectedNode = [];
+        lastSelected = null;
     }
     
     if (typ != "artist") {
@@ -854,6 +869,7 @@ function update(source, switchM) {
                         
                         if (!generateTabIsActive) {
                             barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
+                            redraw();
                         }
                     }
                     
@@ -936,9 +952,11 @@ function update(source, switchM) {
                             Positivity: d.valence,
                             Key: { key: d.tonic, mode: d.mode },
                         };
-            
+                        
                         if (!generateTabIsActive) {
                             barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
+                            // When we switch between tabs, widths can become negative, so we need to up the widths and heights and redraw.
+                            redraw();
                         }
                     }
                     
