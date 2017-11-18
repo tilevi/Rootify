@@ -7,7 +7,7 @@ var switchingMode = true;
 var treeData = { "name": "", "root": true, "children": [] };
 
 // Initial Spotify user profile data
-var me = { "url": "" };
+var me = { url: "", uid: "" };
 
 // Used for assigning IDs to our nodes
 var i = 0;
@@ -646,7 +646,8 @@ function toggleChildren(d) {
         spotifyApi.getRecommendations(
         {
             "limit": 3,
-            "seed_tracks": ("" + d.tid)
+            "seed_tracks": ("" + d.tid), 
+            "market": "US"
         }, 
         function(err, data) {
             getAudioFeatures(err, data.tracks, d);
@@ -1330,6 +1331,7 @@ var loadMe = function() {
     spotifyApi.getMe({}, function(err, data) {
         if (!err) {
             me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
+            me.uid = data.id;
             loadTopTracks();
         } else {        
             var refresh_token = getCookie("myRefreshToken");
@@ -1445,3 +1447,82 @@ $(".chosen").on('change', function(evt, params) {
         }
     }
 });
+
+function createPlaylist() {
+    // If we don't have at least 1 seed, return because we can't generate a playlist.
+    if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
+        return;
+    }
+    
+    var popValues = $("#filter_pop_slider").slider("values");
+    var popularityMin = popValues[0];
+    var popularityMax = popValues[1];
+    
+    var danceValues = $("#filter_dance_slider").slider("values");
+    var danceMin = danceValues[0];
+    var danceMax = danceValues[1];
+    
+    var energyValues = $("#filter_energy_slider").slider("values");
+    var energyMin = energyValues[0];
+    var energyMax = energyValues[1];
+    
+    var positivityValues = $("#filter_valence_slider").slider("values");
+    var positivityMin = positivityValues[0];
+    var positivityMax = positivityValues[1];
+    
+    spotifyApi.getRecommendations(
+    {
+        // We want to include our selected tracks, so we need to find the remainder of songs
+        // There should be a maximum total of 25 tracks.
+        "limit": 25 - (selectedTrack.length),
+        
+        "seed_tracks": selectedTrack, 
+        "seed_artists": selectedArtist, 
+        "seed_genres": selectedGenre, 
+        
+        "min_popularity": popularityMin, 
+        "max_popularity": popularityMax, 
+        
+        "min_danceability": danceMin / 100, 
+        "max_danceability": danceMax / 100, 
+        
+        "min_energy": energyMin / 100, 
+        "max_energy": energyMax / 100, 
+        
+        "min_valence": positivityMin / 100, 
+        "max_valence": positivityMax / 100, 
+        
+        "market": "US"
+    }, 
+    function(err, data) {
+        if (!err) {
+            
+            var uriArr = [];
+            
+            selectedTrack.forEach(function(d) {
+                uriArr.push("spotify:track:" + d);
+            });
+            
+            data.tracks.forEach(function(d) {
+                // Make sure there can't be duplicate tracks
+                if (uriArr.indexOf(d.uri) == -1) {
+                    uriArr.push(d.uri); 
+                }
+            });
+            
+            spotifyApi.createPlaylist(me.uid, 
+            {
+                name: "[Rootify] Playlist", 
+                public: true, 
+            }, 
+            function(err, data) {
+                if (!err) {
+                    var playlistID = data.id;
+                    console.log("Playlist successfully created: " + playlistID);
+                    
+                    spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) { if (err) { console.log(err); } else { console.log("Added tracks to the new playlist!"); }});
+                }
+            });
+        }
+    });
+}
