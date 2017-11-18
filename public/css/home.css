@@ -4,10 +4,14 @@
   font-family: Source Sans Pro;
   src: url(./assets/fonts/SourceSansPro-Regular.otf);
 }
+@font-face {
+  font-family: Avenir Next;
+  src: url(./assets/fonts/AvenirNext.ttc);
+}
 body {
     background-color:#2F394C;
     margin:0;
-    font-family: Avenir Next;
+    font-family: "Source Sans Pro", sans-serif;
     font-size: .9em;
     line-height: 1em;
 }
@@ -15,6 +19,7 @@ body {
 /* link options */
 a {
 
+font-family: "Source Sans Pro", sans-serif;
 }
 
 /* ------------- Bottom Bar ------------ */
@@ -25,8 +30,8 @@ a {
 }
 
 #slideout {
-    background: #333;
-    color: #333;
+    background: #252F41;
+    border-top: 1px solid #242A34;
     position: relative;
     bottom: 0%;
     top: 0%;
@@ -86,9 +91,7 @@ a {
     float: left;
 }
 
-/*
-    Checkboxes
-*/
+/*  ------------- Checkboxes ------------ */
 
 /* Customize the label (the container) */
 .container2 {
@@ -98,7 +101,7 @@ a {
     margin-top: 20px;
     margin-bottom: 12px;
     cursor: pointer;
-    font-size: 22px;
+    font-size: 1em;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -117,8 +120,8 @@ a {
   position: absolute;
   top: 0;
   left: 0;
-  height: 25px;
-  width: 25px;
+  height: 15px;
+  width: 15px;
   background-color: #eee;
 }
 
@@ -146,8 +149,7 @@ a {
 
 /* Style the checkmark/indicator */
 .container2 .checkmark:after {
-  left: 9px;
-  top: 5px;
+  left: 4px;
   width: 5px;
   height: 10px;
   border: solid white;
@@ -160,15 +162,17 @@ a {
 
 /* ------------- Header ------------ */
 #tophead {
-    height:12vh;
+    height:8vh;
     margin:0;
     background-color:#252F41;
-    box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.6);
+    box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+    border-bottom: .5px solid #242A34;
 }
 .navbar {
     width:100vh;
-    padding-top: 3vh;
+    padding-top: 2vh;
     padding-left: 4vh;
+
 }
 
 .navbar a {
@@ -184,7 +188,8 @@ a {
     text-decoration: none;
     text-transform: uppercase;
     font-family: "Source Sans Pro", sans-serif;
-    font-weight: 400;
+    font-weight: 100;
+    font-size: .8em;
 }
 .navbar a:hover {
     color: #fff;
@@ -221,13 +226,19 @@ a {
 
 #sidebar {
     z-index: 5px;
-    position: relative;
+    position: absolute;
+    right:0;
     width: 18%;
-    height: 100%;
-    height: 87vh;
-    float: right;
+    height: 92vh;
     background-color: #2F3B4E;
-    box-shadow: -1px 4px 16px -5px rgba(0, 0, 0, 0.5);
+    border-left: .5px solid #242A34;
+    box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.2);
+}
+
+.line-div {
+  width:100%;
+  border-bottom: .5px solid #242A34;
+  padding-top:1%;
 }
 
 #generateFilters {
@@ -260,6 +271,9 @@ a {
   text-align: center;
   transition: color 0.3s;
 
+}
+.tablinkside {
+    border-left: .5px solid #242A34;
 }
 
 .tablink a{
@@ -294,6 +308,7 @@ a {
 
 .tabcontent {
   color: #fff;
+  padding-left: 0.1rem;
 }
 
 .tabcontentinner {
@@ -312,12 +327,24 @@ a {
 
 }
 .tabcontent h2{
+    font-family: "Avenir Next", sans-serif;
+    line-height: 2em;
+    height: 2em;
     border-left: 5px solid #01B482;
     font-size: 1.05em;
-    letter-spacing: 3px;
+    letter-spacing: 0.86px;
     text-decoration: none;
     padding: 3px;
+    font-weight: normal;
 
+}
+
+#selectedtab{
+   margin-bottom: 5%;
+}
+.selectedtabwow{
+  margin-bottom: 5%;
+  text-decoration: none;
 }
 
  /* Tabs no-js fallback
@@ -437,10 +464,9 @@ a {
 
 .trackBox {
     width: 90%;
-    height: 40px;
-    background: orange;
-    float:left;
-    clear:left;
+    padding: 5%;
+    background-color: #252F41;
+    border: .5px solid #242A34;
 }
 
 #selectedTracks {
@@ -458,9 +484,9 @@ a {
     background: #ccc;
 }
 
-/*
-    Bottom bar sliders
-*/
+
+
+/* -------------Bottom Bar Sliders ------------ */
 
 .range-slider {
     width: 150px;

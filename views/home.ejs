@@ -155,7 +155,7 @@
             <!-- Tabs -->
              <div id="tabs" class="c-tabs no-js">
                 <div class="tabnav">
-                    <a href="#" class="tablink is-active">
+                    <a href="#" class="tablink tablinkside is-active">
                         Details
                     </a>
                     <a href="#" class="tablink">
@@ -184,17 +184,14 @@
                 <div class="c-tab">
                     <div id="overflowss" class="tabcontent">
                         <h2> Selected </h2>
-                        <div class="tabcontentinner" id="selectedTracks">
-                            
+                        
+                        <div id="selectedtab" class="selectedtabwow">
+                            <div id="selectedTracks"></div>
+                            <div id="selectedArtists" class="space"></div>
                         </div>
-                        
-                        
-                        <div class="tabcontentinner" id= "selectedArtists">
-                            
-                        </div>
-                        
-                          
-                        
+                        <div class="line-div"></div>
+                        <h2> Select Genre </h2>
+
                         <select id="first" data-placeholder="Select genres" class="chosen" style="font-family:Arial !important;" multiple=true tabindex="4">
                             <option value="acoustic">Acoustic</option>
                             <option value="afrobeat">Afrobeat</option>
@@ -323,7 +320,7 @@
                             <option value="work-out">Work-out</option>
                             <option value="world-music">World-music</option>
                     </select>
-                        
+                        <div class="line-div"></div>
                         <h2> Filtering Options </h2>
                         
                         <div id="generateFilters">
@@ -395,7 +392,7 @@
                 
                 <div id="leftSide">
                     
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px"><b>Resize Tracks & Artists</b></h1>
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.5em;"><b>Resize Tracks & Artists</b></h1>
                     
                     <label class="container2">Popularity
                         <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
@@ -420,7 +417,7 @@
                 
                 <div id="rightSide">
                     
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px"><b>Filter Tracks & Artists</b></h1>
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.5em;"><b>Filter Tracks & Artists</b></h1>
                     
                     <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
                     <div id="pop_slider" class="range-slider"></div>

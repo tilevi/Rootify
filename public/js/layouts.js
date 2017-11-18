@@ -987,6 +987,29 @@ function update(source, switchM) {
                     var artistName = d.name;
                     
                     handleSelection(this, "artist", artistID, artistName);
+                                        
+                    d3.select("#headerImage")
+                        .style("display", "block")
+                        .style("height", "200px")
+                        .style("width","100")
+                        .style("font-size", "1.5em")
+                        .style("font-family", "Avenir Next, sans-serif")
+                        .style("line-height", "90%")
+                        .style("padding", "6%")
+                        .text(d.name);
+                    
+                    d3.select("#headerImage")
+                        .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .5),rgba(0,236,188, .5)), url('" + d.url + "')")
+                        .style("background-repeat", "no-repeat")
+                        .style("background-size", "cover");
+                                
+                    
+                    // If there are genres for this artist, list them
+                    if (d.genres.length > 0) {
+                        d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+                    } else {
+                        d3.select("#detailsGenres").style("display", "none");
+                    }
                 });
                 
                 if (selectedArtist.indexOf(d.aid) != -1) {
