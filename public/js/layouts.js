@@ -185,6 +185,42 @@ var handleSelection = function(node, typ, id, name, artistName) {
                     
                     var d = d3.select(node).datum();
                     
+                    if (d.aid) {
+                        if (d.tracks) {
+                            loadSpotifyTracks(d.tracks);
+                        } 
+                        else {
+                            getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                        }
+
+                        if (barManager.artistNotLoaded(d.aid)) {                        
+                            var trackInfo = {
+                                Popularity: d.popularity,
+                                Danceability: 0,
+                                Energy: 0,
+                                Positivity: 0,
+                                Key: { key: 0, mode: 0 }
+                            };
+                            
+                            barManager.setTrackInfo(trackInfo, { id: d.aid, typ: "artist" });
+                        }
+                    } else {
+                        
+                        loadSpotifyTracks([d.tid]);
+
+                        if (barManager.trackNotLoaded(d.tid)) {                    
+                            var trackInfo = {
+                                Popularity: d.popularity,
+                                Danceability: d.dance,
+                                Energy: d.energy,
+                                Positivity: d.valence,
+                                Key: { key: d.tonic, mode: d.mode },
+                            };
+                            
+                            barManager.setTrackInfo(trackInfo, { id: d.tid, typ: "track" });
+                        }  
+                    }
+                    
                     if (typ == "artist") {
                         d3.select("#headerImage")
                                 .style("display", "block")
@@ -250,7 +286,44 @@ var handleSelection = function(node, typ, id, name, artistName) {
             
             lastSelected = node;
             var d = d3.select(node).datum();
-                 
+            
+            if (d.aid) {
+                console.log("This is an artist.");
+                if (d.tracks) {
+                    loadSpotifyTracks(d.tracks);
+                } 
+                else {
+                    getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                }
+
+                if (barManager.artistNotLoaded(d.aid)) {                        
+                    var trackInfo = {
+                        Popularity: d.popularity,
+                        Danceability: 0,
+                        Energy: 0,
+                        Positivity: 0,
+                        Key: { key: 0, mode: 0 }
+                    };
+
+                    barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
+                }
+            } else {
+
+                loadSpotifyTracks([d.tid]);
+
+                if (barManager.trackNotLoaded(d.tid)) {                    
+                    var trackInfo = {
+                        Popularity: d.popularity,
+                        Danceability: d.dance,
+                        Energy: d.energy,
+                        Positivity: d.valence,
+                        Key: { key: d.tonic, mode: d.mode },
+                    };
+
+                    barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
+                }  
+            }
+
             if (typ == "artist") {
                 d3.select("#headerImage")
                         .style("display", "block")
@@ -908,30 +981,7 @@ function update(source, switchM) {
                     return d.url;
                 })
                 .attr("clip-path", "url(#clip-r-" + Math.floor(newSize/2) + ")")
-                .on("click", function(d) {
-                    if (d.tracks) {
-                        loadSpotifyTracks(d.tracks);
-                    } 
-                    else {
-                        getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
-                    }
-                    
-                    if (barManager.artistNotLoaded(d.aid)) {                        
-                        var trackInfo = {
-                            Popularity: d.popularity,
-                            Danceability: 0,
-                            Energy: 0,
-                            Positivity: 0,
-                            Key: { key: 0, mode: 0 }
-                        };
-                        
-                        if (!generateTabIsActive) {
-                            barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
-                        } else {
-                            barManager.setTrackInfo(trackInfo, { id: d.aid, typ: "artist" });
-                        }
-                    }
-                    
+                .on("click", function(d) {                
                     var artistID = d.aid;
                     var artistName = d.name;
                     
@@ -977,25 +1027,7 @@ function update(source, switchM) {
                 .attr('height', newSize-6)
                 .attr("xlink:href", function(d) {
                     return d.url;
-                }).on("click", function(d) {
-                    loadSpotifyTracks([d.tid]);
-                    
-                    if (barManager.trackNotLoaded(d.tid)) {                    
-                        var trackInfo = {
-                            Popularity: d.popularity,
-                            Danceability: d.dance,
-                            Energy: d.energy,
-                            Positivity: d.valence,
-                            Key: { key: d.tonic, mode: d.mode },
-                        };
-                        
-                        if (!generateTabIsActive) {
-                            barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
-                        } else {
-                            barManager.setTrackInfo(trackInfo, { id: d.tid, typ: "track" });
-                        }
-                    }
-                    
+                }).on("click", function(d) {                    
                     var trackID = d.tid;
                     var trackName = d.name;
                     var trackArtistName = d.artist;
