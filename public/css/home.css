@@ -45,9 +45,21 @@ a {
     max-height: 0;
 }
 
-#button_slide {
+.button_slide {
     position: relative;
-    left: 50%;
+    left: 45%;
+    background-color: #4B9877; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    margin: 4px 2px;
+    cursor: pointer;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
 }
 
 #innerRightDiv {
