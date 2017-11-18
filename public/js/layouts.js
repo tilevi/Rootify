@@ -182,8 +182,37 @@ var handleSelection = function(node, typ, id, name, artistName) {
                     
                     lastSelected = node;
                     selectedNode.push(node);
-                }
+                    
+                    var d = d3.select(node).datum();
+                    
+                    if (typ == "artist") {
+                        d3.select("#headerImage")
+                                .style("display", "block")
+                                .style("height", "200px")
+                                .style("width","100")
+                                .style("font-size", "1.5em")
+                                .style("font-family", "Arial, Helvetica, sans-serif")
+                                .style("line-height", "90%")
+                                .style("padding", "6%")
+                                .text(d.name);
 
+                            d3.select("#headerImage")
+                                .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
+                                .style("background-repeat", "no-repeat")
+                                .style("background-size", "cover");
+
+
+                            // If there are genres for this artist, list them
+                            if (d.genres.length > 0) {
+                                d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+                            } else {
+                                d3.select("#detailsGenres").style("display", "none");
+                            }
+                        } else {
+                            d3.select("#detailsGenres").style("display", "none");
+                        }
+                    }
+                
                 selectedArr.push(id);
             } else {
                 // Removes the track box
@@ -220,6 +249,35 @@ var handleSelection = function(node, typ, id, name, artistName) {
             d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#FF8C00");
             
             lastSelected = node;
+            var d = d3.select(node).datum();
+                 
+            if (typ == "artist") {
+                d3.select("#headerImage")
+                        .style("display", "block")
+                        .style("height", "200px")
+                        .style("width","100")
+                        .style("font-size", "1.5em")
+                        .style("font-family", "Arial, Helvetica, sans-serif")
+                        .style("line-height", "90%")
+                        .style("padding", "6%")
+                        .text(d.name);
+
+                    d3.select("#headerImage")
+                        .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
+                        .style("background-repeat", "no-repeat")
+                        .style("background-size", "cover");
+
+
+                    // If there are genres for this artist, list them
+                    if (d.genres.length > 0) {
+                        d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+                    } else {
+                        d3.select("#detailsGenres").style("display", "none");
+                    }
+                } else {
+                    d3.select("#detailsGenres").style("display", "none");
+                }
+
         }
      }
     
@@ -869,7 +927,8 @@ function update(source, switchM) {
                         
                         if (!generateTabIsActive) {
                             barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
-                            redraw();
+                        } else {
+                            barManager.setTrackInfo(trackInfo, { id: d.aid, typ: "artist" });
                         }
                     }
                     
@@ -877,29 +936,6 @@ function update(source, switchM) {
                     var artistName = d.name;
                     
                     handleSelection(this, "artist", artistID, artistName);
-                                        
-                    d3.select("#headerImage")
-                        .style("display", "block")
-                        .style("height", "200px")
-                        .style("width","100")
-                        .style("font-size", "1.5em")
-                        .style("font-family", "Arial, Helvetica, sans-serif")
-                        .style("line-height", "90%")
-                        .style("padding", "6%")
-                        .text(d.name);
-                    
-                    d3.select("#headerImage")
-                        .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
-                        .style("background-repeat", "no-repeat")
-                        .style("background-size", "cover");
-                                
-                    
-                    // If there are genres for this artist, list them
-                    if (d.genres.length > 0) {
-                        d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
-                    } else {
-                        d3.select("#detailsGenres").style("display", "none");
-                    }
                 });
                 
                 if (selectedArtist.indexOf(d.aid) != -1) {
@@ -955,8 +991,8 @@ function update(source, switchM) {
                         
                         if (!generateTabIsActive) {
                             barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
-                            // When we switch between tabs, widths can become negative, so we need to up the widths and heights and redraw.
-                            redraw();
+                        } else {
+                            barManager.setTrackInfo(trackInfo, { id: d.tid, typ: "track" });
                         }
                     }
                     
@@ -965,7 +1001,6 @@ function update(source, switchM) {
                     var trackArtistName = d.artist;
                     
                     handleSelection(this, "track", trackID, trackName, trackArtistName);
-                    d3.select("#detailsGenres").style("display", "none");
                 });
             
                 if (selectedTrack.indexOf(d.tid) != -1) {

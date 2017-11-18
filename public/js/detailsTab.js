@@ -58,6 +58,14 @@ var BarManager = function() {
         }
     }
     
+    this.setTrackInfo = function (trackInfo, obj) {
+        var id = obj.id;
+        var typ = obj.typ;
+        
+        selected = {id: id, typ: typ};
+        selectedTrackInfo = Object.assign({}, trackInfo);
+    }
+    
     this.artistNotLoaded = function(id) {
         return (!(selected.typ == "artist" && selected.id == id));
     }
@@ -76,10 +84,25 @@ var BarManager = function() {
         if (created) { return; }
         created = true;
         
-        var id = obj.id;
-        var typ = obj.typ;
+        var id;
+        var typ;
         
-        selected = {id: id, typ: typ};
+        if (trackinfo == null) {
+            id = selected.id;
+            typ = selected.typ;
+            trackinfo = selectedTrackInfo;
+        } else {
+            id = obj.id;
+            typ = obj.typ;
+            
+            selected = { id: id, typ: typ };
+            // Store the track information (for use when resizing)
+            selectedTrackInfo = Object.assign({}, trackinfo);
+        }
+        
+        if (trackinfo == null) {
+            return;
+        }
         
         // Resize the <div>
         var newHeight = (typ == "track" ? "170px" : "34px");
@@ -90,7 +113,7 @@ var BarManager = function() {
         selectedTrackInfo = Object.assign({}, trackinfo);
         
         // Grab our SVG width
-        width = atDiv.clientWidth;
+        width = svg.attr("width");
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
@@ -171,7 +194,7 @@ var BarManager = function() {
     }
     
     // Update bars code
-    this.updateBars = function(trackinfo, obj) {
+    this.updateBars = function(trackinfo, obj, force_layout) {    
         var id;
         var typ;
         
@@ -192,8 +215,29 @@ var BarManager = function() {
             return;
         }
         
+        if (force_layout) {
+        
+            // Extract the width and height that was computed by CSS.
+            viewerWidth = treeDiv.clientWidth;
+            viewerHeight = treeDiv.clientHeight;
+
+            // Use the extracted size to set the size of an SVG element.
+            svg
+            .attr("width", viewerWidth)
+            .attr("height", viewerHeight)
+            .attr("class", "overlay");
+
+            // Resize the the details SVG
+            viewerW2 = atDiv.clientWidth;
+            viewerH2 = atDiv.clientHeight;
+
+            d3.select("#detailsSVG")
+                .attr("width", viewerW2)
+                .attr("height", viewerH2);
+        }
+        
         // Grab our SVG width
-        width = atDiv.clientWidth;
+        width = svg.attr("width");
         
         // Resize the <div>
         var newHeight = (typ == "track" ? "170px" : "34px");

@@ -486,6 +486,13 @@
                     } else {
                         parNode.select("rect").style("stroke", color);
                     }
+                    
+                    var d = d3.select(lastSelected).datum();
+                    
+                    // We switched to the 'Details' tab, show the previous information.
+                    if (!isActive) {
+                        barManager.showBars();
+                    }
                 }
             }
             
