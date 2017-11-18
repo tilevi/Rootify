@@ -7,7 +7,7 @@ var switchingMode = true;
 var treeData = { "name": "", "root": true, "children": [] };
 
 // Initial Spotify user profile data
-var me = { "url": "" };
+var me = { url: "", uid: "" };
 
 // Used for assigning IDs to our nodes
 var i = 0;
@@ -125,25 +125,136 @@ var getAudioFeatures = function(err, data, source) {
     });
 }
 
+var lastSelected = null;
+
 var handleSelection = function(node, typ, id, name, artistName) {
-     if (generateTabIsActive && node != null) {
-        var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
+     if (node != null) {
          
-        // If the selected artist is not in the selected artist array
-        if (selectedArr.indexOf(id) == -1) {
+        if (generateTabIsActive) {
+        
+            var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
             
-            // If we exceed a maximum combination of 5 artists, tracks and genres, return.
-            if (doesNotMeetCap()) { return; }
-            
-            var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
-            d3.select(selectType)
-            .append("div")
-            .attr("id", "selected_" + id)
-            .attr("class","trackBox")
-            .attr("font-family", "sans-serif")
-            .attr("font-size", "10px")
-            .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
-            .append("span").attr("id", "closeButton").html("X").on("click", function() {               
+            // If the selected artist is not in the selected artist array
+            if (selectedArr.indexOf(id) == -1) {
+
+                // If we exceed a maximum combination of 5 artists, tracks and genres, return.
+                if (doesNotMeetCap()) { return; }
+
+                var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
+                d3.select(selectType)
+                .append("div")
+                .attr("id", "selected_" + id)
+                .attr("class", "trackBox")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "10px")
+                .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
+                .append("span").attr("id", "closeButton").html("X").on("click", function() {               
+                    var parNode = d3.select(node.parentNode);
+                    var parCircle = parNode.select("circle"); 
+                    if (parCircle[0][0] != null) {
+                        parCircle.style("stroke", "#ccc");
+                    } else {
+                        parNode.select("rect").style("stroke", "#ccc");
+                    }
+
+                    // Remove the selected node
+                    var selNodeIndex = selectedNode.indexOf(node);
+                    if (selNodeIndex != -1) {
+                        selectedArr.splice(selectedArr.indexOf(id), 1);
+                        selectedNode.splice(selNodeIndex, 1);
+                        d3.select("#selected_" + id).remove();
+                    }
+                });
+
+                if (lastSelected != null) {
+                    var color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                    var parNode = d3.select(lastSelected.parentNode);
+                    var parCircle = parNode.select("circle"); 
+                    if (parCircle[0][0] != null) {
+                        parCircle.style("stroke", color);
+                    } else {
+                        parNode.select("rect").style("stroke", color);
+                    }
+                }
+
+                if (node != null) {
+                    d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#FF8C00");
+                    
+                    lastSelected = node;
+                    selectedNode.push(node);
+                    
+                    var d = d3.select(node).datum();
+                    
+                    if (d.aid) {
+                        if (d.tracks) {
+                            loadSpotifyTracks(d.tracks);
+                        } 
+                        else {
+                            getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                        }
+
+                        if (barManager.artistNotLoaded(d.aid)) {                        
+                            var trackInfo = {
+                                Popularity: d.popularity,
+                                Danceability: 0,
+                                Energy: 0,
+                                Positivity: 0,
+                                Key: { key: 0, mode: 0 }
+                            };
+                            
+                            barManager.setTrackInfo(trackInfo, { id: d.aid, typ: "artist" });
+                        }
+                    } else {
+                        
+                        loadSpotifyTracks([d.tid]);
+
+                        if (barManager.trackNotLoaded(d.tid)) {                    
+                            var trackInfo = {
+                                Popularity: d.popularity,
+                                Danceability: d.dance,
+                                Energy: d.energy,
+                                Positivity: d.valence,
+                                Key: { key: d.tonic, mode: d.mode },
+                            };
+                            
+                            barManager.setTrackInfo(trackInfo, { id: d.tid, typ: "track" });
+                        }  
+                    }
+                    
+                    if (typ == "artist") {
+                        d3.select("#headerImage")
+                                .style("display", "block")
+                                .style("height", "200px")
+                                .style("width","100")
+                                .style("font-size", "1.5em")
+                                .style("font-family", "Arial, Helvetica, sans-serif")
+                                .style("line-height", "90%")
+                                .style("padding", "6%")
+                                .text(d.name);
+
+                            d3.select("#headerImage")
+                                .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
+                                .style("background-repeat", "no-repeat")
+                                .style("background-size", "cover");
+
+
+                            // If there are genres for this artist, list them
+                            if (d.genres.length > 0) {
+                                d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+                            } else {
+                                d3.select("#detailsGenres").style("display", "none");
+                            }
+                        } else {
+                            d3.select("#detailsGenres").style("display", "none");
+                        }
+                    }
+                
+                selectedArr.push(id);
+            } else {
+                // Removes the track box
+                d3.select("#selected_" + id).remove();
+                selectedArr.splice(selectedArr.indexOf(id), 1);
+
                 var parNode = d3.select(node.parentNode);
                 var parCircle = parNode.select("circle"); 
                 if (parCircle[0][0] != null) {
@@ -155,57 +266,91 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 // Remove the selected node
                 var selNodeIndex = selectedNode.indexOf(node);
                 if (selNodeIndex != -1) {
-                    selectedArr.splice(selectedArr.indexOf(id), 1);
                     selectedNode.splice(selNodeIndex, 1);
-                    d3.select("#selected_" + id).remove();
                 }
-            });
-            
-            if (node != null) {
-                d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
-            
-                selectedNode.push(node);
             }
-        
-            selectedArr.push(id);
         } else {
-            // Removes the track box
-            d3.select("#selected_" + id).remove();
-            selectedArr.splice(selectedArr.indexOf(id), 1);
             
-            var parNode = d3.select(node.parentNode);
-            var parCircle = parNode.select("circle"); 
-            if (parCircle[0][0] != null) {
-                parCircle.style("stroke", "#ccc");
+            if (lastSelected != null) {
+                var color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                var parNode = d3.select(lastSelected.parentNode);
+                var parCircle = parNode.select("circle"); 
+                if (parCircle[0][0] != null) {
+                    parCircle.style("stroke", color);
+                } else {
+                    parNode.select("rect").style("stroke", color);
+                }
+            }
+            
+            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#FF8C00");
+            
+            lastSelected = node;
+            var d = d3.select(node).datum();
+            
+            if (d.aid) {
+                console.log("This is an artist.");
+                if (d.tracks) {
+                    loadSpotifyTracks(d.tracks);
+                } 
+                else {
+                    getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
+                }
+
+                if (barManager.artistNotLoaded(d.aid)) {                        
+                    var trackInfo = {
+                        Popularity: d.popularity,
+                        Danceability: 0,
+                        Energy: 0,
+                        Positivity: 0,
+                        Key: { key: 0, mode: 0 }
+                    };
+
+                    barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
+                }
             } else {
-                parNode.select("rect").style("stroke", "#ccc");
+
+                loadSpotifyTracks([d.tid]);
+
+                if (barManager.trackNotLoaded(d.tid)) {                    
+                    var trackInfo = {
+                        Popularity: d.popularity,
+                        Danceability: d.dance,
+                        Energy: d.energy,
+                        Positivity: d.valence,
+                        Key: { key: d.tonic, mode: d.mode },
+                    };
+
+                    barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
+                }  
             }
-            
-            // Remove the selected node
-            var selNodeIndex = selectedNode.indexOf(node);
-            if (selNodeIndex != -1) {
-                selectedNode.splice(selNodeIndex, 1);
-            }
-        }
-     } else {
-        // This code sets the previously selected node to a white stroke
-        if (selectedNode[0] != null) {
-            var parNode = d3.select(selectedNode[0].parentNode);
-            var parCircle = parNode.select("circle"); 
-            if (parCircle[0][0] != null) {
-                parCircle.style("stroke", "#ccc");
-            } else {
-                parNode.select("rect").style("stroke", "#ccc");
-            }
-            
-            // Remove the selected node
-            selectedNode.splice(0, 1);
-        }
-        
-        if (node != null) {
-            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#4B9877");
-            
-            selectedNode.push(node);
+
+            if (typ == "artist") {
+                d3.select("#headerImage")
+                        .style("display", "block")
+                        .style("height", "200px")
+                        .style("width","100")
+                        .style("font-size", "1.5em")
+                        .style("font-family", "Arial, Helvetica, sans-serif")
+                        .style("line-height", "90%")
+                        .style("padding", "6%")
+                        .text(d.name);
+
+                    d3.select("#headerImage")
+                        .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
+                        .style("background-repeat", "no-repeat")
+                        .style("background-size", "cover");
+
+
+                    // If there are genres for this artist, list them
+                    if (d.genres.length > 0) {
+                        d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+                    } else {
+                        d3.select("#detailsGenres").style("display", "none");
+                    }
+                } else {
+                    d3.select("#detailsGenres").style("display", "none");
+                }
+
         }
      }
     
@@ -231,6 +376,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
             }
         });
         selectedNode = [];
+        lastSelected = null;
     }
     
     if (typ != "artist") {
@@ -500,7 +646,8 @@ function toggleChildren(d) {
         spotifyApi.getRecommendations(
         {
             "limit": 3,
-            "seed_tracks": ("" + d.tid)
+            "seed_tracks": ("" + d.tid), 
+            "market": "US"
         }, 
         function(err, data) {
             getAudioFeatures(err, data.tracks, d);
@@ -835,28 +982,7 @@ function update(source, switchM) {
                     return d.url;
                 })
                 .attr("clip-path", "url(#clip-r-" + Math.floor(newSize/2) + ")")
-                .on("click", function(d) {
-                    if (d.tracks) {
-                        loadSpotifyTracks(d.tracks);
-                    } 
-                    else {
-                        getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
-                    }
-                    
-                    if (barManager.artistNotLoaded(d.aid)) {                        
-                        var trackInfo = {
-                            Popularity: d.popularity,
-                            Danceability: 0,
-                            Energy: 0,
-                            Positivity: 0,
-                            Key: { key: 0, mode: 0 }
-                        };
-                        
-                        if (!generateTabIsActive) {
-                            barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
-                        }
-                    }
-                    
+                .on("click", function(d) {                
                     var artistID = d.aid;
                     var artistName = d.name;
                     
@@ -925,29 +1051,12 @@ function update(source, switchM) {
                 .attr('height', newSize-6)
                 .attr("xlink:href", function(d) {
                     return d.url;
-                }).on("click", function(d) {
-                    loadSpotifyTracks([d.tid]);
-                    
-                    if (barManager.trackNotLoaded(d.tid)) {                    
-                        var trackInfo = {
-                            Popularity: d.popularity,
-                            Danceability: d.dance,
-                            Energy: d.energy,
-                            Positivity: d.valence,
-                            Key: { key: d.tonic, mode: d.mode },
-                        };
-            
-                        if (!generateTabIsActive) {
-                            barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
-                        }
-                    }
-                    
+                }).on("click", function(d) {                    
                     var trackID = d.tid;
                     var trackName = d.name;
                     var trackArtistName = d.artist;
                     
                     handleSelection(this, "track", trackID, trackName, trackArtistName);
-                    d3.select("#detailsGenres").style("display", "none");
                 });
             
                 if (selectedTrack.indexOf(d.tid) != -1) {
@@ -1245,6 +1354,7 @@ var loadMe = function() {
     spotifyApi.getMe({}, function(err, data) {
         if (!err) {
             me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
+            me.uid = data.id;
             loadTopTracks();
         } else {        
             var refresh_token = getCookie("myRefreshToken");
@@ -1360,3 +1470,82 @@ $(".chosen").on('change', function(evt, params) {
         }
     }
 });
+
+function createPlaylist() {
+    // If we don't have at least 1 seed, return because we can't generate a playlist.
+    if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
+        return;
+    }
+    
+    var popValues = $("#filter_pop_slider").slider("values");
+    var popularityMin = popValues[0];
+    var popularityMax = popValues[1];
+    
+    var danceValues = $("#filter_dance_slider").slider("values");
+    var danceMin = danceValues[0];
+    var danceMax = danceValues[1];
+    
+    var energyValues = $("#filter_energy_slider").slider("values");
+    var energyMin = energyValues[0];
+    var energyMax = energyValues[1];
+    
+    var positivityValues = $("#filter_valence_slider").slider("values");
+    var positivityMin = positivityValues[0];
+    var positivityMax = positivityValues[1];
+    
+    spotifyApi.getRecommendations(
+    {
+        // We want to include our selected tracks, so we need to find the remainder of songs
+        // There should be a maximum total of 25 tracks.
+        "limit": 25 - (selectedTrack.length),
+        
+        "seed_tracks": selectedTrack, 
+        "seed_artists": selectedArtist, 
+        "seed_genres": selectedGenre, 
+        
+        "min_popularity": popularityMin, 
+        "max_popularity": popularityMax, 
+        
+        "min_danceability": danceMin / 100, 
+        "max_danceability": danceMax / 100, 
+        
+        "min_energy": energyMin / 100, 
+        "max_energy": energyMax / 100, 
+        
+        "min_valence": positivityMin / 100, 
+        "max_valence": positivityMax / 100, 
+        
+        "market": "US"
+    }, 
+    function(err, data) {
+        if (!err) {
+            
+            var uriArr = [];
+            
+            selectedTrack.forEach(function(d) {
+                uriArr.push("spotify:track:" + d);
+            });
+            
+            data.tracks.forEach(function(d) {
+                // Make sure there can't be duplicate tracks
+                if (uriArr.indexOf(d.uri) == -1) {
+                    uriArr.push(d.uri); 
+                }
+            });
+            
+            spotifyApi.createPlaylist(me.uid, 
+            {
+                name: "[Rootify] Playlist", 
+                public: true, 
+            }, 
+            function(err, data) {
+                if (!err) {
+                    var playlistID = data.id;
+                    console.log("Playlist successfully created: " + playlistID);
+                    
+                    spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) { if (err) { console.log(err); } else { console.log("Added tracks to the new playlist!"); }});
+                }
+            });
+        }
+    });
+}

@@ -338,7 +338,7 @@
                         </div>
                         
                         <!-- Button  -->
-                        <a class="playlistbtn" href="#">Generate Playlist</a>
+                        <a class="playlistbtn" href="#" onclick="createPlaylist()">Generate Playlist</a>
                     </div>
                 </div>
             </div>
@@ -347,8 +347,7 @@
         <!-- Tree Container -->
         <div id="tree-container">
             
-        <script type="text/javascript">
-            
+        <script type="text/javascript">        
             $(".chosen").chosen({
                 no_results_text: "No relevant genres found!",
                 width: "99%", 
@@ -461,10 +460,37 @@
             
             var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
             
-            var viewerWidth;
-            var viewerHeight;
-            
+            var viewerWidth, viewerHeight;
             var viewerW2, viewerH2;
+            
+            // This variable is true if the 'Generate' tab is selected.
+            var generateTabIsActive = false;
+            
+            function generateTabSwitched(isActive) {
+                generateTabIsActive = isActive;
+                if (lastSelected != null) {
+                    var color;
+                    if (isActive) {
+                        color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                    } else {
+                        color = "#FF8C00";
+                    }
+                    var parNode = d3.select(lastSelected.parentNode);
+                    var parCircle = parNode.select("circle"); 
+                    if (parCircle[0][0] != null) {
+                        parCircle.style("stroke", color);
+                    } else {
+                        parNode.select("rect").style("stroke", color);
+                    }
+                    
+                    var d = d3.select(lastSelected).datum();
+                    
+                    // We switched to the 'Details' tab, show the previous information.
+                    if (!isActive) {
+                        barManager.showBars();
+                    }
+                }
+            }
             
             // For the bars in the 'Details' tab
             var barManager = new BarManager();
@@ -488,7 +514,9 @@
                     .attr("width", viewerW2)
                     .attr("height", viewerH2);
                 
-                barManager.updateBars();
+                if (!generateTabIsActive) {
+                    barManager.updateBars();
+                }
             }
 
             // Draw for the first time to initialize.
@@ -503,16 +531,7 @@
         
         <!-- TAB JS -->
         <script src="/js/tabs.js"></script>
-        <script>
-            
-            var generateTabIsActive = false;
-            
-            function generateTabSwitched(isActive) {
-                generateTabIsActive = isActive;
-                barManager.updateBars();
-                handleSelection(null, null);
-            }
-            
+        <script>            
             var myTabs = tabs({
                 el: '#tabs',
                 tabNavigationLinks: '.tablink',
