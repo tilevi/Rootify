@@ -233,7 +233,7 @@ font-family: "Source Sans Pro", sans-serif;
 /* ------------- sidebar ------------ */
 
 #sidebar {
-    z-index: 5px;
+    z-index: 5;
     position: fixed;
     right:0;
     width: 18%;
@@ -372,13 +372,14 @@ font-family: "Source Sans Pro", sans-serif;
 
 
 #overflowss {
-    height: 82vh;
+    height: 78vh;
     overflow-y:auto;
      max-width: 100%;
     overflow-x: hidden;
     
 }
 .playlistbtn {
+     z-index: 10;
     background-color: #05AC81;
     position:absolute;
     bottom:0;
@@ -486,7 +487,7 @@ font-family: "Source Sans Pro", sans-serif;
     width: 90%;
     padding: 5%;
     background-color: #212938;
-    border: .5px solid #242A34;
+    border: .5px solid #1f2126;
     color:#959da0;
 }
 
