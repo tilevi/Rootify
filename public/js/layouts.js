@@ -152,9 +152,9 @@ var handleSelection = function(node, typ, id, name, artistName) {
                     var parNode = d3.select(node.parentNode);
                     var parCircle = parNode.select("circle"); 
                     if (parCircle[0][0] != null) {
-                        parCircle.style("stroke", "#ccc");
+                        parCircle.style("stroke", "none");
                     } else {
-                        parNode.select("rect").style("stroke", "#ccc");
+                        parNode.select("rect").style("stroke", "none");
                     }
 
                     // Remove the selected node
@@ -167,7 +167,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 });
 
                 if (lastSelected != null) {
-                    var color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                    var color = (selectedNode.indexOf(lastSelected) == -1) ? "none" : "#4B9877";
                     var parNode = d3.select(lastSelected.parentNode);
                     var parCircle = parNode.select("circle"); 
                     if (parCircle[0][0] != null) {
@@ -258,9 +258,9 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 var parNode = d3.select(node.parentNode);
                 var parCircle = parNode.select("circle"); 
                 if (parCircle[0][0] != null) {
-                    parCircle.style("stroke", "#ccc");
+                    parCircle.style("stroke", "none");
                 } else {
-                    parNode.select("rect").style("stroke", "#ccc");
+                    parNode.select("rect").style("stroke", "none");
                 }
 
                 // Remove the selected node
@@ -272,7 +272,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
         } else {
             
             if (lastSelected != null) {
-                var color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                var color = (selectedNode.indexOf(lastSelected) == -1) ? "none" : "#4B9877";
                 var parNode = d3.select(lastSelected.parentNode);
                 var parCircle = parNode.select("circle"); 
                 if (parCircle[0][0] != null) {
@@ -370,9 +370,9 @@ var handleSelection = function(node, typ, id, name, artistName) {
             var parNode = d3.select(d.parentNode);
             var parCircle = parNode.select("circle"); 
             if (parCircle[0][0] != null) {
-                parCircle.style("stroke", "#ccc");
+                parCircle.style("stroke", "none");
             } else {
-                parNode.select("rect").style("stroke", "#ccc");
+                parNode.select("rect").style("stroke", "none");
             }
         });
         selectedNode = [];
