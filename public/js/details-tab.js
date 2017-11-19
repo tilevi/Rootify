@@ -196,8 +196,23 @@ var BarManager = function() {
     // Update bars code
     this.updateBars = function(trackinfo, obj, force_layout) {
         if (force_layout) {
-            redraw();
-            return;
+            // Extract the width and height that was computed by CSS.
+            viewerWidth = treeDiv.clientWidth;
+            viewerHeight = treeDiv.clientHeight;
+
+            // Use the extracted size to set the size of an SVG element.
+            svg
+            .attr("width", viewerWidth)
+            .attr("height", viewerHeight)
+            .attr("class", "overlay");
+
+            // Resize the the details SVG
+            viewerW2 = atDiv.clientWidth;
+            viewerH2 = atDiv.clientHeight;
+
+            d3.select("#detailsSVG")
+                .attr("width", viewerW2)
+                .attr("height", viewerH2);
         }
         
         var id;

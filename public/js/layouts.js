@@ -393,6 +393,11 @@ var handleSelection = function(node, typ, id, name, artistName) {
             }
         });
         selectedNode = [];
+        
+        if (lastSelected != null) {
+            var data = d3.select(lastSelected).datum();
+            d3.select(lastSelected.parentNode).select((data.tid ? "rect" : "circle")).style("stroke", "#ccc");
+        }
         lastSelected = null;
     }
     
