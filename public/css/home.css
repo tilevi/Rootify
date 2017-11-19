@@ -56,7 +56,7 @@ font-family: "Source Sans Pro", sans-serif;
     background-color: #4B9877; /* Green */
     border: none;
     color: white;
-    padding: 15px 32px;
+    padding: 5px 10px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
@@ -71,7 +71,6 @@ font-family: "Source Sans Pro", sans-serif;
     position: relative;
     top: 50%;
     transform: translateY(-50%);
-    
     width: 50%;
     display: block;
     margin-left: auto;
@@ -195,6 +194,8 @@ font-family: "Source Sans Pro", sans-serif;
     color: #fff;
     background-color: #4B9877;
     border-color: #4B9877;
+     transition-property: all;
+  transition-duration: .5s;
 }
 
 .navbar a:active{
@@ -273,7 +274,6 @@ font-family: "Source Sans Pro", sans-serif;
 
 }
 .tablinkside {
-    border-left: .5px solid #242A34;
 }
 
 .tablink a{
@@ -369,20 +369,25 @@ font-family: "Source Sans Pro", sans-serif;
 }
 .playlistbtn {
     background-color: #05AC81;
+    position:absolute;
+    bottom:0;
     color: #fff;
     width: 100%;
-    float: bottom;
     display: block;
     padding:10px;
-    padding-top: 10px;
-    float:bottom;
-    display: block;
-    padding:10px;
-    padding-bottom: 10px;
+    padding:20px;
+    padding-bottom: 15px;
     padding-left: 0;
     padding-right: 0;
     text-align: center;
     text-decoration: none;
+    text-transform: uppercase;
+}
+
+.playlistbtn:hover {
+  background-color:#212938;
+  transition-property: all;
+  transition-duration: .5s;
 }
 
 /*----------- Other ---------*/
@@ -441,7 +446,7 @@ font-family: "Source Sans Pro", sans-serif;
 .node circle, .node rect {
     fill: #282828;
     stroke: #ccc;
-    stroke-width: 2.5px;
+    stroke-width: 1.5px;
 }
 
 
@@ -454,7 +459,7 @@ font-family: "Source Sans Pro", sans-serif;
 .link {
     fill: none;
     stroke: #ccc;
-    stroke-width: 1.5px;
+    stroke-width: 1px;
 }
 
 .line {
@@ -467,6 +472,7 @@ font-family: "Source Sans Pro", sans-serif;
     padding: 5%;
     background-color: #252F41;
     border: .5px solid #242A34;
+    color:#959da0;
 }
 
 #selectedTracks {
@@ -479,9 +485,13 @@ font-family: "Source Sans Pro", sans-serif;
 
 #closeButton {
     float: right;
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
     display: inline-block;
     padding: 2px 5px;
-    background: #ccc;
+    color: red;
+
 }
 
 
@@ -490,23 +500,27 @@ font-family: "Source Sans Pro", sans-serif;
 
 .range-slider {
     width: 150px;
-    background: orange;
+    height: 5px !important;
 }
 
 .generate-range-slider {
     width: 100%;
+    height: 5px !important; 
 }
 
 .range-slider .ui-slider-range, .generate-range-slider .ui-slider-range  {
+    height: 5px !important;  
     background: #4B9877;
 }
 
 .ui-slider-handle.ui-corner-all.ui-state-default {
     background: #282828;
+     height: 10px !important;  
 }
 
 .range-slider-text {
     margin-top: 5px;
+    padding:.5%;
     height: 20px;
-    color: white;
+    color: #cfcfcf;
 }

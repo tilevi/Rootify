@@ -147,8 +147,8 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 .attr("class", "trackBox")
                 .attr("font-family", "sans-serif")
                 .attr("font-size", "10px")
-                .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
-                .append("span").attr("id", "closeButton").html("X").on("click", function() {               
+                .html(name + (artistName != null ? (" - <br>" + artistName) : ""))
+                .append("span").attr("id", "closeButton").html("&times").on("click", function() {               
                     var parNode = d3.select(node.parentNode);
                     var parCircle = parNode.select("circle"); 
                     if (parCircle[0][0] != null) {
@@ -838,7 +838,7 @@ function update(source, switchM) {
                 .style("stroke-width", 0)
                 .transition()
                 .duration(duration)
-                .style("stroke-width", 3)
+                .style("stroke-width", 1)
                 .style("stroke", "#ccc");
                 
                 if (!d.root) {
@@ -850,7 +850,7 @@ function update(source, switchM) {
                         .attr("d", d3.svg.symbol().type("triangle-up").size(50))
                         .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
                         .style("fill", "white")
-                        .attr("stroke", "black")
+                        .attr("stroke", "#293345")
                         .attr("stroke-width", "1px")
                         .style("opacity", 0)
                         .on("click", click)
@@ -937,7 +937,7 @@ function update(source, switchM) {
                 .style("stroke-width", 0)
                 .transition()
                 .duration(duration)
-                .style("stroke-width", 3)
+                .style("stroke-width", 1)
                 .style("stroke", "#ccc");
             
             
@@ -958,11 +958,9 @@ function update(source, switchM) {
         } if (!d.root && !d.spacer) {
             d3This.append('path')
                 .classed("triangleDown", true)
-                .attr("d", d3.svg.symbol().type("triangle-down").size(150))
+                .attr("d", d3.svg.symbol().type("triangle-down").size(50))
                 .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.55) + ")"; })
                 .style("fill", "white")
-                .attr("stroke", "black")
-                .attr("stroke-width", "1px")
                 .style("opacity", d.children == null ? 1 : 0)
                 .style("pointer-events", d.children == null ? "auto" : "none")
                 .on("click", click);
