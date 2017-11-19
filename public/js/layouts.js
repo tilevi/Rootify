@@ -230,6 +230,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
                                 .style("font-family", "Arial, Helvetica, sans-serif")
                                 .style("line-height", "90%")
                                 .style("padding", "6%")
+                                .style("vertical-align", "middle;")
                                 .text(d.name);
 
                             d3.select("#headerImage")

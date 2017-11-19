@@ -16,6 +16,55 @@ body {
     line-height: 1em;
     max-width: 100%;
     overflow-x: hidden;
+    overflow-y:hidden;
+}
+html {
+  overflow:   scroll;
+}
+
+::-webkit-scrollbar {
+    display:none;
+    width:7px;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    background:rgba(0,0,0,0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    background:rgba(0,0,0,0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:rgba(0,0,0,0.4);
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+    background:rgba(0,0,0,0.05);
+}
+
+::-webkit-scrollbar-track {
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    background:rgba(0,0,0,0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius:5px;
+    border-radius:5px;
+    background:rgba(0,0,0,0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:rgba(0,0,0,0.4);
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+    background:rgba(0,0,0,0.05);
 }
 
 /* link options */
@@ -377,6 +426,10 @@ font-family: "Source Sans Pro", sans-serif;
      max-width: 100%;
     overflow-x: hidden;
     
+}
+#overflowssgone{
+  overflow-y:auto;
+  height: 82vh;
 }
 .playlistbtn {
      z-index: 10;
