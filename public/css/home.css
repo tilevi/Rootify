@@ -484,6 +484,8 @@ font-family: "Source Sans Pro", sans-serif;
 }
 
 .trackBox {
+    position: relative;
+    
     width: 90%;
     padding: 5%;
     background-color: #212938;
@@ -491,23 +493,19 @@ font-family: "Source Sans Pro", sans-serif;
     color:#959da0;
 }
 
-#selectedTracks {
-    width: 100%;
-}
-
-#selectedArtists {
+#selectedTracks, #selectedArtists {
     width: 100%;
 }
 
 #closeButton {
-    float: right;
-    position: relative;
+    position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    display: inline-block;
-    padding: 2px 5px;
+    right: 5%;
+    font-weight: bold;
+    font-size: 18px;
     color: red;
-
+    cursor: pointer;
 }
 
 

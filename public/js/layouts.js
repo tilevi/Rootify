@@ -147,8 +147,8 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 .attr("class", "trackBox")
                 .attr("font-family", "sans-serif")
                 .attr("font-size", "10px")
-                .html(name + (artistName != null ? (" - <br>" + artistName) : ""))
-                .append("span").attr("id", "closeButton").html("&times").on("click", function() {               
+                .html(name + (artistName != null ? (" - <br/>" + artistName) : ""))
+                .append("div").attr("id", "closeButton").html("&times").on("click", function() {               
                     var parNode = d3.select(node.parentNode);
                     var parCircle = parNode.select("circle"); 
                     if (parCircle[0][0] != null) {
