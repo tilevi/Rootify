@@ -54,7 +54,7 @@ var difference = 55 - 42;
 var verticalSpacing = 78;
 
 function elbow(d, i) {
-    var targetY = d.target.y - (d.target.howTall-2 ? d.target.howTall : 26);
+    var targetY = d.target.y + (d.target.howTall ? (-d.target.howTall + 2) : -10);
     
     return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : (verticalSpacing-13)) )
     + "H" + d.target.x + "V" + ( targetY );
@@ -98,14 +98,14 @@ var doneLoading = function() {}
 var getAudioFeatures = function(err, data, source) {
     var tracks = [];
     var audioFeatures = {};
-
+    
     var j = 0;
-
+    
     while (j < data.length) {
         tracks.push(data[j].id);
         j++;
     }
-
+    
     spotifyApi.getAudioFeaturesForTracks(tracks, function(err, tdata) {
         if (!err) {
             j = 0;
@@ -289,7 +289,6 @@ var handleSelection = function(node, typ, id, name, artistName) {
             var d = d3.select(node).datum();
             
             if (d.aid) {
-                console.log("This is an artist.");
                 if (d.tracks) {
                     loadSpotifyTracks(d.tracks);
                 } 
@@ -366,6 +365,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
         
         d3.select("#spotifyTracks").html("");
         d3.select("#detailsGenres").style("display", "none");
+        d3.select("#generatedPlaylistTracks").style("display", "none");
         
         selectedNode.forEach(function(d) {
             var parNode = d3.select(d.parentNode);
@@ -518,7 +518,7 @@ function zoom() {
 }
 
 // Our zoom listener
-var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom).scale(1.35);
+var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom).scale(1.4);
 
 // Our base SVG
 var baseSvg = d3.select("#baseSVG").call(zoomListener);
@@ -744,25 +744,26 @@ function resizeNodes() {
         d.howTall = newSize/2;
         
         if (d.aid) {
-            d3This.select("circle").attr("r", newSize/2);
+            d3This.select("circle").attr("r", (newSize-4)/2);
             
-            var newRadius = Math.floor(newSize/2);
+            var newRadius = Math.floor((newSize-3)/2);
             
             d3This.select('image')
                     .attr("clip-path", "url(#clip-r-" + newRadius + ")");
             
             d3This.select('image')
-                .attr('x', -newSize/2)
-                .attr('y', -newSize/2)
-                .attr('width', newSize)
-                .attr('height', newSize)
+                .attr('x', -(newSize-4)/2)
+                .attr('y', -(newSize-4)/2)
+                .attr('width', (newSize-4))
+                .attr('height', (newSize-4))
         } else {
-            d3This.select("rect").attr('x', -newSize/2)
-                    .attr('y', -newSize/2)
-                    .attr('width', newSize)
-                    .attr('height', newSize)
-                    .attr('rx', 6)
-                    .attr('ry', 6);
+            d3This.select("rect")
+                    .attr('x', -(newSize-4)/2)
+                    .attr('y', -(newSize-4)/2)
+                    .attr('width', newSize-4)
+                    .attr('height', newSize-4)
+                    .attr('rx', 0)
+                    .attr('ry', 0);
 
             d3This.select('image')
                     .attr('x', -(newSize-6)/2)
@@ -774,7 +775,7 @@ function resizeNodes() {
         d3This.select("path.line")
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.howTall ? d.howTall+2 : 26) }, 
+                        { "x": 0, "y": (d.howTall ? d.howTall-2 : 26) }, 
                         { "x": 0, "y": (verticalSpacing - 15) }
                     ]));
         
@@ -832,7 +833,7 @@ function update(source, switchM) {
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall+2 : 26)) }, 
+                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall-2 : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
@@ -931,7 +932,7 @@ function update(source, switchM) {
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall+2 : 26)) }, 
+                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall-2 : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
@@ -969,53 +970,29 @@ function update(source, switchM) {
         
         if (d.aid) {
             d3This.append('circle')
-                .attr("r", newSize/2)
+                .attr("r", (newSize-4)/2)
                 .style("fill", "#282828");
             
             d3This.append('image')
-                .attr('x', -newSize/2)
-                .attr('y', -newSize/2)
-                .attr('width', newSize)
-                .attr('height', newSize)
+                .attr('x', -(newSize-6)/2)
+                .attr('y', -(newSize-6)/2)
+                .attr('width', (newSize-6))
+                .attr('height', (newSize-6))
                 .attr("xlink:href", function(d) {
                     return d.url;
                 })
-                .attr("clip-path", "url(#clip-r-" + Math.floor(newSize/2) + ")")
+                .attr("clip-path", "url(#clip-r-" + Math.floor((newSize-4)/2) + ")")
                 .on("click", function(d) {                
                     var artistID = d.aid;
                     var artistName = d.name;
                     
                     handleSelection(this, "artist", artistID, artistName);
-                                        
-                    d3.select("#headerImage")
-                        .style("display", "block")
-                        .style("height", "200px")
-                        .style("width","100")
-                        .style("font-size", "1.5em")
-                        .style("font-family", "Avenir Next, sans-serif")
-                        .style("line-height", "90%")
-                        .style("padding", "6%")
-                        .text(d.name);
-                    
-                    d3.select("#headerImage")
-                        .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .5),rgba(0,236,188, .5)), url('" + d.url + "')")
-                        .style("background-repeat", "no-repeat")
-                        .style("background-size", "cover");
-                                
-                    
-                    // If there are genres for this artist, list them
-                    if (d.genres.length > 0) {
-                        d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
-                    } else {
-                        d3.select("#detailsGenres").style("display", "none");
-                    }
                 });
                 
                 if (selectedArtist.indexOf(d.aid) != -1) {
                     d3.select(this).select("circle").style("stroke", "#4B9877");
                 }
         } else if (d.root) {
-            
             d3This.style("cursor", "none").style("pointer-events", "none");
             
             d3This.append("circle")
@@ -1036,12 +1013,15 @@ function update(source, switchM) {
                .attr("clip-path", "url(#clip-root)");
         } else if (!d.spacer) {
             d3This.append('rect')
-                .attr('x', -newSize/2)
-                    .attr('y', -newSize/2)
-                    .attr('width', newSize)
-                    .attr('height', newSize)
-                    .attr('rx', 6)
-                    .attr('ry', 6);
+                .attr("class", "node")
+                .attr("fill", "#282828")
+                .attr("stroke-width", "1px")
+                .attr('x', -(newSize-4)/2)
+                .attr('y', -(newSize-4)/2)
+                .attr('width', newSize-4)
+                .attr('height', newSize-4)
+                .attr('rx', 0)
+                .attr('ry', 0);
             
             d3This.append('image')
                 .attr('x', -(newSize-6)/2)
@@ -1118,7 +1098,6 @@ function update(source, switchM) {
         If our node exit set is non-empty, we transition them properly. I make a custom clip element that resizes its radius as the transition occurs.
     */
     if (!nodeExit.empty()) {
-        
         d3.selectAll("circle.clipResize")
             .attr("r", function(d, i) { return (i + 10); })
             .transition()
@@ -1163,7 +1142,6 @@ function update(source, switchM) {
     }
     
     nodeExit.each(function(d) {
-        
         var d3This = d3.select(this);
         
         var line = d3This.select("path.line");
@@ -1174,7 +1152,7 @@ function update(source, switchM) {
         
         if (d.aid) {
             d3This.select('image')
-                    .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall) + ")");
+                    .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall-3) + ")");
         }
         
         var exitVar = d3This
@@ -1520,15 +1498,18 @@ function createPlaylist() {
         if (!err) {
             
             var uriArr = [];
+            var trackInfo = [];
             
             selectedTrack.forEach(function(d) {
                 uriArr.push("spotify:track:" + d);
+                //trackInfo.push(d3.select("#selected_" + d).text().slice(0, -1));
             });
             
             data.tracks.forEach(function(d) {
                 // Make sure there can't be duplicate tracks
                 if (uriArr.indexOf(d.uri) == -1) {
-                    uriArr.push(d.uri); 
+                    uriArr.push(d.uri);
+                    trackInfo.push(d.name + " - <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
                 }
             });
             
@@ -1542,7 +1523,20 @@ function createPlaylist() {
                     var playlistID = data.id;
                     console.log("Playlist successfully created: " + playlistID);
                     
-                    spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) { if (err) { console.log(err); } else { console.log("Added tracks to the new playlist!"); }});
+                    spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) { if (!err) {
+                        
+                        var genPlaylistDiv = d3.select("#recommendedTracks");
+                        genPlaylistDiv.html("");
+                        d3.select("#generatedPlaylistTracks").style("display", "block");
+                        
+                        trackInfo.forEach(function(d) {
+                            genPlaylistDiv.append("div")
+                                .attr("class", "trackBox")
+                                .attr("font-family", "sans-serif")
+                                .attr("font-size", "10px")
+                                .html(d);
+                        });
+                    } });
                 }
             });
         }

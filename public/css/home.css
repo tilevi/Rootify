@@ -301,9 +301,13 @@ font-family: "Source Sans Pro", sans-serif;
 
 #generateFilters {
     width: 87%;
-    height: 170px;
+    height: 130px;
     margin-left: 5%;
     margin-right: 8%;
+}
+
+#generatedPlaylistTracks {
+    display: none;
 }
 
 #at-container {
@@ -513,8 +517,11 @@ font-family: "Source Sans Pro", sans-serif;
 
 }
 
+rect .node {
+    fill: grey;
+}
+
 .node circle, .node rect {
-    fill: transparent;
     box-shadow: 10px 10px 5px #888888;
 }
 
