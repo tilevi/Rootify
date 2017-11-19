@@ -856,7 +856,7 @@ function update(source, switchM) {
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall : 26)) }, 
+                        { "x": 0, "y": (d.root ? 30 : (d.howTall ? d.howTall : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
@@ -956,7 +956,7 @@ function update(source, switchM) {
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall : 26)) }, 
+                        { "x": 0, "y": (d.root ? 30 : (d.howTall ? d.howTall : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
