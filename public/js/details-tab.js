@@ -52,7 +52,7 @@ var BarManager = function() {
     
     this.showBars = function(trackInfo, obj) {
         if (created) {
-            this.updateBars(trackInfo, obj);
+            this.updateBars(trackInfo, obj, true);
         } else {
             this.createBars(trackInfo, obj);
         }
@@ -79,7 +79,7 @@ var BarManager = function() {
     }
     
     // This method is called if we initially click on an artist or track.
-    this.createBars = function(trackinfo, obj) {    
+    this.createBars = function(trackinfo, obj) {
         // Return if we already created the bars
         if (created) { return; }
         created = true;
@@ -194,7 +194,12 @@ var BarManager = function() {
     }
     
     // Update bars code
-    this.updateBars = function(trackinfo, obj, force_layout) {    
+    this.updateBars = function(trackinfo, obj, force_layout) {
+        if (force_layout) {
+            redraw();
+            return;
+        }
+        
         var id;
         var typ;
         
@@ -213,27 +218,6 @@ var BarManager = function() {
         
         if (trackinfo == null) {
             return;
-        }
-        
-        if (force_layout) {
-        
-            // Extract the width and height that was computed by CSS.
-            viewerWidth = treeDiv.clientWidth;
-            viewerHeight = treeDiv.clientHeight;
-
-            // Use the extracted size to set the size of an SVG element.
-            svg
-            .attr("width", viewerWidth)
-            .attr("height", viewerHeight)
-            .attr("class", "overlay");
-
-            // Resize the the details SVG
-            viewerW2 = atDiv.clientWidth;
-            viewerH2 = atDiv.clientHeight;
-
-            d3.select("#detailsSVG")
-                .attr("width", viewerW2)
-                .attr("height", viewerH2);
         }
         
         // Grab our SVG width

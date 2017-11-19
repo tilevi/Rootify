@@ -19,8 +19,10 @@ body {
     overflow-y:hidden;
 }
 html {
-  overflow:   scroll;
+    overflow: scroll;
+    overflow: -moz-scrollbars-none;
 }
+
 
 ::-webkit-scrollbar {
     display:none;
@@ -431,10 +433,12 @@ font-family: "Source Sans Pro", sans-serif;
     overflow-x: hidden;
     
 }
-#overflowssgone{
-  overflow-y:auto;
-  height: 82vh;
+#overflowssgone {
+    width: 100%;
+    height: 95vh;
+    overflow-y:auto;
 }
+
 .playlistbtn {
      z-index: 10;
     background-color: #05AC81;
@@ -478,6 +482,10 @@ font-family: "Source Sans Pro", sans-serif;
     display: block;
     margin: 0 auto;
 
+}
+
+#detailsSVG {
+    width: 100%;
 }
 
 #detailsGenres {

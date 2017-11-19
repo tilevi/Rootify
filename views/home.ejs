@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE HTML>
 <html>
 	<head>
 		<title>Rootify</title>
@@ -18,9 +18,6 @@
 		<!-- Spotify Web API (JS client-side wrapper) -->
 		<script src="/js/spotify-web-api.js"></script>
         
-        <!-- anti scroll -->
-        <script src="/js/antiscroll.js"></script>
-
         <!-- Main CSS -->
         <link rel="stylesheet" type="text/css" href="/css/home.css">
         
@@ -341,7 +338,7 @@
                         </div>
                         
                         <div id="generatedPlaylistTracks">
-                            <h2>Generated Playlist</h2>
+                            <h2>Recommended Playlist</h2>
                             <div id="recommendedTracks"></div>
                         </div>
                         
@@ -459,7 +456,7 @@
         </script>
         
         <!-- Details tab -->
-        <script type="text/javascript" src="/js/detailsTab.js"></script>
+        <script type="text/javascript" src="/js/details-tab.js"></script>
         
         <!-- Resize code -->
         <script type="text/javascript">
@@ -531,6 +528,8 @@
                 if (!generateTabIsActive) {
                     barManager.updateBars();
                 }
+                
+                console.log("Resized.");
             }
 
             // Draw for the first time to initialize.

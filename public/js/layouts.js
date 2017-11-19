@@ -41,6 +41,8 @@ var selectedArtist = [];
 var selectedTrack = [];
 var selectedGenre = [];
 
+var selectedTrackInfo = {};
+
 /*
     Our initial tree layout
 */
@@ -54,7 +56,15 @@ var difference = 55 - 42;
 var verticalSpacing = 78;
 
 function elbow(d, i) {
-    var targetY = d.target.y + (d.target.howTall ? (-d.target.howTall + 2) : -10);
+    var targetY = -10;
+    
+    if (d.target.aid) {
+        var circleRadius = d.target.newSize;
+        targetY = d.target.y + Math.floor(-circleRadius/2);
+    } else if (d.target.tid) {
+        var rectHeight = d.target.newSize;
+        targetY = d.target.y + Math.floor(-rectHeight/2);
+    }
     
     return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : (verticalSpacing-13)) )
     + "H" + d.target.x + "V" + ( targetY );
@@ -147,7 +157,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 .attr("class", "trackBox")
                 .attr("font-family", "sans-serif")
                 .attr("font-size", "10px")
-                .html(name + (artistName != null ? (" - <br/>" + artistName) : ""))
+                .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
                 .append("div").attr("id", "closeButton").html("&times").on("click", function() {               
                     var parNode = d3.select(node.parentNode);
                     var parCircle = parNode.select("circle"); 
@@ -161,6 +171,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
                     var selNodeIndex = selectedNode.indexOf(node);
                     if (selNodeIndex != -1) {
                         selectedArr.splice(selectedArr.indexOf(id), 1);
+                        selectedTrackInfo[id] = null;
                         selectedNode.splice(selNodeIndex, 1);
                         d3.select("#selected_" + id).remove();
                     }
@@ -251,10 +262,14 @@ var handleSelection = function(node, typ, id, name, artistName) {
                     }
                 
                 selectedArr.push(id);
+                if (selectedArr == selectedTrack) {
+                    selectedTrackInfo[id] = name + " <br/>" + artistName;
+                }
             } else {
                 // Removes the track box
                 d3.select("#selected_" + id).remove();
                 selectedArr.splice(selectedArr.indexOf(id), 1);
+                selectedTrackInfo[id] = null;
 
                 var parNode = d3.select(node.parentNode);
                 var parCircle = parNode.select("circle"); 
@@ -358,6 +373,7 @@ var handleSelection = function(node, typ, id, name, artistName) {
         // Reset all selected artists and tracks (from 'Generate' tab)
         selectedArtist = [];
         selectedTrack = [];
+        selectedTrackInfo = {};
         
         d3.select("div.trackBox").remove();
         d3.select("#selectedArtists").html("");
@@ -741,41 +757,48 @@ function resizeNodes() {
         var newSize = sizeScale(num);
         var d3This = d3.select(this);
         
-        d.howTall = newSize/2;
+        d.howTall = Math.floor(newSize/2);
+        d.newSize = newSize;
         
         if (d.aid) {
-            d3This.select("circle").attr("r", (newSize-4)/2);
+            var circleRadius = Math.floor(newSize/2);
+            var imageWidth = (newSize-1);
+            var imageHeight = (newSize-1);
             
-            var newRadius = Math.floor((newSize-3)/2);
+            d3This.select("circle").attr("r", circleRadius);
             
             d3This.select('image')
-                    .attr("clip-path", "url(#clip-r-" + newRadius + ")");
+                    .attr("clip-path", "url(#clip-r-" + circleRadius + ")");
             
             d3This.select('image')
-                .attr('x', -(newSize-4)/2)
-                .attr('y', -(newSize-4)/2)
-                .attr('width', (newSize-4))
-                .attr('height', (newSize-4))
+                .attr('x', Math.floor(-imageWidth/2))
+                .attr('y', Math.floor(-imageHeight/2))
+                .attr('width', imageWidth)
+                .attr('height', imageHeight);
         } else {
+            var rectWidth = newSize;
+            var rectHeight = newSize;
+            
+            var imageWidth = newSize - 2;
+            var imageHeight = newSize - 2;
+            
             d3This.select("rect")
-                    .attr('x', -(newSize-4)/2)
-                    .attr('y', -(newSize-4)/2)
-                    .attr('width', newSize-4)
-                    .attr('height', newSize-4)
-                    .attr('rx', 0)
-                    .attr('ry', 0);
+                    .attr('x', Math.floor(-rectWidth/2))
+                    .attr('y', Math.floor(-rectHeight/2))
+                    .attr('width', rectWidth)
+                    .attr('height', rectHeight);
 
             d3This.select('image')
-                    .attr('x', -(newSize-6)/2)
-                    .attr('y', -(newSize-6)/2)
-                    .attr('width', newSize-6)
-                    .attr('height', newSize-6);
+                    .attr('x', Math.floor(-imageWidth/2))
+                    .attr('y', Math.floor(-imageHeight/2))
+                    .attr('width', imageWidth)
+                    .attr('height', imageHeight);
         }
         
         d3This.select("path.line")
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.howTall ? d.howTall-2 : 26) }, 
+                        { "x": 0, "y": (d.howTall ? d.howTall : 26) }, 
                         { "x": 0, "y": (verticalSpacing - 15) }
                     ]));
         
@@ -833,7 +856,7 @@ function update(source, switchM) {
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall-2 : 26)) }, 
+                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
@@ -925,14 +948,15 @@ function update(source, switchM) {
         var newSize = sizeScale(num);
         var d3This = d3.select(this);
         
-        d.howTall = newSize/2;
+        d.howTall = Math.floor(newSize/2);
+        d.newSize = newSize;
         
         if (d.children) {
             d3This.append("path")
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall-2 : 26)) }, 
+                        { "x": 0, "y": (d.root ? 33 : (d.howTall ? d.howTall : 26)) }, 
                         { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
                     ]))
                 .style("stroke", "#ccc")
@@ -969,19 +993,23 @@ function update(source, switchM) {
         }
         
         if (d.aid) {
+            var circleRadius = Math.floor(newSize/2);
+            var imageWidth = (newSize-1);
+            var imageHeight = (newSize-1);
+            
             d3This.append('circle')
-                .attr("r", (newSize-4)/2)
+                .attr("r", circleRadius)
                 .style("fill", "#282828");
             
             d3This.append('image')
-                .attr('x', -(newSize-6)/2)
-                .attr('y', -(newSize-6)/2)
-                .attr('width', (newSize-6))
-                .attr('height', (newSize-6))
+                .attr('x', Math.floor(-imageWidth/2))
+                .attr('y', Math.floor(-imageHeight/2))
+                .attr('width', imageWidth)
+                .attr('height', imageHeight)
                 .attr("xlink:href", function(d) {
                     return d.url;
                 })
-                .attr("clip-path", "url(#clip-r-" + Math.floor((newSize-4)/2) + ")")
+                .attr("clip-path", "url(#clip-r-" + circleRadius + ")")
                 .on("click", function(d) {                
                     var artistID = d.aid;
                     var artistName = d.name;
@@ -1012,22 +1040,26 @@ function update(source, switchM) {
                 })
                .attr("clip-path", "url(#clip-root)");
         } else if (!d.spacer) {
+            var rectWidth = newSize;
+            var rectHeight = newSize;
+            
+            var imageWidth = newSize - 2;
+            var imageHeight = newSize - 2;
+            
             d3This.append('rect')
                 .attr("class", "node")
                 .attr("fill", "#282828")
                 .attr("stroke-width", "1px")
-                .attr('x', -(newSize-4)/2)
-                .attr('y', -(newSize-4)/2)
-                .attr('width', newSize-4)
-                .attr('height', newSize-4)
-                .attr('rx', 0)
-                .attr('ry', 0);
+                .attr('x', Math.floor(-rectWidth/2))
+                .attr('y', Math.floor(-rectHeight/2))
+                .attr('width', rectWidth)
+                .attr('height', rectHeight);
             
             d3This.append('image')
-                .attr('x', -(newSize-6)/2)
-                .attr('y', -(newSize-6)/2)
-                .attr('width', newSize-6)
-                .attr('height', newSize-6)
+                .attr('x', Math.floor(-imageWidth/2))
+                .attr('y', Math.floor(-imageHeight/2))
+                .attr('width', imageWidth)
+                .attr('height', imageHeight)
                 .attr("xlink:href", function(d) {
                     return d.url;
                 }).on("click", function(d) {                    
@@ -1037,7 +1069,7 @@ function update(source, switchM) {
                     
                     handleSelection(this, "track", trackID, trackName, trackArtistName);
                 });
-            
+                
                 if (selectedTrack.indexOf(d.tid) != -1) {
                     d3.select(this).select("rect").style("stroke", "#4B9877");
                 }
@@ -1152,7 +1184,7 @@ function update(source, switchM) {
         
         if (d.aid) {
             d3This.select('image')
-                    .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall-3) + ")");
+                    .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall-1) + ")");
         }
         
         var exitVar = d3This
@@ -1502,14 +1534,14 @@ function createPlaylist() {
             
             selectedTrack.forEach(function(d) {
                 uriArr.push("spotify:track:" + d);
-                //trackInfo.push(d3.select("#selected_" + d).text().slice(0, -1));
+                trackInfo.push(selectedTrackInfo[d]);
             });
             
             data.tracks.forEach(function(d) {
                 // Make sure there can't be duplicate tracks
                 if (uriArr.indexOf(d.uri) == -1) {
                     uriArr.push(d.uri);
-                    trackInfo.push(d.name + " - <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
+                    trackInfo.push(d.name + " <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
                 }
             });
             
