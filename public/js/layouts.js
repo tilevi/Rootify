@@ -15,14 +15,15 @@ var i = 0;
 // Duration of our transitions
 var duration = 700;
 
+// This is used as a measure for vertical spacing between nodes
+var verticalSpacing = 78;
+
 // These will be arrays that hold the root's children for each mode.
 var longChildren;
 var shortChildren;
 
 // Root initially doesn't exist.
 var root = null;
-
-var selectedNode = [];
 
 /*
     All of these arrays are used to determine if a certain artist or track already exists in the tree. This is very important because if we have the same artist or track, it's redunant plus we can run into some huge visualization issues.
@@ -34,13 +35,18 @@ var artistID_long = [];
 var trackID_long = [];
 
 /*
-    Selected artists, tracks, and genres
+    Selected artists, tracks, genres, and nodes
 */
 
 var selectedArtist = [];
 var selectedTrack = [];
 var selectedGenre = [];
+var selectedNode = [];
 
+/*
+    We store the track information for nodes we've clicked.
+    This allows us to display the information when a Spotify user generates a recommended playlist.
+*/
 var selectedTrackInfo = {};
 
 /*
@@ -52,8 +58,6 @@ var tree = d3.layout.tree()
 /*
     This is our path generator which creates an elbow shape.
 */
-var difference = 55 - 42;
-var verticalSpacing = 78;
 
 function elbow(d, i) {
     var targetY = -10;
@@ -127,144 +131,167 @@ var getAudioFeatures = function(err, data, source) {
                 j++;
             }
             if (source == root) {
-                populateChildrenArray(err, data, root, "track", 0, 0, audioFeatures);
+                populateChildrenArray(err, data, root, "track", audioFeatures);
             } else {
-                populateChildrenArray(err, data, source, "track", null, null, audioFeatures);
+                populateChildrenArray(err, data, source, "track", audioFeatures);
             }
         }
     });
 }
 
+// This variable stores a reference to our last selected node.
 var lastSelected = null;
+
+/*
+    Sets/Loads track or artist details (for the 'Details' tab)
+*/
+var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
+    if (lastSelected != null) {
+        var color = (selectedNode.indexOf(lastSelected) == -1) ? "none" : "#4B9877";
+        var parNode = d3.select(lastSelected.parentNode);
+        var parCircle = parNode.select("circle"); 
+        if (parCircle[0][0] != null) {
+            parCircle.style("stroke", color);
+        } else {
+            parNode.select("rect").style("stroke", color);
+        }
+    }
+    
+    if (node != null) {
+        d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle"))
+                                    .style("stroke", "#FF8C00");
+
+        lastSelected = node;
+        
+        if (isGenerateTab) {
+            selectedNode.push(node);
+        }
+
+        var d = d3.select(node).datum();
+
+        if (d.aid) {
+            if (d.tracks) {
+                loadSpotifyTracks(d.tracks);
+            } 
+            else {
+                getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks); });
+            }
+
+            if (barManager.artistNotLoaded(d.aid)) {                        
+                var trackInfo = {
+                    Popularity: d.popularity,
+                    Danceability: 0,
+                    Energy: 0,
+                    Positivity: 0,
+                    Key: { key: 0, mode: 0 }
+                };
+                
+                var obj = { id: d.aid, typ: "artist" };
+                
+                if (isGenerateTab) {
+                    barManager.setTrackInfo(trackInfo, obj);
+                } else {
+                    barManager.showBars(trackInfo, obj);
+                }
+            }
+        } else {
+            loadSpotifyTracks([d.tid]);
+
+            if (barManager.trackNotLoaded(d.tid)) {                    
+                var trackInfo = {
+                    Popularity: d.popularity,
+                    Danceability: d.dance,
+                    Energy: d.energy,
+                    Positivity: d.valence,
+                    Key: { key: d.tonic, mode: d.mode },
+                };
+
+                var obj = { id: d.tid, typ: "track" };
+                
+                if (isGenerateTab) {
+                    barManager.setTrackInfo(trackInfo, obj);
+                } else {
+                    
+                    // Resize the <div>
+                    barManager.showBars(trackInfo, obj, true);
+                }
+            }  
+        }
+
+        if (typ == "artist") {
+            d3.select("#headerImage")
+                    .style("display", "block")
+                    .style("height", "200px")
+                    .style("width","100")
+                    .style("font-size", "1.5em")
+                    .style("font-family", "Arial, Helvetica, sans-serif")
+                    .style("line-height", "90%")
+                    .style("padding", "6%")
+                    .style("vertical-align", "middle;")
+                    .text(d.name);
+            
+            d3.select("#headerImage")
+                    .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
+                    .style("background-repeat", "no-repeat")
+                    .style("background-size", "cover");
+            
+            // If there are genres for this artist, list them
+            if (d.genres.length > 0) {
+                d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+            } else {
+                d3.select("#detailsGenres").style("display", "none");
+            }
+        } else {
+                // Hide the artist header image and associated genres.
+                d3.select("#headerImage").style("display", "none");
+                d3.select("#detailsGenres").style("display", "none");
+            }
+        }
+}
 
 var handleSelection = function(node, typ, id, name, artistName) {
      if (node != null) {
-         
         if (generateTabIsActive) {
-        
             var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
             
             // If the selected artist is not in the selected artist array
             if (selectedArr.indexOf(id) == -1) {
-
                 // If we exceed a maximum combination of 5 artists, tracks and genres, return.
                 if (doesNotMeetCap()) { return; }
 
                 var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
                 d3.select(selectType)
-                .append("div")
-                .attr("id", "selected_" + id)
-                .attr("class", "trackBox")
-                .attr("font-family", "sans-serif")
-                .attr("font-size", "10px")
-                .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
-                .append("div").attr("id", "closeButton").html("&times").on("click", function() {               
-                    var parNode = d3.select(node.parentNode);
-                    var parCircle = parNode.select("circle"); 
-                    if (parCircle[0][0] != null) {
-                        parCircle.style("stroke", "none");
-                    } else {
-                        parNode.select("rect").style("stroke", "none");
-                    }
-
-                    // Remove the selected node
-                    var selNodeIndex = selectedNode.indexOf(node);
-                    if (selNodeIndex != -1) {
-                        selectedArr.splice(selectedArr.indexOf(id), 1);
-                        selectedTrackInfo[id] = null;
-                        selectedNode.splice(selNodeIndex, 1);
-                        d3.select("#selected_" + id).remove();
-                    }
-                });
-
-                if (lastSelected != null) {
-                    var color = (selectedNode.indexOf(lastSelected) == -1) ? "none" : "#4B9877";
-                    var parNode = d3.select(lastSelected.parentNode);
-                    var parCircle = parNode.select("circle"); 
-                    if (parCircle[0][0] != null) {
-                        parCircle.style("stroke", color);
-                    } else {
-                        parNode.select("rect").style("stroke", color);
-                    }
-                }
-
-                if (node != null) {
-                    d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#FF8C00");
-                    
-                    lastSelected = node;
-                    selectedNode.push(node);
-                    
-                    var d = d3.select(node).datum();
-                    
-                    if (d.aid) {
-                        if (d.tracks) {
-                            loadSpotifyTracks(d.tracks);
-                        } 
-                        else {
-                            getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
-                        }
-
-                        if (barManager.artistNotLoaded(d.aid)) {                        
-                            var trackInfo = {
-                                Popularity: d.popularity,
-                                Danceability: 0,
-                                Energy: 0,
-                                Positivity: 0,
-                                Key: { key: 0, mode: 0 }
-                            };
-                            
-                            barManager.setTrackInfo(trackInfo, { id: d.aid, typ: "artist" });
-                        }
-                    } else {
-                        
-                        loadSpotifyTracks([d.tid]);
-
-                        if (barManager.trackNotLoaded(d.tid)) {                    
-                            var trackInfo = {
-                                Popularity: d.popularity,
-                                Danceability: d.dance,
-                                Energy: d.energy,
-                                Positivity: d.valence,
-                                Key: { key: d.tonic, mode: d.mode },
-                            };
-                            
-                            barManager.setTrackInfo(trackInfo, { id: d.tid, typ: "track" });
-                        }  
-                    }
-                    
-                    if (typ == "artist") {
-                        d3.select("#headerImage")
-                                .style("display", "block")
-                                .style("height", "200px")
-                                .style("width","100")
-                                .style("font-size", "1.5em")
-                                .style("font-family", "Arial, Helvetica, sans-serif")
-                                .style("line-height", "90%")
-                                .style("padding", "6%")
-                                .style("vertical-align", "middle;")
-                                .text(d.name);
-
-                            d3.select("#headerImage")
-                                .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
-                                .style("background-repeat", "no-repeat")
-                                .style("background-size", "cover");
-
-
-                            // If there are genres for this artist, list them
-                            if (d.genres.length > 0) {
-                                d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
+                        .append("div")
+                        .attr("id", "selected_" + id)
+                        .attr("class", "trackBox")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "10px")
+                        .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
+                        .append("div").attr("id", "closeButton").html("&times").on("click", function() {               
+                            var parNode = d3.select(node.parentNode);
+                            var parCircle = parNode.select("circle"); 
+                            if (parCircle[0][0] != null) {
+                                parCircle.style("stroke", "none");
                             } else {
-                                d3.select("#detailsGenres").style("display", "none");
+                                parNode.select("rect").style("stroke", "none");
                             }
-                        } else {
-                            d3.select("#detailsGenres").style("display", "none");
-                        }
-                    }
+                            
+                            // Remove the selected node
+                            var selNodeIndex = selectedNode.indexOf(node);
+                            if (selNodeIndex != -1) {
+                                selectedArr.splice(selectedArr.indexOf(id), 1);
+                                selectedTrackInfo[id] = null;
+                                selectedNode.splice(selNodeIndex, 1);
+                                d3.select("#selected_" + id).remove();
+                            }
+                        });
                 
                 selectedArr.push(id);
                 if (selectedArr == selectedTrack) {
                     selectedTrackInfo[id] = name + " <br/>" + artistName;
                 }
+                
+                loadDetailsTabForNode(node, typ, true);
             } else {
                 // Removes the track box
                 d3.select("#selected_" + id).remove();
@@ -286,103 +313,35 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 }
             }
         } else {
-            
-            if (lastSelected != null) {
-                var color = (selectedNode.indexOf(lastSelected) == -1) ? "none" : "#4B9877";
-                var parNode = d3.select(lastSelected.parentNode);
-                var parCircle = parNode.select("circle"); 
-                if (parCircle[0][0] != null) {
-                    parCircle.style("stroke", color);
-                } else {
-                    parNode.select("rect").style("stroke", color);
-                }
-            }
-            
-            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle")).style("stroke", "#FF8C00");
-            
-            lastSelected = node;
-            var d = d3.select(node).datum();
-            
-            if (d.aid) {
-                if (d.tracks) {
-                    loadSpotifyTracks(d.tracks);
-                } 
-                else {
-                    getArtistTopTracks(d.aid, d, function() { loadSpotifyTracks(d.tracks); });
-                }
-
-                if (barManager.artistNotLoaded(d.aid)) {                        
-                    var trackInfo = {
-                        Popularity: d.popularity,
-                        Danceability: 0,
-                        Energy: 0,
-                        Positivity: 0,
-                        Key: { key: 0, mode: 0 }
-                    };
-
-                    barManager.showBars(trackInfo, { id: d.aid, typ: "artist" });
-                }
-            } else {
-
-                loadSpotifyTracks([d.tid]);
-
-                if (barManager.trackNotLoaded(d.tid)) {                    
-                    var trackInfo = {
-                        Popularity: d.popularity,
-                        Danceability: d.dance,
-                        Energy: d.energy,
-                        Positivity: d.valence,
-                        Key: { key: d.tonic, mode: d.mode },
-                    };
-
-                    barManager.showBars(trackInfo, { id: d.tid, typ: "track" });
-                }  
-            }
-
-            if (typ == "artist") {
-                d3.select("#headerImage")
-                        .style("display", "block")
-                        .style("height", "200px")
-                        .style("width","100")
-                        .style("font-size", "1.5em")
-                        .style("font-family", "Arial, Helvetica, sans-serif")
-                        .style("line-height", "90%")
-                        .style("padding", "6%")
-                        .text(d.name);
-
-                    d3.select("#headerImage")
-                        .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
-                        .style("background-repeat", "no-repeat")
-                        .style("background-size", "cover");
-
-
-                    // If there are genres for this artist, list them
-                    if (d.genres.length > 0) {
-                        d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
-                    } else {
-                        d3.select("#detailsGenres").style("display", "none");
-                    }
-                } else {
-                    d3.select("#detailsGenres").style("display", "none");
-                }
-
+            loadDetailsTabForNode(node, typ, false);
         }
      }
     
     if (node == null) {
-        // Reset all selected artists and tracks (from 'Generate' tab)
+        // Reset all selected artists and tracks (for the 'Generate' tab)
         selectedArtist = [];
         selectedTrack = [];
         selectedTrackInfo = {};
         
+        // Clear the contents in the 'Generate' tab
         d3.select("div.trackBox").remove();
         d3.select("#selectedArtists").html("");
         d3.select("#selectedTracks").html("");
-        
-        d3.select("#spotifyTracks").html("");
-        d3.select("#detailsGenres").style("display", "none");
         d3.select("#generatedPlaylistTracks").style("display", "none");
         
+        // Clear the contents in the 'Details' tab
+        d3.select("#headerImage").style("display", "none");
+        d3.select("#spotifyTracks").html("");
+        d3.select("#at-container").style("display", "none");
+        d3.select("#detailsGenres").style("display", "none");
+        
+        /*
+            Remove the green/orange strokes from the last selected node, 
+            and also every selected node.
+            
+            Note: We can push the last selected name into the selectedNode array 
+            because we are going to empty it right after.
+        */
         selectedNode.forEach(function(d) {
             var parNode = d3.select(d.parentNode);
             var parCircle = parNode.select("circle"); 
@@ -392,85 +351,69 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 parNode.select("rect").style("stroke", "none");
             }
         });
-        selectedNode = [];
         
-        if (lastSelected != null) {
-            var data = d3.select(lastSelected).datum();
-            d3.select(lastSelected.parentNode).select((data.tid ? "rect" : "circle")).style("stroke", "#ccc");
-        }
+        selectedNode = [];
         lastSelected = null;
     }
-    
-    if (typ != "artist") {
-        d3.select("#headerImage").style("display", "none");
-    }
-    d3.select("#detailsSVG").attr("opacity", (node==null) ? 0 : 1);
 }
 
 var loadSpotifyTracks = function(trackArr) {
+    var numberOfTracks = trackArr.length;
+    var height = (numberOfTracks <= 1) ? 355 : 75;
     var html = "";
-    var i = 0;
-    var height = trackArr.length == 1 ? 355 : 75;
     
-    while (i < trackArr.length) {
+    // Loop through each track and display its Spotify widget
+    for (var i = 0; i < numberOfTracks; i++) {
         var trackID = trackArr[i];
         html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "' frameborder='0' allowtransparency='true'></iframe><br/>";
-        i++;
     }
     
     d3.select("#spotifyTracks").html(html);
 }
 
-var getArtistTopTracks = function(aid, source, callback) {
-
-        spotifyApi.getArtistTopTracks(aid, "US", {}, function(err, tdata) {
-            if (!err) {
-                var j = 0;
-                var count = 0;
-                source.tracks = [];
-                
-                while (j < tdata.tracks.length && count < 3) {
-                    var item = tdata.tracks[j];
-                    if (item != null) {
-                        source.tracks.push(item.id);
-                        count++;
-                    }
-                    j++;
+var getArtistTopTracks = function(source, callback) {
+    spotifyApi.getArtistTopTracks(source.aid, "US", {}, function(err, data) {
+        if (!err) {
+            var j = 0;
+            var count = 0;
+            source.tracks = [];
+            
+            while (j < data.tracks.length && count < 3) {
+                var item = data.tracks[j];
+                if (item != null) {
+                    source.tracks.push(item.id);
+                    count++;
                 }
-                
-                callback();
+                j++;
             }
-        });
+            
+            callback();
+        }
+    });
 }
 
-var populateChildrenArray = function(err, data, source, typ, firstCount, baseCount, audioFeatures) {
+var populateChildrenArray = function(err, data, source, typ, audioFeatures) {
     if (!err) {
-        
-        var blacklist;
+        // Array of tracks/artists that we already have in our tree.
+        var blacklist = null;
         
         if (typ == "track") {
-            if (mode == "short") {
-                blacklist = trackID_short;
-            } else {
-                blacklist = trackID_long;
-            }
+            blacklist = (mode == "short") ? trackID_short : trackID_long;
         } else {
-            if (mode == "short") {
-                blacklist = artistID_short;
-            } else {
-                blacklist = artistID_long;
-            }
+            blacklist = (mode == "short") ? artistID_short : artistID_long;
         }
         
-        var baseIndex = (baseCount != null) ? baseCount : 0;
-        var maxChildren = (firstCount == null) ? 3 : 5;
-        
-        var count = 0;
-        var i = 0;
-        
-        if (!firstCount || firstCount == 0) {
+        var nonRootNode = (source != root);
+        if (nonRootNode || typ == "track") {
             source.children = [];
         }
+        
+        // We only want to start at index 6 if we're a root node populating our top artists
+        var baseIndex = (nonRootNode || typ == "track") ? 0 : 6;
+        var maxChildren = (nonRootNode) ? 3 : 5;
+        
+        var i = 0;
+        var count = 0;
         
         while ( (i < data.length) && (count < d3.min([maxChildren, data.length])) ) {
             var obj = data[i];
@@ -478,51 +421,57 @@ var populateChildrenArray = function(err, data, source, typ, firstCount, baseCou
             if (obj != null && blacklist.indexOf(obj.id) === -1) {
                 if (typ == "track") {
                     var audioFeat = audioFeatures[obj.id];
-                    source.children.push( {
-                        "index": baseIndex + i, 
-                        "name": obj.name, 
+                    source.children.push({
+                        index: baseIndex + i, 
+                        name: obj.name, 
                         artist: obj.artists.length > 0 ? obj.artists[0].name : "N/A", 
-                        "tid": obj.id, 
+                        tid: obj.id, 
                         url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
-                        "popularity": obj.popularity / 100, 
-                        "energy": audioFeat.energy, 
-                        "dance": audioFeat.dance, 
-                        "valence": audioFeat.valence, 
-                        "tonic": audioFeat.tonic, 
-                        "mode": audioFeat.mode 
-                    } );
+                        popularity: obj.popularity / 100, 
+                        energy: audioFeat.energy, 
+                        dance: audioFeat.dance, 
+                        valence: audioFeat.valence, 
+                        tonic: audioFeat.tonic, 
+                        mode: audioFeat.mode 
+                    });
                 } else {
-                   source.children.push( { "index": baseIndex + i, "name": obj.name, "aid": obj.id, url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", "popularity": obj.popularity / 100, genres: obj.genres } ); 
+                   source.children.push({
+                       index: baseIndex + i, 
+                       name: obj.name, 
+                       aid: obj.id, 
+                       url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
+                       popularity: obj.popularity / 100, 
+                       genres: obj.genres
+                   }); 
                 }
-
                 blacklist.push(obj.id);
                 count++;
             }
-            
             i++;
         }
         
-        if (firstCount == 0) {
-            source.children.push( {"index": count, "name": "SPACER", "spacer": true } );
-            blacklist.push("INVALID");
-            count = count + 1;
-
-            loadTopArtists(count);
-        } else if (firstCount == 1) {
-            doneLoading();
-        } else {
+        if (nonRootNode) {
             source._children = null;
+            
             var pan = update(source);
             centerNode(source, false, pan);
-            source.clicked = false;
+            
+            source.clicked = false;   
+        } else if (typ == "track") {
+            source.children.push
+            ({
+                index: count, 
+                spacer: true 
+            });
+            blacklist.push("INVALID");
+            count = count + 1;
+            
+            loadTopArtists(count);
+        } else {
+             doneLoading();
         }
     }
 }
-
-
-
-// This variable holds what our scale is, default is 1.
-var globalScale = 1;
 
 /*
     This code handles our zoom.
@@ -535,7 +484,6 @@ function zoom() {
     var scale = d3.event.scale;
     
     svgGroup.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
-    globalScale = scale;
 }
 
 // Our zoom listener
@@ -547,13 +495,15 @@ baseSvg.on("dblclick.zoom", null);
 
 /*
     Our clip paths.
-    
     One is for our avatar (bigger radius), another is for the nodes (smaller radii).
 */
 
 var customClip = [];
 var custClipResize = [];
 
+/*
+    We need to create clip paths for a range of radii due to the resize functionality.
+*/
 for (var i = 0; i <= 15; i++) {
     customClip[i] = baseSvg.append("defs")
                     .append("clipPath")
@@ -573,6 +523,7 @@ for (var i = 0; i <= 15; i++) {
                         .attr("r", (10 + i - 1));
 }
 
+/* Clip path for the root node. */
 baseSvg.append("defs")
     .append("clipPath")
         .attr("id", "clip-root")
@@ -581,18 +532,8 @@ baseSvg.append("defs")
             .attr("cy", 0)
             .attr("r", 31);
 
-baseSvg.append("defs")
-    .append("clipPath")
-        .attr("id", "clip")
-        .append("circle")
-            .attr("cx", 0)
-            .attr("cy", 0)
-            .attr("r", 24);
-
 /*
-    This a helper function that converts an element's position in the SVG to its relative position to the SVG.
-    
-    Therefore, we can figure out if a node is visible.
+    This a helper function that converts an element's position in the SVG to its relative position to the SVG. Therefore, we can figure out if a node is visible.
     
     Reference: https://stackoverflow.com/questions/18554224/getting-screen-positions-of-d3-nodes-after-transform/18561829
 */
@@ -657,24 +598,22 @@ function toggleChildren(d) {
         
         d.clicked = false;
     } else if (d.aid && !d.children) {
-        
         // Grab related artists based on the artist we just selected.
         spotifyApi.getArtistRelatedArtists(d.aid, function(err, data) {
             populateChildrenArray(err, data.artists, d, "artist");
         });
 
     } else if (d.tid && !d.children) {
-        
         spotifyApi.getRecommendations(
-        {
-            "limit": 3,
-            "seed_tracks": ("" + d.tid), 
-            "market": "US"
-        }, 
-        function(err, data) {
-            getAudioFeatures(err, data.tracks, d);
-        });
-        
+            {
+                limit: 3,
+                seed_tracks: d.tid, 
+                market: "US"
+            }, 
+            function(err, data) {
+                getAudioFeatures(err, data.tracks, d);
+            }
+        );
     } else if (d.children) {
         d._children = d.children;
         d.children = null;
@@ -700,13 +639,12 @@ function click(d) {
 
 //This is the accessor function we talked about above
 var lineFunction = d3.svg.line()
-  .x(function(d) { return d.x; })
-  .y(function(d) { return d.y; })
-  .interpolate('linear');
-
+                        .x(function(d) { return d.x; })
+                        .y(function(d) { return d.y; })
+                        .interpolate('linear');
 
 /*
-    This function is VERY important.
+    This function is important.
     We call this function after we update the children of certain nodes.
     
     It will re-layout the tree layout (which computes all of the numbers for positioning, etc.).
@@ -728,59 +666,64 @@ var lineFunction = d3.svg.line()
 var sizeScale = d3.scale.linear()
                     .domain([0.10,0.95]).range([20, 50]).clamp(true);
 
+function getNodeSize(d) {
+    var num = 1;
+
+    if (d.aid || d.tid) {
+        for (var key in scaleOptions) {
+            var value = scaleOptions[key];
+            if (value) {
+                if (key == "popCheck") {
+                    num = num * d.popularity;
+                }
+                if (d.tid) {
+                    if (key == "energyCheck") {
+                        num = num * d.energy;
+                    } else if (key == "danceCheck") {
+                        num = num * d.dance;
+                    } else if (key == "posCheck") {
+                        num = num * d.valence;
+                    }
+                }
+            }
+        }
+    }
+    return sizeScale(num);
+}
+
 function resizeNodes() {
     // Grab the new set
     node = svgGroup.selectAll("g.node");
     
     // For each node in the set..
     node.each(function(d) {
-        
+        // Don't resize the root node.
         if (d.root) { return; }
         
-        var num = 1;
-        
-        if (d.aid || d.tid) {
-            for (var key in scaleOptions) {
-                var value = scaleOptions[key];
-                if (value) {
-                    if (key == "popCheck") {
-                        num = num * d.popularity;
-                    }
-                    if (d.tid) {
-                        if (key == "energyCheck") {
-                            num = num * d.energy;
-                        } else if (key == "danceCheck") {
-                            num = num * d.dance;
-                        } else if (key == "posCheck") {
-                            num = num * d.valence;
-                        }
-                    }
-                }
-            }
-        }
-        
-        var newSize = sizeScale(num);
+        var newSize = getNodeSize(d);
         var d3This = d3.select(this);
         
         d.howTall = Math.floor(newSize/2);
         d.newSize = newSize;
         
+        // If the node represents an artist..
         if (d.aid) {
             var circleRadius = Math.floor(newSize/2);
             var imageWidth = (newSize-1);
             var imageHeight = (newSize-1);
             
-            d3This.select("circle").attr("r", circleRadius);
+            d3This.select("circle")
+                    .attr("r", circleRadius);
             
             d3This.select('image')
                     .attr("clip-path", "url(#clip-r-" + circleRadius + ")");
             
             d3This.select('image')
-                .attr('x', Math.floor(-imageWidth/2))
-                .attr('y', Math.floor(-imageHeight/2))
-                .attr('width', imageWidth)
-                .attr('height', imageHeight);
-        } else {
+                    .attr('x', Math.floor(-imageWidth/2))
+                    .attr('y', Math.floor(-imageHeight/2))
+                    .attr('width', imageWidth)
+                    .attr('height', imageHeight);
+        } else { // Otherwise, the node must represent a track..
             var rectWidth = newSize;
             var rectHeight = newSize;
             
@@ -800,6 +743,7 @@ function resizeNodes() {
                     .attr('height', imageHeight);
         }
         
+        // Update the position of the vertical line (below the node)
         d3This.select("path.line")
                 .attr("d", lineFunction(
                     [
@@ -807,13 +751,15 @@ function resizeNodes() {
                         { "x": 0, "y": (verticalSpacing - 15) }
                     ]));
         
+        // Update the position of the down triangle (expand or collapse tree)
         d3This.select("path.triangleDown")
                 .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.55) + ")"; });
     });
     
+    // Once all of the nodes have been resized, reposition the tree links.
     var link = svgGroup.selectAll("path.link");
     
-    // Transition links to their new position.
+    // Transition links to their new positions.
     link.attr("d", elbow);
 }
 
@@ -842,58 +788,67 @@ function update(source, switchM) {
     
     // Grab the new set
     node = svgGroup.selectAll("g.node")
-        .data(nodes, function(d) {
-            if (!d.id) {
-                d.id = ++i;
-            }
-            return d.id;
-        });
+                        .data(nodes, function(d) {
+                            if (!d.id) {
+                                d.id = ++i;
+                            }
+                            return d.id;
+                        });
     
     // For each node in the set..
     node.each(function(d) {
         var d3This = d3.select(this);
         var line = d3This.select("path.line");
         
+        // If a node has children but not a vertical line, we need to create one.
         if (d.children) {
-            
             if (line.length > 0 && line[0][0] == null) {
                 d3This.append("path")
-                .classed("line", true)
-                .attr("d", lineFunction(
-                    [
-                        { "x": 0, "y": (d.root ? 30 : (d.howTall ? d.howTall : 26)) }, 
-                        { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
-                    ]))
-                .style("stroke", "#ccc")
-                .style("stroke-width", 0)
-                .transition()
-                .duration(duration)
-                .style("stroke-width", 1)
-                .style("stroke", "#ccc");
+                        .classed("line", true)
+                        .attr("d", lineFunction(
+                            [
+                                {
+                                    x: 0,
+                                    y: (d.root ? 30 : (d.howTall ? d.howTall : 26)) 
+                                }, 
+                                {
+                                    x: 0, 
+                                    y: (d.root ? 55 : (verticalSpacing - 15))
+                                }
+                            ]))
+                        .style("stroke", "#ccc")
+                        .style("stroke-width", 0)
+                        .transition()
+                        .duration(duration)
+                        .style("stroke-width", 1)
+                        .style("stroke", "#ccc");
                 
+                // We don't want the root to be able to expand or collapse its children.
                 if (!d.root) {
                     d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0)
                         .style("pointer-events", "none");
 
                     d3This.append('path')
-                        .classed("triangleUp", true)
-                        .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-                        .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
-                        .style("fill", "white")
-                        .attr("stroke", "#293345")
-                        .attr("stroke-width", "1px")
-                        .style("opacity", 0)
-                        .on("click", click)
-                        .transition()
-                        .duration(duration)
-                        .style("opacity", 1);
+                            .classed("triangleUp", true)
+                            .attr("d", d3.svg.symbol().type("triangle-up").size(50))
+                            .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
+                            .style("fill", "white")
+                            .attr("stroke", "#293345")
+                            .attr("stroke-width", "1px")
+                            .style("opacity", 0)
+                            .on("click", click)
+                            .transition()
+                            .duration(duration)
+                            .style("opacity", 1);
                 }
             }
-        } else {
+        } else { // If the node doesn't have children, ...
+            // Then if it has a vertical line, remove it.
             if (line.length > 0 && line[0][0] != null) {
                 line.remove();
             }
             
+            // If it has an up triangle, remove it and unhide its down triangle.
             var triUp = d3This.select(".triangleUp");
             if (triUp.length > 0 && triUp[0][0] != null) {
                 triUp.remove();
@@ -910,59 +865,45 @@ function update(source, switchM) {
     
     // Set the destinations of the existing nodes.
     node.transition()
-        .duration(duration)
-        .attr("transform", function(d) {
-            return "translate(" + d.x + "," + d.y + ")";
-        });
+            .duration(duration)
+            .attr("transform", function(d) {
+                return "translate(" + d.x + "," + d.y + ")";
+            });
 
     // Enter any new nodes at the parent's previous position.
     var nodeEnter = node.enter().append("g")
-        .attr("class", "node")
-        .attr("transform", function(d) {
-            return "translate(" + source.x0 + "," + source.y0 + ")";
-        });
+                        .attr("class", "node")
+                        .attr("transform", function(d) {
+                            return "translate(" + source.x0 + "," + source.y0 + ")";
+                        });
     
     // We will return this variable at the end of this function.
     // If this is set to true, we should pan our view.
     var shouldPan = false;
     
     nodeEnter.each(function(d, i) {
-        var num = 1;
-        
-        if (d.aid || d.tid) {
-            for (var key in scaleOptions) {
-                var value = scaleOptions[key];
-                if (value) {
-                    if (key == "popCheck") {
-                        num = num * d.popularity;
-                    }
-
-                    if (d.tid) {
-                        if (key == "energyCheck") {
-                            num = num * d.energy;
-                        } else if (key == "danceCheck") {
-                            num = num * d.dance;
-                        } else if (key == "posCheck") {
-                            num = num * d.valence;
-                        }
-                    } 
-                }
-            }
-        }
-        
-        var newSize = sizeScale(num);
+        // For each new node, we need to set its appearance and assets.
+        var newSize = getNodeSize(d);
         var d3This = d3.select(this);
+        var regNode = (d.aid || d.tid);
         
         d.howTall = Math.floor(newSize/2);
         d.newSize = newSize;
         
         if (d.children) {
+            // We must add this node's vertical line if it has children.
             d3This.append("path")
                 .classed("line", true)
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.root ? 30 : (d.howTall ? d.howTall : 26)) }, 
-                        { "x": 0, "y": (d.root ? 55 : (verticalSpacing - 15)) }
+                        { 
+                            x: 0, 
+                            y: (d.root ? 30 : (d.howTall ? d.howTall : 26))
+                        }, 
+                        {
+                            x: 0, 
+                            y: (d.root ? 55 : (verticalSpacing - 15))
+                        }
                     ]))
                 .style("stroke", "#ccc")
                 .style("stroke-width", 0)
@@ -971,8 +912,8 @@ function update(source, switchM) {
                 .style("stroke-width", 1)
                 .style("stroke", "#ccc");
             
-            
-            if (d.aid || d.tid) {
+            if (regNode) {
+                // Created an up triangle (this node has children)
                 d3This.append('path')
                     .classed("triangleUp", true)
                     .attr("d", d3.svg.symbol().type("triangle-up").size(50))
@@ -986,7 +927,7 @@ function update(source, switchM) {
                     .duration(duration)
                     .style("opacity", 1);
             }
-        } if (!d.root && !d.spacer) {
+        } else if (regNode) { // Otherwise, we create a down triangle.
             d3This.append('path')
                 .classed("triangleDown", true)
                 .attr("d", d3.svg.symbol().type("triangle-down").size(50))
@@ -997,6 +938,11 @@ function update(source, switchM) {
                 .on("click", click);
         }
         
+        /*
+            This section deals with adding the node's DOM elements.
+        */
+        
+        // If the node represents an artist..
         if (d.aid) {
             var circleRadius = Math.floor(newSize/2);
             var imageWidth = (newSize-1);
@@ -1025,26 +971,7 @@ function update(source, switchM) {
                 if (selectedArtist.indexOf(d.aid) != -1) {
                     d3.select(this).select("circle").style("stroke", "#4B9877");
                 }
-        } else if (d.root) {
-            d3This.style("cursor", "none").style("pointer-events", "none");
-            
-            d3This.append("circle")
-                .attr('class', 'node')
-                .attr("r", 32)
-                .style("fill", function(d) {
-                    return "#282828";
-                });
-            
-            d3This.append('image')
-                .attr('x', -32)
-                .attr('y', -32)
-                .attr('width', 64)
-                .attr('height', 64)
-                .attr("xlink:href", function(d) {
-                    return me.url;
-                })
-               .attr("clip-path", "url(#clip-root)");
-        } else if (!d.spacer) {
+        } else if (d.tid) { // Otherwise if the node represents a track, ..
             var rectWidth = newSize;
             var rectHeight = newSize;
             
@@ -1072,12 +999,32 @@ function update(source, switchM) {
                     var trackName = d.name;
                     var trackArtistName = d.artist;
                     
+                    d3.select("#at-container").style("display", "block");
                     handleSelection(this, "track", trackID, trackName, trackArtistName);
                 });
                 
                 if (selectedTrack.indexOf(d.tid) != -1) {
                     d3.select(this).select("rect").style("stroke", "#4B9877");
                 }
+        } else if (d.root) { // And lastly, if the node is the root, then ...
+            d3This.style("cursor", "none").style("pointer-events", "none");
+            
+            d3This.append("circle")
+                .attr('class', 'node')
+                .attr("r", 32)
+                .style("fill", function(d) {
+                    return "#282828";
+                });
+            
+            d3This.append('image')
+                .attr('x', -32)
+                .attr('y', -32)
+                .attr('width', 64)
+                .attr('height', 64)
+                .attr("xlink:href", function(d) {
+                    return me.url;
+                })
+               .attr("clip-path", "url(#clip-root)");
         }
         
         // If shouldPan is true, a node was already detected outside of our view.
@@ -1096,8 +1043,9 @@ function update(source, switchM) {
             var xDiff = (d.x - source.x0);
             var yDiff = (d.y - source.y0);
             
-            coords.x = coords.x + globalScale * xDiff;
-            coords.y = coords.y + globalScale * yDiff;
+            var scale = zoomListener.scale();
+            coords.x = coords.x + scale * xDiff;
+            coords.y = coords.y + scale * yDiff;
             
             /*
                 If the node is too far to the left or right, or too above or below, we should pan the view. I don't think the node could be too above but let's just keep that to be complete.
@@ -1109,7 +1057,6 @@ function update(source, switchM) {
                 shouldPan = true;
             }
         }
-        
         
         /*
             Transition the new nodes to their correct positions, starting at their parent's old position.
@@ -1132,7 +1079,7 @@ function update(source, switchM) {
     /*
         The below code is for node exit animation.
         
-        If our node exit set is non-empty, we transition them properly. I make a custom clip element that resizes its radius as the transition occurs.
+        If our node exit set is non-empty, we transition them properly. We make a custom clip element that resizes its radius as the transition occurs.
     */
     if (!nodeExit.empty()) {
         d3.selectAll("circle.clipResize")
@@ -1141,41 +1088,28 @@ function update(source, switchM) {
             .duration(duration)
             .attr("r", 0);
         
-        var customClip = baseSvg.append("defs")
-                    .append("clipPath")
-                    .attr("id", "clip" + (source.id))
-                        .append("circle")
-                        .attr("cx", 0)
-                        .attr("cy", 0)
-                        .attr("r", 0)
-                        .transition()
-                        .duration(duration)
-                        .attr("r", 0)
-                        .each("end", function() {
-                            // At the end of the transition, remove the dynamic clip path.
-                            d3.select("#clip" + (source.id)).remove();
-                            
-                            // After our nodes exit, we check if we should switch modes.
-                            if (switchM) {
-                                
-                                var childRef = null;
-                                if (switchM == "long") {
-                                    childRef = longChildren;
-                                } else if (switchM == "short") {
-                                    childRef = shortChildren;
-                                }
-                                
-                                // If we have no data, then load it.
-                                if (childRef == null) {
-                                    loadTopTracks();
-                                } else {
-                                    // Otherwise, set the root's children
-                                    root.children = childRef;
-                                    update(root);
-                                    centerNode(root, true);
-                                }
-                            }
-                        });
+        setTimeout(function() {
+            // After our nodes exit, we check if we should switch modes.
+            if (switchM) {
+
+                var childRef = null;
+                if (switchM == "long") {
+                    childRef = longChildren;
+                } else if (switchM == "short") {
+                    childRef = shortChildren;
+                }
+
+                // If we have no data, then load it.
+                if (childRef == null) {
+                    loadTopTracks();
+                } else {
+                    // Otherwise, set the root's children
+                    root.children = childRef;
+                    update(root);
+                    centerNode(root, true);
+                }
+            }
+        }, duration);
     }
     
     nodeExit.each(function(d) {
@@ -1200,19 +1134,14 @@ function update(source, switchM) {
             })
             .remove();
         
-        if (!d.tid) {
-            exitVar.select("image")
-                    .attr("x", 0)
-                    .attr("y", 0)
-                    .attr("width", 0)
-                    .attr("height", 0);
-        } else {
+        if (d.aid || d.tid) {
             exitVar.select("image")
                     .attr("x", 0)
                     .attr("y", 0)
                     .attr("width", 0)
                     .attr("height", 0);
         }
+        
         exitVar.select("circle").attr("r", 0);
         exitVar.select("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0);
     });
@@ -1308,7 +1237,7 @@ doneLoading = function() {
     baseCount should be 6 because 5 of our tracks should have been loaded, including a spacer node so our tree looks clean.
 */
 
-loadTopArtists = function(baseCount) {
+loadTopArtists = function() {
     spotifyApi.getMyTopArtists(
     {
         "limit": 5,
@@ -1316,7 +1245,7 @@ loadTopArtists = function(baseCount) {
     },
     
     function(err, data) {
-        populateChildrenArray(err, data.items, root, "artist", 1, baseCount);
+        populateChildrenArray(err, data.items, root, "artist");
     });
 }
 
@@ -1404,11 +1333,10 @@ var switchMode = function(m) {
         return;
     }
     
-    // We are switching modes now
-    switchingMode = true;
-    
     // Unselect any nodes
     handleSelection(null, null);
+    
+    switchingMode = true;
     
     if (m == "long") {
         d3.select("#long-term").style("background-color", "#4B9877");
@@ -1427,7 +1355,7 @@ var switchMode = function(m) {
     // Switch the mode
     mode = m;
     // Set the root children initially to nothing
-    root.children = null;
+    root.children = [];
     
     // Re-layout the tree
     update(root, m);

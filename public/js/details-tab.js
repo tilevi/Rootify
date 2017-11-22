@@ -107,7 +107,8 @@ var BarManager = function() {
         // Resize the <div>
         var newHeight = (typ == "track" ? "170px" : "34px");
         d3.select("#at-container").style("height", newHeight);
-        d3.select("#detailsSVG").style("height", newHeight);
+        d3.select("#detailsSVG").style("height", newHeight)
+                                .style("display", "block");
         
         // Store the track information (for use when resizing)
         selectedTrackInfo = Object.assign({}, trackinfo);
@@ -241,7 +242,8 @@ var BarManager = function() {
         // Resize the <div>
         var newHeight = (typ == "track" ? "170px" : "34px");
         d3.select("#at-container").style("height", newHeight);
-        d3.select("#detailsSVG").style("height", newHeight);
+        d3.select("#detailsSVG").style("height", newHeight)
+                                .style("display", "block");
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
