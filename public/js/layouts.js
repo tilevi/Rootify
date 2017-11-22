@@ -852,13 +852,13 @@ function update(source, switchM) {
             var triUp = d3This.select(".triangleUp");
             if (triUp.length > 0 && triUp[0][0] != null) {
                 triUp.remove();
-
-                var triDown = d3This.select(".triangleDown");
-                if (triDown.length > 0 && triDown[0][0] != null) {
-                    triDown.style("opacity", 1)
-                            .style("pointer-events", "auto")
-                            .style("fill-opacity", 1);
-                }
+            }
+            
+            var triDown = d3This.select(".triangleDown");
+            if (triDown.length > 0 && triDown[0][0] != null) {
+                triDown.style("opacity", 1)
+                        .style("pointer-events", "auto")
+                        .style("fill-opacity", 1);
             }
         }
     })
@@ -927,7 +927,13 @@ function update(source, switchM) {
                     .duration(duration)
                     .style("opacity", 1);
             }
-        } else if (regNode) { // Otherwise, we create a down triangle.
+        } 
+        
+        /*
+            All regular (artist and track) nodes should have a down triangle.
+            If the node doesn't have children, show it. Otherwise, hide it.
+        */
+        if (regNode) {
             d3This.append('path')
                 .classed("triangleDown", true)
                 .attr("d", d3.svg.symbol().type("triangle-down").size(50))
@@ -1112,20 +1118,24 @@ function update(source, switchM) {
         }, duration);
     }
     
+    // For each unmatched node (nodes that don't have any associated data), delete it.
     nodeExit.each(function(d) {
         var d3This = d3.select(this);
         
+        // Remove the vertical line (if it exists).
         var line = d3This.select("path.line");
         if (line != null) {
             line.remove();
             d3This.selectAll("path").remove();
         }
         
+        // If it's an artist node, we want to set its clip path
         if (d.aid) {
             d3This.select('image')
                     .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall-1) + ")");
         }
         
+        // Transition the exiting node to its parent's position and then remove it.
         var exitVar = d3This
             .transition()
             .duration(duration)
@@ -1134,6 +1144,7 @@ function update(source, switchM) {
             })
             .remove();
         
+        // Make the album covers or artist images smaller
         if (d.aid || d.tid) {
             exitVar.select("image")
                     .attr("x", 0)
@@ -1142,6 +1153,7 @@ function update(source, switchM) {
                     .attr("height", 0);
         }
         
+        // Make the artist circles or track rectangles smaller.
         exitVar.select("circle").attr("r", 0);
         exitVar.select("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0);
     });
@@ -1205,11 +1217,8 @@ var svgGroup = baseSvg.append("g");
 
 root = treeData;
 
-root.x = 0;
-root.y = 0;
-
-root.x0 = 0;
-root.y0 = 0;
+root.x = 0, root.x0 = 0;
+root.y = 0, root.y0 = 0;
 
 /*
     Booleans to indicate if we properly loaded our top artists and tracks.

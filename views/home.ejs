@@ -391,7 +391,7 @@
         <!-- bottom pop out bar -->
         <div id="bottom-bar">
 
-            <button type="button" class="button_slide">&#x25B2;</var></button>
+            <button type="button" class="button_slide">&#x25B2;</button>
 
             <div id="slideout">
                 
@@ -442,11 +442,11 @@
 
         <!-- bottom pop up bar script -->
         <script>
-            $('#slideout').toggleClass('on');
-            
             $('button').click(function(){
                 $('#slideout').toggleClass('on');
                 var status = $('button').html();
+                console.log(status);
+                
                 if (status == "▲"){
                     $('button').html("&#x25BC;");
                 } else {
