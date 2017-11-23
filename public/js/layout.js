@@ -251,6 +251,9 @@ var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
 
 var handleSelection = function(node, typ, id, name, artistName) {
      if (node != null) {
+         
+        d3.select("#at-container").style("display", "block");
+        
         if (generateTabIsActive) {
             var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
             
@@ -342,6 +345,10 @@ var handleSelection = function(node, typ, id, name, artistName) {
             Note: We can push the last selected name into the selectedNode array 
             because we are going to empty it right after.
         */
+        if (lastSelected != null) {
+            selectedNode.push(lastSelected);
+        }
+        
         selectedNode.forEach(function(d) {
             var parNode = d3.select(d.parentNode);
             var parCircle = parNode.select("circle"); 
@@ -1005,7 +1012,6 @@ function update(source, switchM) {
                     var trackName = d.name;
                     var trackArtistName = d.artist;
                     
-                    d3.select("#at-container").style("display", "block");
                     handleSelection(this, "track", trackID, trackName, trackArtistName);
                 });
                 

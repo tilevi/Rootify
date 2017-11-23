@@ -445,7 +445,6 @@
             $('button').click(function(){
                 $('#slideout').toggleClass('on');
                 var status = $('button').html();
-                console.log(status);
                 
                 if (status == "▲"){
                     $('button').html("&#x25BC;");
@@ -482,7 +481,7 @@
                 if (lastSelected != null) {
                     var color;
                     if (isActive) {
-                        color = (selectedNode.indexOf(lastSelected) == -1) ? "#ccc" : "#4B9877";
+                        color = (selectedNode.indexOf(lastSelected) == -1) ? "#282828" : "#4B9877";
                     } else {
                         color = "#FF8C00";
                     }
