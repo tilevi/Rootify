@@ -770,6 +770,21 @@ function resizeNodes() {
     link.attr("d", elbow);
 }
 
+function createUpTriangle(d3This) {
+    d3This.append('path')
+        .classed("triangleUp", true)
+        .attr("d", d3.svg.symbol().type("triangle-up").size(50))
+        .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
+        .style("fill", "white")
+        .attr("stroke", "#293345")
+        .attr("stroke-width", "1px")
+        .style("opacity", 0)
+        .on("click", click)
+        .transition()
+        .duration(duration)
+        .style("opacity", 1);    
+}
+
 function update(source, switchM) {
     tree = tree.nodeSize([64, 64]);
     
@@ -831,22 +846,12 @@ function update(source, switchM) {
                         .style("stroke", "#ccc");
                 
                 // We don't want the root to be able to expand or collapse its children.
-                if (!d.root) {
+                if (d.aid || d.tid) {
                     d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0)
                         .style("pointer-events", "none");
-
-                    d3This.append('path')
-                            .classed("triangleUp", true)
-                            .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-                            .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
-                            .style("fill", "white")
-                            .attr("stroke", "#293345")
-                            .attr("stroke-width", "1px")
-                            .style("opacity", 0)
-                            .on("click", click)
-                            .transition()
-                            .duration(duration)
-                            .style("opacity", 1);
+                    
+                    // This is already existing note who now has children.
+                    createUpTriangle(d3This);
                 }
             }
         } else { // If the node doesn't have children, ...
@@ -920,19 +925,8 @@ function update(source, switchM) {
                 .style("stroke", "#ccc");
             
             if (regNode) {
-                // Created an up triangle (this node has children)
-                d3This.append('path')
-                    .classed("triangleUp", true)
-                    .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
-                    .style("fill", "white")
-                    .attr("stroke", "black")
-                    .attr("stroke-width", "1px")
-                    .style("opacity", 0)
-                    .on("click", click)
-                    .transition()
-                    .duration(duration)
-                    .style("opacity", 1);
+                // Create an up triangle (this new node has children).
+                createUpTriangle(d3This);
             }
         } 
         
