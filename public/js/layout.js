@@ -587,6 +587,12 @@ function centerNode(source, first, shouldPan) {
     
     zoomListener.scale(scale);
     zoomListener.translate([x, y]);
+    
+    if (source == root) {
+        setTimeout(function() {
+            switchingMode = false;
+        }, duration*2);
+    }
 }
 
 /*
@@ -850,7 +856,7 @@ function update(source, switchM) {
                     d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0)
                         .style("pointer-events", "none");
                     
-                    // This is already existing note who now has children.
+                    // This already existing note who now has children.
                     createUpTriangle(d3This);
                 }
             }
@@ -866,6 +872,7 @@ function update(source, switchM) {
                 triUp.remove();
             }
             
+            // Show the down triangle
             var triDown = d3This.select(".triangleDown");
             if (triDown.length > 0 && triDown[0][0] != null) {
                 triDown.style("opacity", 1)
@@ -1107,6 +1114,7 @@ function update(source, switchM) {
 
                 // If we have no data, then load it.
                 if (childRef == null) {
+                    switchingMode = true;
                     loadTopTracks();
                 } else {
                     // Otherwise, set the root's children
@@ -1235,7 +1243,6 @@ var loadedTracks = false;
 doneLoading = function() {
     update(root);
     centerNode(root, true);
-    switchingMode = false;
 }
 
 /*
@@ -1368,9 +1375,6 @@ var switchMode = function(m) {
     
     // Re-layout the tree
     update(root, m);
-    
-    // Wait twice the duration, plus a little more, then reallow switching
-    setTimeout(function() { switchingMode = false; }, duration*2 + 1000);
 }
 
 /*
@@ -1385,6 +1389,11 @@ document.getElementById("short-term").addEventListener("click", function() {
 });
 
 document.getElementById("reset_tree").addEventListener("click", function() {
+    // Don't reset the tree if we're switching modes.
+    if (switchingMode) {
+        return;
+    }
+    
     handleSelection(null, null);
     
     root.children.forEach(function(d) {
