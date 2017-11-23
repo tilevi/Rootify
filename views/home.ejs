@@ -465,9 +465,7 @@
             // Artist track container
             var atDiv = document.getElementById("at-container");
             
-            
             var selectedType = null;
-            
             var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
             
             var viewerWidth, viewerHeight;
@@ -481,7 +479,7 @@
                 if (lastSelected != null) {
                     var color;
                     if (isActive) {
-                        color = (selectedNode.indexOf(lastSelected) == -1) ? "#282828" : "#4B9877";
+                        color = (isNodeSelected(lastSelected)) ? "#4B9877" : "#282828";
                     } else {
                         color = "#FF8C00";
                     }

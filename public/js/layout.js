@@ -41,7 +41,6 @@ var trackID_long = [];
 var selectedArtist = [];
 var selectedTrack = [];
 var selectedGenre = [];
-var selectedNode = [];
 
 /*
     We store the track information for nodes we've clicked.
@@ -143,30 +142,42 @@ var getAudioFeatures = function(err, data, source) {
 var lastSelected = null;
 
 /*
-    Sets/Loads track or artist details (for the 'Details' tab)
+    Returns true if the node is part of the selected set.
 */
-var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
+var isNodeSelected = function(node) {
+    var d = d3.select(node).datum();
+    var selectArr = (d.aid != null ? selectedArtist : selectedTrack);
+    var id = (d.aid != null ? d.aid : d.tid);
+    
+    return (selectArr.indexOf(id) != -1);
+}
+
+var deselectLastFocused = function() {
     if (lastSelected != null) {
-        var color = (selectedNode.indexOf(lastSelected) == -1) ? "none" : "#4B9877";
+        var color = (isNodeSelected(lastSelected)) ? "#4B9877" : "#282828";
         var parNode = d3.select(lastSelected.parentNode);
         var parCircle = parNode.select("circle"); 
+
         if (parCircle[0][0] != null) {
             parCircle.style("stroke", color);
         } else {
             parNode.select("rect").style("stroke", color);
         }
+        lastSelected = null;
     }
+}
+
+/*
+    Sets/Loads track or artist details (for the 'Details' tab)
+*/
+var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
+    deselectLastFocused();
     
     if (node != null) {
         d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle"))
                                     .style("stroke", "#FF8C00");
 
         lastSelected = node;
-        
-        if (isGenerateTab) {
-            selectedNode.push(node);
-        }
-
         var d = d3.select(node).datum();
 
         if (d.aid) {
@@ -279,14 +290,9 @@ var handleSelection = function(node, typ, id, name, artistName) {
                                 parNode.select("rect").style("stroke", "none");
                             }
                             
-                            // Remove the selected node
-                            var selNodeIndex = selectedNode.indexOf(node);
-                            if (selNodeIndex != -1) {
-                                selectedArr.splice(selectedArr.indexOf(id), 1);
-                                selectedTrackInfo[id] = null;
-                                selectedNode.splice(selNodeIndex, 1);
-                                d3.select("#selected_" + id).remove();
-                            }
+                            selectedArr.splice(selectedArr.indexOf(id), 1);
+                            selectedTrackInfo[id] = null;
+                            d3.select("#selected_" + id).remove();
                         });
                 
                 selectedArr.push(id);
@@ -308,59 +314,35 @@ var handleSelection = function(node, typ, id, name, artistName) {
                 } else {
                     parNode.select("rect").style("stroke", "none");
                 }
-
-                // Remove the selected node
-                var selNodeIndex = selectedNode.indexOf(node);
-                if (selNodeIndex != -1) {
-                    selectedNode.splice(selNodeIndex, 1);
-                }
             }
         } else {
+            if (node != lastSelected) {
+                deselectLastFocused();
+            }
+            
             loadDetailsTabForNode(node, typ, false);
         }
-     }
-    
-    if (node == null) {
-        // Reset all selected artists and tracks (for the 'Generate' tab)
-        selectedArtist = [];
-        selectedTrack = [];
-        selectedTrackInfo = {};
-        
-        // Clear the contents in the 'Generate' tab
-        d3.select("div.trackBox").remove();
-        d3.select("#selectedArtists").html("");
-        d3.select("#selectedTracks").html("");
-        d3.select("#generatedPlaylistTracks").style("display", "none");
+    } else {
+         /*
+            Remove the green/orange strokes from the last selected node, 
+            and also every selected node.
+        */
         
         // Clear the contents in the 'Details' tab
         d3.select("#headerImage").style("display", "none");
         d3.select("#spotifyTracks").html("");
         d3.select("#at-container").style("display", "none");
         d3.select("#detailsGenres").style("display", "none");
-        
-        /*
-            Remove the green/orange strokes from the last selected node, 
-            and also every selected node.
-            
-            Note: We can push the last selected name into the selectedNode array 
-            because we are going to empty it right after.
-        */
-        if (lastSelected != null) {
-            selectedNode.push(lastSelected);
-        }
-        
-        selectedNode.forEach(function(d) {
-            var parNode = d3.select(d.parentNode);
-            var parCircle = parNode.select("circle"); 
-            if (parCircle[0][0] != null) {
-                parCircle.style("stroke", "none");
-            } else {
-                parNode.select("rect").style("stroke", "none");
+        barManager.setTrackInfo(null, 
+            {
+                id: null, 
+                typ: null
             }
-        });
+        );
         
-        selectedNode = [];
-        lastSelected = null;
+        if (!generateTabIsActive) {
+            deselectLastFocused();
+        }
     }
 }
 

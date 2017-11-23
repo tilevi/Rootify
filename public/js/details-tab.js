@@ -52,7 +52,7 @@ var BarManager = function() {
     
     this.showBars = function(trackInfo, obj) {
         if (created) {
-            this.updateBars(trackInfo, obj, true);
+            this.updateBars(trackInfo, obj);
         } else {
             this.createBars(trackInfo, obj);
         }
@@ -76,6 +76,16 @@ var BarManager = function() {
     
     this.clearSelection = function() {
         selected = { typ: null, id: null };
+    }
+    
+    var resizeBarArea = function() {
+        // Resize the the details SVG
+        var w = atDiv.clientWidth;
+        var h = atDiv.clientHeight;
+
+        d3.select("#detailsSVG")
+            .attr("width", w)
+            .attr("height", h);
     }
     
     // This method is called if we initially click on an artist or track.
@@ -104,11 +114,10 @@ var BarManager = function() {
             return;
         }
         
-        // Resize the <div>
+        // Resize the <div> container
         var newHeight = (typ == "track" ? "170px" : "34px");
         d3.select("#at-container").style("height", newHeight);
-        d3.select("#detailsSVG").style("height", newHeight)
-                                .style("display", "block");
+        d3.select("#detailsSVG").style("height", newHeight);
         
         // Store the track information (for use when resizing)
         selectedTrackInfo = Object.assign({}, trackinfo);
@@ -195,29 +204,12 @@ var BarManager = function() {
     }
     
     // Update bars code
-    this.updateBars = function(trackinfo, obj, force_layout) {
-        if (force_layout) {
-            // Extract the width and height that was computed by CSS.
-            viewerWidth = treeDiv.clientWidth;
-            viewerHeight = treeDiv.clientHeight;
-
-            // Use the extracted size to set the size of an SVG element.
-            svg
-            .attr("width", viewerWidth)
-            .attr("height", viewerHeight)
-            .attr("class", "overlay");
-
-            // Resize the the details SVG
-            viewerW2 = atDiv.clientWidth;
-            viewerH2 = atDiv.clientHeight;
-
-            d3.select("#detailsSVG")
-                .attr("width", viewerW2)
-                .attr("height", viewerH2);
-        }
+    this.updateBars = function(trackinfo, obj) {
         
-        var id;
-        var typ;
+        // Resize the bar area.
+        resizeBarArea();
+        
+        var id, typ;
         
         if (trackinfo == null) {
             id = selected.id;
@@ -232,7 +224,7 @@ var BarManager = function() {
             selectedTrackInfo = Object.assign({}, trackinfo);
         }
         
-        if (trackinfo == null) {
+        if (id == null || typ == null) {
             return;
         }
         
