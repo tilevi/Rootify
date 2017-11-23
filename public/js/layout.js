@@ -167,6 +167,16 @@ var deselectLastFocused = function() {
     }
 }
 
+var clearDetailsTab = function() {
+    d3.select("#headerImage").style("display", "none");
+    d3.select("#spotifyTracks").html("");
+    
+    d3.select("#at-container").style("display", "none");
+    barManager.clearSelection();
+    
+    d3.select("#detailsGenres").style("display", "none");
+}
+
 /*
     Sets/Loads track or artist details (for the 'Details' tab)
 */
@@ -262,9 +272,6 @@ var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
 
 var handleSelection = function(node, typ, id, name, artistName) {
      if (node != null) {
-         
-        d3.select("#at-container").style("display", "block");
-        
         if (generateTabIsActive) {
             var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
             
@@ -323,26 +330,10 @@ var handleSelection = function(node, typ, id, name, artistName) {
             loadDetailsTabForNode(node, typ, false);
         }
     } else {
-         /*
-            Remove the green/orange strokes from the last selected node, 
-            and also every selected node.
-        */
-        
-        // Clear the contents in the 'Details' tab
-        d3.select("#headerImage").style("display", "none");
-        d3.select("#spotifyTracks").html("");
-        d3.select("#at-container").style("display", "none");
-        d3.select("#detailsGenres").style("display", "none");
-        barManager.setTrackInfo(null, 
-            {
-                id: null, 
-                typ: null
-            }
-        );
-        
-        if (!generateTabIsActive) {
-            deselectLastFocused();
-        }
+        // Clear the contents in the 'Details' tab.
+        clearDetailsTab();
+        // Deselect the last focused node.
+        deselectLastFocused();
     }
 }
 
