@@ -565,6 +565,16 @@ function centerNode(source, first, shouldPan) {
     
     zoomListener.scale(scale);
     zoomListener.translate([x, y]);
+    
+    /*
+        If this node is the root, and we have nodes in our tree, then turn off 
+        switching modes after we enter the nodes.
+    */
+    if (source == root && root.children.length > 0) {
+        setTimeout(function() {
+            switchingMode = false;
+        }, duration*2);
+    }
 }
 
 /*
@@ -1228,7 +1238,7 @@ doneLoading = function(children_length) {
         Otherwise, we need to either switch modes or redirect the user to an error page.
     */
     
-    if (children_length <= 1) {
+    if (children_length <= 0) {
         switchingMode = false;
         
         if (mode == "short") {
@@ -1245,10 +1255,6 @@ doneLoading = function(children_length) {
         } else {
             switchMode("short");
         }
-    } else {
-        setTimeout(function() {
-            switchingMode = false;
-        }, duration*2);
     }
 }
 
@@ -1280,7 +1286,7 @@ function loadTopTracks() {
     {
         "limit": 5,
         "time_range": mode == "long" ? "medium_term" : "short_term"
-    },
+    }, 
     function(err, data) {
         getAudioFeatures(err, data.items, root);
     });
@@ -1395,7 +1401,7 @@ document.getElementById("short-term").addEventListener("click", function() {
 
 document.getElementById("reset_tree").addEventListener("click", function() {
     // Don't reset the tree if we're switching modes.
-    if (switchingMode) {
+    if (switchingMode || root.children == null) {
         return;
     }
     
