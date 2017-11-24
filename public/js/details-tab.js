@@ -14,7 +14,7 @@ var BarManager = function() {
     var barsCreated = false;
     
     // Audio feature labels
-    var audio_features = ["Popularity", "Danceability", "Energy", "Positivity", "Key"];
+    var audio_features = ["Popularity", "Danceability", "Energy", "Happiness", "Key"];
     
     // Tonic key labels
     var pitchclass = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];

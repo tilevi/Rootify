@@ -4,7 +4,11 @@ var mode = "short";
 var switchingMode = true;
 
 // Initial tree data
-var treeData = { "name": "", "root": true, "children": [] };
+var treeData = {
+                    name: "",
+                    root: true, 
+                    children: [] 
+                };
 
 // Initial Spotify user profile data
 var me = { url: "", uid: "" };
@@ -19,8 +23,8 @@ var duration = 700;
 var verticalSpacing = 78;
 
 // These will be arrays that hold the root's children for each mode.
-var longChildren;
-var shortChildren;
+var longChildren = null;
+var shortChildren = null;
 
 // Root initially doesn't exist.
 var root = null;
@@ -119,21 +123,19 @@ var getAudioFeatures = function(err, data, source) {
         j++;
     }
     
-    spotifyApi.getAudioFeaturesForTracks(tracks, function(err, tdata) {
+    spotifyApi.getAudioFeaturesForTracks(tracks, function(err, track_data) {
         if (!err) {
             j = 0;
-            while (j < tdata.audio_features.length) {
-                var item = tdata.audio_features[j];
+            while (j < track_data.audio_features.length) {
+                var item = track_data.audio_features[j];
                 if (item != null) {
                     audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence, "tonic": item.key, "mode": item.mode }
                 }
                 j++;
             }
-            if (source == root) {
-                populateChildrenArray(err, data, root, "track", audioFeatures);
-            } else {
-                populateChildrenArray(err, data, source, "track", audioFeatures);
-            }
+            
+            // Populate the children array for the track node.
+            populateChildrenArray(err, data, source, "track", audioFeatures);
         }
     });
 }
@@ -203,7 +205,7 @@ var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
                     Popularity: d.popularity,
                     Danceability: 0,
                     Energy: 0,
-                    Positivity: 0,
+                    Happiness: 0,
                     Key: { key: 0, mode: 0 }
                 };
                 
@@ -223,7 +225,7 @@ var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
                     Popularity: d.popularity,
                     Danceability: d.dance,
                     Energy: d.energy,
-                    Positivity: d.valence,
+                    Happiness: d.valence,
                     Key: { key: d.tonic, mode: d.mode },
                 };
 
@@ -386,6 +388,18 @@ var populateChildrenArray = function(err, data, source, typ, audioFeatures) {
         var nonRootNode = (source != root);
         if (nonRootNode || typ == "track") {
             source.children = [];
+        } else {
+            /*
+                This branch is taken when we are operating on the root node with typ 'artist'
+                If we have enough data, then we should add a spacer.
+            */
+            if (data.length > 0 && source.children.length > 0) {
+                source.children.push
+                ({
+                    index: source.children.length, 
+                    spacer: true 
+                });
+            }
         }
         
         // We only want to start at index 6 if we're a root node populating our top artists
@@ -431,24 +445,15 @@ var populateChildrenArray = function(err, data, source, typ, audioFeatures) {
         }
         
         if (nonRootNode) {
-            source._children = null;
-            
             var pan = update(source);
             centerNode(source, false, pan);
             
+            source._children = null;
             source.clicked = false;   
         } else if (typ == "track") {
-            source.children.push
-            ({
-                index: count, 
-                spacer: true 
-            });
-            blacklist.push("INVALID");
-            count = count + 1;
-            
             loadTopArtists(count);
         } else {
-             doneLoading();
+            doneLoading(root.children.length);
         }
     }
 }
@@ -560,12 +565,6 @@ function centerNode(source, first, shouldPan) {
     
     zoomListener.scale(scale);
     zoomListener.translate([x, y]);
-    
-    if (source == root) {
-        setTimeout(function() {
-            switchingMode = false;
-        }, duration*2);
-    }
 }
 
 /*
@@ -1067,36 +1066,15 @@ function update(source, switchM) {
         
         If our node exit set is non-empty, we transition them properly. We make a custom clip element that resizes its radius as the transition occurs.
     */
-    if (!nodeExit.empty()) {
+    
+    var exitSetEmpty = nodeExit.empty();
+    
+    if (!exitSetEmpty) {
         d3.selectAll("circle.clipResize")
             .attr("r", function(d, i) { return (i + 10); })
             .transition()
             .duration(duration)
             .attr("r", 0);
-        
-        setTimeout(function() {
-            // After our nodes exit, we check if we should switch modes.
-            if (switchM) {
-
-                var childRef = null;
-                if (switchM == "long") {
-                    childRef = longChildren;
-                } else if (switchM == "short") {
-                    childRef = shortChildren;
-                }
-
-                // If we have no data, then load it.
-                if (childRef == null) {
-                    switchingMode = true;
-                    loadTopTracks();
-                } else {
-                    // Otherwise, set the root's children
-                    root.children = childRef;
-                    update(root);
-                    centerNode(root, true);
-                }
-            }
-        }, duration);
     }
     
     // For each unmatched node (nodes that don't have any associated data), delete it.
@@ -1159,11 +1137,9 @@ function update(source, switchM) {
                         .transition()
                         .duration(duration)
                         .style("opacity", function(d) {
-
                             if (d.target.spacer) {
                                 return 0;
                             }
-
                             return 1;
                         })
                         .attr("d", elbow);
@@ -1180,6 +1156,32 @@ function update(source, switchM) {
         d.x0 = d.x;
         d.y0 = d.y;
     });
+    
+    /*
+        If we switching modes, then we wait for the nodes to exit and then switch the root's children.
+    */
+    if (switchM) {
+        setTimeout(function() {
+            // After our nodes exit, we check if we should switch modes.
+            var childRef = null;
+            if (switchM == "long") {
+                childRef = longChildren;
+            } else if (switchM == "short") {
+                childRef = shortChildren;
+            }
+
+            // If we have no data, then load it.
+            if (childRef == null) {
+                switchingMode = true;
+                loadTopTracks();
+            } else {
+                // Otherwise, set the root's children
+                root.children = childRef;
+                update(root);
+                centerNode(root, true);
+            }
+        }, (exitSetEmpty ? 0 : duration));
+    }
     
     // Should we pan our view?
     return shouldPan;
@@ -1213,17 +1215,45 @@ var loadedTracks = false;
     
     This function is called when we finally loaded the data of our top artists and tracks.
 */
-doneLoading = function() {
+var shortTermEmpty = false;
+var longTermEmpty = false;
+
+doneLoading = function(children_length) {
+    
     update(root);
     centerNode(root, true);
+    
+    /*
+        We need to make sure we don't display empty data.
+        Otherwise, we need to either switch modes or redirect the user to an error page.
+    */
+    
+    if (children_length <= 1) {
+        switchingMode = false;
+        
+        if (mode == "short") {
+            shortTermEmpty = true;
+        } else if (mode == "long") {
+            longTermEmpty = true;
+        }
+        
+        if (shortTermEmpty && longTermEmpty) {
+            // Redirect the user to an error page.
+            window.location.replace('http://localhost:8888/oops');
+        } else if (shortTermEmpty) {
+            switchMode("long");
+        } else {
+            switchMode("short");
+        }
+    } else {
+        setTimeout(function() {
+            switchingMode = false;
+        }, duration*2);
+    }
 }
 
 /*
     This function loads all of our top artists.
-    
-    Notice that we pass in a baseCount. This is a hacky solution but basically we need to make sure we are inserting the children of our root node properly.
-    
-    baseCount should be 6 because 5 of our tracks should have been loaded, including a spacer node so our tree looks clean.
 */
 
 loadTopArtists = function() {
@@ -1240,17 +1270,12 @@ loadTopArtists = function() {
 
 /*
     This function loads our top tracks.
-    
-    After we loaded our top track information, we call loadTopArtists().
-    I understand that we could have an asynchornous operation here but we could run into all sorts of problems.
-    
-        For example, we could have race conditions with pushing into the children array. This probably wouldn't happen as JS is apparently single-threaded.
-
-        Another example is what if we only could load 2 top tracks and 5 top artists? Instead of using indices, we woud have to push nodes to the front of the list or append to the back.
-        
-        The bottom line is that we could do asynchorous operations and it would probably be fine but loading times for a Spotify user's top artists and tracks are relatively fast so the savings probably wouldn't be worth it for the design and implementation time.
+    After we loaded our top track information, we load our top artists.
 */
 function loadTopTracks() {
+    // We need to make sure the root's children array is empty.
+    root.children = [];
+    
     spotifyApi.getMyTopTracks(
     {
         "limit": 5,
@@ -1322,16 +1347,22 @@ var switchMode = function(m) {
         return;
     }
     
-    // Unselect any nodes
-    handleSelection(null, null);
+    // There's no point to switching to a mode that doesn't have any data to load.
+    if ((m == "short" && shortTermEmpty) || (m == "long" && longTermEmpty)) {
+        return;
+    }
     
+    // We are now switching modes.
     switchingMode = true;
+    
+    // Deselect any nodes
+    handleSelection(null, null);
     
     if (m == "long") {
         d3.select("#long-term").style("background-color", "#4B9877");
         d3.select("#short-term").style("background-color", null);
         
-        // Save the short-term infomration
+        // Save the short-term information
         shortChildren = root.children;
     } else {
         d3.select("#short-term").style("background-color", "#4B9877");
@@ -1343,6 +1374,7 @@ var switchMode = function(m) {
     
     // Switch the mode
     mode = m;
+    
     // Set the root children initially to nothing
     root.children = [];
     

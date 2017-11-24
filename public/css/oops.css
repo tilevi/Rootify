@@ -1,0 +1,53 @@
+body {
+    color: #fff;
+    background-color: #273143;
+    margin: 0;
+    font-family: Avenir Next;
+    font-size: 1em;
+    line-height: 2em;
+}
+
+p {
+	font-size: 1.5em;
+	line-height: 1.3em;
+
+}
+/*----------- Other ---------*/
+
+div {
+	margin-top: 5%;
+	width: 80%;
+    min-width: 850px;
+	margin-bottom: 5%;
+}
+
+a {
+    -moz-user-select: none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+    cursor: pointer;
+    color: #fff;
+    border: 1px solid #B5BDC4;
+    display: inline-block;
+    padding: 10px 30px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 100;
+    font-size: .8em;
+     transition-property: all;
+    transition-duration: .5s;
+    transition-timing-function: ease-out;
+}
+
+a:hover {
+    color: #fff;
+    background-color: #4B9877;
+    border-color: #4B9877;
+    transition-property: all;
+    transition-duration: .5s;
+}
+
+a:active{
+    color-background: #4B9877;
+}
