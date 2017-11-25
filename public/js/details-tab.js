@@ -139,7 +139,7 @@ var BarManager = function() {
         selectedTrackInfo = Object.assign({}, trackinfo);
         
         // Grab our SVG width
-        width = document.getElementById("detailsSVG").clientWidth;
+        width = document.getElementById("detailsSVG").getBoundingClientRect().width;
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
@@ -248,7 +248,7 @@ var BarManager = function() {
         resizeBarContainer(typ);
         
         // Grab our SVG width
-        width = document.getElementById("detailsSVG").clientWidth;
+        width = document.getElementById("detailsSVG").getBoundingClientRect().width;
         
         // Re-define the xScale based on this width
         xScale = d3.scale.linear()
