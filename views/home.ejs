@@ -12,6 +12,9 @@
         <!-- Chosen library for select -->
         <script src="/js/chosen.jquery.js"></script>
         
+        <!-- Select2 library -->
+        <script src="/js/select2.min.js"></script>
+        
         <!-- D3.js v3 -->
 		<script src="http://d3js.org/d3.v3.min.js"></script>
 		
@@ -26,6 +29,9 @@
         
         <!-- Chosen CSS -->
         <link rel="stylesheet" type="text/css" href="/css/chosen.css">
+        
+        <!-- Select2 CSS -->
+        <link rel="stylesheet" type="text/css" href="/css/select2.min.css">
 	</head>
     
 	<body>
@@ -320,6 +326,15 @@
                             <option value="work-out">Work-out</option>
                             <option value="world-music">World-music</option>
                     </select>
+                        
+                        <div class="line-div"></div>
+                        <h2> Search Tracks </h2>
+                        <select id="search_tracks" style="width: 99%"></select>
+                        
+                        <div class="line-div"></div>
+                        <h2> Search Artists </h2>
+                        <select id="search_artists" style="width: 99%"></select>
+                        
                         <div class="line-div"></div>
                         <h2> Filtering Options </h2>
                         
@@ -334,7 +349,7 @@
                             <div id="filter_energy_slider" class="generate-range-slider"></div>
 
                             <div id="filter_valence_slider_text" class="range-slider-text">Happiness: 0 - 100</div>
-                            <div id="filter_valence_slider" class="generate-range-slider"></div>
+                            <div id="filter_valence_slider" class="generate-range-slider" style="margin-bottom: 20px;"></div>
                         </div>
                         
                         <div id="generatedPlaylistTracks">
@@ -373,6 +388,11 @@
                 d.setTime(d.getTime() + (exdays*24*60*60*1000));
                 var expires = "expires="+ d.toUTCString();
                 document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+            }
+            
+            // Source: https://stackoverflow.com/questions/2144386/how-to-delete-a-cookie
+            function deleteCookie( name ) {
+              document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             }
             
             var spotifyApi = new SpotifyWebApi();
@@ -531,6 +551,9 @@
             // Redraw based on the new size whenever the browser window is resized.
             window.addEventListener("resize", redraw);
         </script>
+        
+        <script type="text/javascript" src="/js/select2-track.js"></script>
+        <script type="text/javascript" src="/js/select2-artist.js"></script>
         
         <!-- Tree layout -->
         <script type="text/javascript" src="/js/layout.js"></script>

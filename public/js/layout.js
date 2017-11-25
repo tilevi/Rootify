@@ -333,58 +333,84 @@ var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
         }
 }
 
+function addToOrRemoveFromSelected(name, artistName, id, typ, node) {
+    var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);        
+    // If the selected artist is not in the selected artist array
+    if (selectedArr.indexOf(id) == -1) {
+        // If we exceed a maximum combination of 5 artists, tracks and genres, return.
+        if (doesNotMeetCap()) { return; }
+
+        var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
+        d3.select(selectType)
+                .append("div")
+                .attr("id", "selected_" + id)
+                .attr("class", "trackBox")
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "10px")
+                .html(name + (artistName != null ? (" - <br/>" + artistName) : ""))
+                .append("div").attr("id", "closeButton").html("&times").on("click", function() {
+                    if (node) {
+                        var parNode = d3.select(node.parentNode);
+                        var parCircle = parNode.select("circle"); 
+                        if (parCircle[0][0] != null) {
+                            parCircle.style("stroke", "none");
+                        } else {
+                            parNode.select("rect").style("stroke", "none");
+                        }
+                    }
+                    
+                    selectedArr.splice(selectedArr.indexOf(id), 1);
+                    if (typ == "track") {
+                        selectedTrackInfo[id] = null;
+                    }
+                    d3.select("#selected_" + id).remove();
+                });
+
+        selectedArr.push(id);
+        if (selectedArr == selectedTrack) {
+            selectedTrackInfo[id] = name + " <br/>" + artistName;
+        }
+        
+        if (node != null) {
+            loadDetailsTabForNode(node, typ, true);
+        } else {
+            
+            if (typ == "artist") {
+                svgGroup.selectAll("g.node").each(function(d) {
+                    if (d.aid == id && lastSelected != this) {
+                        d3.select(this).select("circle").style("stroke", "#4B9877");
+                    }
+                });
+            } else {
+                svgGroup.selectAll("g.node").each(function(d) {
+                    if (d.tid == id && lastSelected != this) {
+                        d3.select(this).select("rect").style("stroke", "#4B9877");
+                    }
+                });
+            }
+        }
+    } else {
+        // Removes the track box
+        d3.select("#selected_" + id).remove();
+        selectedArr.splice(selectedArr.indexOf(id), 1);
+        if (typ == "track") {
+            selectedTrackInfo[id] = null;
+        }
+
+        var parNode = d3.select(node.parentNode);
+        var parCircle = parNode.select("circle"); 
+        if (parCircle[0][0] != null) {
+            parCircle.style("stroke", "none");
+        } else {
+            parNode.select("rect").style("stroke", "none");
+        }
+    }
+}
+
 var handleSelection = function(node, typ, id, name, artistName) {
      if (node != null) {
         if (generateTabIsActive) {
-            var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);
-            
-            // If the selected artist is not in the selected artist array
-            if (selectedArr.indexOf(id) == -1) {
-                // If we exceed a maximum combination of 5 artists, tracks and genres, return.
-                if (doesNotMeetCap()) { return; }
-
-                var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
-                d3.select(selectType)
-                        .append("div")
-                        .attr("id", "selected_" + id)
-                        .attr("class", "trackBox")
-                        .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px")
-                        .html(name + (artistName != null ? ("<br/>" + artistName) : ""))
-                        .append("div").attr("id", "closeButton").html("&times").on("click", function() {               
-                            var parNode = d3.select(node.parentNode);
-                            var parCircle = parNode.select("circle"); 
-                            if (parCircle[0][0] != null) {
-                                parCircle.style("stroke", "none");
-                            } else {
-                                parNode.select("rect").style("stroke", "none");
-                            }
-                            
-                            selectedArr.splice(selectedArr.indexOf(id), 1);
-                            selectedTrackInfo[id] = null;
-                            d3.select("#selected_" + id).remove();
-                        });
-                
-                selectedArr.push(id);
-                if (selectedArr == selectedTrack) {
-                    selectedTrackInfo[id] = name + " <br/>" + artistName;
-                }
-                
-                loadDetailsTabForNode(node, typ, true);
-            } else {
-                // Removes the track box
-                d3.select("#selected_" + id).remove();
-                selectedArr.splice(selectedArr.indexOf(id), 1);
-                selectedTrackInfo[id] = null;
-
-                var parNode = d3.select(node.parentNode);
-                var parCircle = parNode.select("circle"); 
-                if (parCircle[0][0] != null) {
-                    parCircle.style("stroke", "none");
-                } else {
-                    parNode.select("rect").style("stroke", "none");
-                }
-            }
+            addToOrRemoveFromSelected(name, artistName, id, typ, node);
         } else {
             if (node != lastSelected) {
                 deselectLastFocused();

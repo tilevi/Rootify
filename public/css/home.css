@@ -599,3 +599,37 @@ rect .node {
     height: 20px;
     color: #cfcfcf;
 }
+
+
+.sa_container {
+    position: relative;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
+
+.avatar {
+    width: 20%;
+    float: left;
+}
+
+.info {
+    width: 80%;
+    float: right;
+    color: black;
+    font-weight: 600;
+    font-family: "Source Sans Pro", sans-serif;
+    word-wrap: break-word;
+}
+
+.clearfix {
+    width: 100%;
+    clear: both; 
+    float: none;
+    content: '';
+}
+li {
+    overflow: auto;
+}
