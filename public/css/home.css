@@ -97,7 +97,10 @@ a {
 
 .button_slide {
     position: relative;
-    left: 45%;
+    left: 50%;
+    width: 36px;
+    margin-left: -18px;
+    margin-bottom: 2px;
     background-color: #4B9877; /* Green */
     border: none;
     color: white;
@@ -106,7 +109,6 @@ a {
     text-decoration: none;
     display: inline-block;
     font-size: 12px;
-    margin: 4px 2px;
     cursor: pointer;
     -webkit-transition-duration: 0.4s; /* Safari */
     transition-duration: 0.4s;

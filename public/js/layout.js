@@ -105,6 +105,32 @@ function doesNotMeetCap() {
     return ((1 + selectedArtist.length + selectedTrack.length + selectedGenre.length) > 5);
 }
 
+
+/*
+    Call Spotify Web API
+*/
+
+var callAPI = function(callback, second_pass) {
+    if (!second_pass) {
+        callback();
+    } else {
+        // Second pass, attempt to get a new access token
+        var refresh_token = getCookie("myRefreshToken");
+        
+        $.ajax({
+            url: '/refresh_token',
+            data: {
+            'refresh_token': refresh_token
+            }
+        }).done(function(data) {
+            setCookie('myToken', data.access_token, 5);
+            spotifyApi.setAccessToken(data.access_token);
+            callback(second_pass);
+        });
+    }
+}
+
+
 /*
     Populate children array with tracks.
 */
@@ -112,7 +138,7 @@ function doesNotMeetCap() {
 var loadTopArtists = function() {}
 var doneLoading = function() {}
 
-var getAudioFeatures = function(err, data, source) {
+var getAudioFeatures = function(data, source, second_pass) {
     var tracks = [];
     var audioFeatures = {};
     
@@ -129,13 +155,48 @@ var getAudioFeatures = function(err, data, source) {
             while (j < track_data.audio_features.length) {
                 var item = track_data.audio_features[j];
                 if (item != null) {
-                    audioFeatures[item.id] = { "energy": item.energy, "dance": item.danceability, "valence": item.valence, "tonic": item.key, "mode": item.mode }
+                    audioFeatures[item.id] = {
+                        energy: item.energy, 
+                        dance: item.danceability, 
+                        valence: item.valence, 
+                        tonic: item.key, 
+                        mode: item.mode 
+                    }
                 }
                 j++;
             }
             
             // Populate the children array for the track node.
-            populateChildrenArray(err, data, source, "track", audioFeatures);
+            populateChildrenArray(data, source, "track", audioFeatures);
+        } else if (!second_pass) {
+            callAPI(function() { getAudioFeatures(data, source, true) }, true);
+        }
+    });
+}
+
+var getTrackRecommendations = function(id, source, second_pass) {
+    spotifyApi.getRecommendations(
+        {
+            limit: 3,
+            seed_tracks: id, 
+            market: "US"
+        }, 
+        function(err, data) {
+            if (!err) {
+                callAPI(function() { getAudioFeatures(data.tracks, source); });
+            } else if (!second_pass) {
+                callAPI(function() { getTrackRecommendations(id, source, true); }, true);
+            }
+        }
+    );
+}
+
+var getRelatedArtists = function(id, node, second_pass) {
+    spotifyApi.getArtistRelatedArtists(id, function(err, data) {
+        if (!err) {
+            populateChildrenArray(data.artists, node, "artist");
+        } else if (!second_pass) {
+            callAPI(function() { getRelatedArtists(id, node, true); }, true);
         }
     });
 }
@@ -197,7 +258,7 @@ var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
                 loadSpotifyTracks(d.tracks);
             } 
             else {
-                getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks); });
+                callAPI(function() { getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks); }); });
             }
 
             if (barManager.artistNotLoaded(d.aid)) {                        
@@ -353,7 +414,7 @@ var loadSpotifyTracks = function(trackArr) {
     d3.select("#spotifyTracks").html(html);
 }
 
-var getArtistTopTracks = function(source, callback) {
+var getArtistTopTracks = function(source, callback, second_pass) {
     spotifyApi.getArtistTopTracks(source.aid, "US", {}, function(err, data) {
         if (!err) {
             var j = 0;
@@ -368,93 +429,92 @@ var getArtistTopTracks = function(source, callback) {
                 }
                 j++;
             }
-            
             callback();
+        } else if (!second_pass) {
+            callAPI(function() { getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks); }, true); }, true);
         }
     });
 }
 
-var populateChildrenArray = function(err, data, source, typ, audioFeatures) {
-    if (!err) {
-        // Array of tracks/artists that we already have in our tree.
-        var blacklist = null;
-        
-        if (typ == "track") {
-            blacklist = (mode == "short") ? trackID_short : trackID_long;
-        } else {
-            blacklist = (mode == "short") ? artistID_short : artistID_long;
+var populateChildrenArray = function(data, source, typ, audioFeatures) {
+    // Array of tracks/artists that we already have in our tree.
+    var blacklist = null;
+
+    if (typ == "track") {
+        blacklist = (mode == "short") ? trackID_short : trackID_long;
+    } else {
+        blacklist = (mode == "short") ? artistID_short : artistID_long;
+    }
+
+    var nonRootNode = (source != root);
+    if (nonRootNode || typ == "track") {
+        source.children = [];
+    } else {
+        /*
+            This branch is taken when we are operating on the root node with typ 'artist'
+            If we have enough data, then we should add a spacer.
+        */
+        if (data.length > 0 && source.children.length > 0) {
+            source.children.push
+            ({
+                index: source.children.length, 
+                spacer: true 
+            });
         }
-        
-        var nonRootNode = (source != root);
-        if (nonRootNode || typ == "track") {
-            source.children = [];
-        } else {
-            /*
-                This branch is taken when we are operating on the root node with typ 'artist'
-                If we have enough data, then we should add a spacer.
-            */
-            if (data.length > 0 && source.children.length > 0) {
-                source.children.push
-                ({
-                    index: source.children.length, 
-                    spacer: true 
+    }
+
+    // We only want to start at index 6 if we're a root node populating our top artists
+    var baseIndex = (nonRootNode || typ == "track") ? 0 : 6;
+    var maxChildren = (nonRootNode) ? 3 : 5;
+
+    var i = 0;
+    var count = 0;
+
+    while ( (i < data.length) && (count < d3.min([maxChildren, data.length])) ) {
+        var obj = data[i];
+
+        if (obj != null && blacklist.indexOf(obj.id) === -1) {
+            if (typ == "track") {
+                var audioFeat = audioFeatures[obj.id];
+                source.children.push({
+                    index: baseIndex + i, 
+                    name: obj.name, 
+                    artist: obj.artists.length > 0 ? obj.artists[0].name : "N/A", 
+                    tid: obj.id, 
+                    url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
+                    popularity: obj.popularity / 100, 
+                    energy: audioFeat.energy, 
+                    dance: audioFeat.dance, 
+                    valence: audioFeat.valence, 
+                    tonic: audioFeat.tonic, 
+                    mode: audioFeat.mode 
                 });
+            } else {
+               source.children.push({
+                   index: baseIndex + i, 
+                   name: obj.name, 
+                   aid: obj.id, 
+                   url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
+                   popularity: obj.popularity / 100, 
+                   genres: obj.genres
+               }); 
             }
+            blacklist.push(obj.id);
+            count++;
         }
-        
-        // We only want to start at index 6 if we're a root node populating our top artists
-        var baseIndex = (nonRootNode || typ == "track") ? 0 : 6;
-        var maxChildren = (nonRootNode) ? 3 : 5;
-        
-        var i = 0;
-        var count = 0;
-        
-        while ( (i < data.length) && (count < d3.min([maxChildren, data.length])) ) {
-            var obj = data[i];
-            
-            if (obj != null && blacklist.indexOf(obj.id) === -1) {
-                if (typ == "track") {
-                    var audioFeat = audioFeatures[obj.id];
-                    source.children.push({
-                        index: baseIndex + i, 
-                        name: obj.name, 
-                        artist: obj.artists.length > 0 ? obj.artists[0].name : "N/A", 
-                        tid: obj.id, 
-                        url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
-                        popularity: obj.popularity / 100, 
-                        energy: audioFeat.energy, 
-                        dance: audioFeat.dance, 
-                        valence: audioFeat.valence, 
-                        tonic: audioFeat.tonic, 
-                        mode: audioFeat.mode 
-                    });
-                } else {
-                   source.children.push({
-                       index: baseIndex + i, 
-                       name: obj.name, 
-                       aid: obj.id, 
-                       url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
-                       popularity: obj.popularity / 100, 
-                       genres: obj.genres
-                   }); 
-                }
-                blacklist.push(obj.id);
-                count++;
-            }
-            i++;
-        }
-        
-        if (nonRootNode) {
-            var pan = update(source);
-            centerNode(source, false, pan);
-            
-            source._children = null;
-            source.clicked = false;   
-        } else if (typ == "track") {
-            loadTopArtists(count);
-        } else {
-            doneLoading(root.children.length);
-        }
+        i++;
+    }
+    
+    if (nonRootNode) {
+        var pan = update(source);
+        centerNode(source, false, pan);
+
+        source._children = null;
+        source.clicked = false;   
+    } else if (typ == "track") {
+        callAPI(loadTopArtists);
+    } else {
+        doneLoading();
     }
 }
 
@@ -594,21 +654,9 @@ function toggleChildren(d) {
         d.clicked = false;
     } else if (d.aid && !d.children) {
         // Grab related artists based on the artist we just selected.
-        spotifyApi.getArtistRelatedArtists(d.aid, function(err, data) {
-            populateChildrenArray(err, data.artists, d, "artist");
-        });
-
+        callAPI(function() { getRelatedArtists(d.aid, d); });
     } else if (d.tid && !d.children) {
-        spotifyApi.getRecommendations(
-            {
-                limit: 3,
-                seed_tracks: d.tid, 
-                market: "US"
-            }, 
-            function(err, data) {
-                getAudioFeatures(err, data.tracks, d);
-            }
-        );
+        callAPI(function() { getTrackRecommendations(d.tid, d); });
     } else if (d.children) {
         d._children = d.children;
         d.children = null;
@@ -742,8 +790,14 @@ function resizeNodes() {
         d3This.select("path.line")
                 .attr("d", lineFunction(
                     [
-                        { "x": 0, "y": (d.howTall ? d.howTall : 26) }, 
-                        { "x": 0, "y": (verticalSpacing - 15) }
+                        {
+                            x: 0, 
+                            y: (d.howTall ? d.howTall : 26)
+                        }, 
+                        {
+                            x: 0, 
+                            y: (verticalSpacing - 15)
+                        }
                     ]));
         
         // Update the position of the down triangle (expand or collapse tree)
@@ -1228,7 +1282,7 @@ var loadedTracks = false;
 var shortTermEmpty = false;
 var longTermEmpty = false;
 
-doneLoading = function(children_length) {
+doneLoading = function() {
     
     update(root);
     centerNode(root, true);
@@ -1238,7 +1292,7 @@ doneLoading = function(children_length) {
         Otherwise, we need to either switch modes or redirect the user to an error page.
     */
     
-    if (children_length <= 0) {
+    if (root.children.length <= 0) {
         switchingMode = false;
         
         if (mode == "short") {
@@ -1262,15 +1316,22 @@ doneLoading = function(children_length) {
     This function loads all of our top artists.
 */
 
-loadTopArtists = function() {
+loadTopArtists = function(second_pass) {
     spotifyApi.getMyTopArtists(
     {
-        "limit": 5,
-        "time_range": mode == "long" ? "medium_term" : "short_term"
+        limit: 5,
+        time_range: mode == "long" ? "medium_term" : "short_term"
     },
     
     function(err, data) {
-        populateChildrenArray(err, data.items, root, "artist");
+        if (!err) {
+            populateChildrenArray(data.items, root, "artist");
+        } else {
+            // If this is our second pass and we failed again, then do nothing.
+            if (!second_pass) {
+                callAPI(loadTopArtists, true);
+            }
+        }
     });
 }
 
@@ -1278,69 +1339,49 @@ loadTopArtists = function() {
     This function loads our top tracks.
     After we loaded our top track information, we load our top artists.
 */
-function loadTopTracks() {
+function loadTopTracks(second_pass) {
     // We need to make sure the root's children array is empty.
     root.children = [];
     
     spotifyApi.getMyTopTracks(
     {
-        "limit": 5,
-        "time_range": mode == "long" ? "medium_term" : "short_term"
+        limit: 5,
+        time_range: mode == "long" ? "medium_term" : "short_term"
     }, 
     function(err, data) {
-        getAudioFeatures(err, data.items, root);
+        if (!err) {
+            getAudioFeatures(data.items, root);
+        } else {
+            // If this is our second pass and we failed again, then do nothing.
+            if (!second_pass) {
+                callAPI(loadTopTracks, true);
+            }
+        }
     });
-}
-
-// If there's an error, we want to get our refresh token.
-// This will be used primarily for development as our access token may expire.
-
-// Source: http://www.the-art-of-web.com/javascript/getcookie/
-function getCookie(name)
-{
-    var re = new RegExp(name + "=([^;]+)");
-    var value = re.exec(document.cookie);
-    return (value != null) ? unescape(value[1]) : null;
-}
-
-function setCookie(cname, cvalue, exdays) {
-    var d = new Date();
-    d.setTime(d.getTime() + (exdays*24*60*60*1000));
-    var expires = "expires="+ d.toUTCString();
-    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
 }
 
 /*
     This function grabs the Spotify user's information.
 */
-var loadMe = function() {
+var loadMe = function(second_pass) {
     spotifyApi.getMe({}, function(err, data) {
         if (!err) {
             me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
             me.uid = data.id;
-            loadTopTracks();
-        } else {        
-            var refresh_token = getCookie("myRefreshToken");
-            
-            $.ajax({
-                url: '/refresh_token',
-                data: {
-                'refresh_token': refresh_token
-                }
-            }).done(function(data) {
-                setCookie('myToken', data.access_token, 5);
-                spotifyApi.setAccessToken(data.access_token);
-                loadMe();
-            }).fail(function(err) {
-                // If the refresh token doesn't work, just re-route to our homepage.
-                window.location = "http://localhost:8888";
-            });
+            callAPI(loadTopTracks);
+        } else {
+            // If this is our second pass and we failed again, then just redirect to home.
+            if (second_pass) {
+                window.location.replace('http://localhost:8888');
+            } else {
+                callAPI(loadMe, true);
+            }
         }
     });
 }
 
 // Load the Spotify user's associated information
-loadMe();
+callAPI(loadMe);
 
 /*
     This function switches the mode.
@@ -1442,12 +1483,33 @@ $(".chosen").on('change', function(evt, params) {
     }
 });
 
-function createPlaylist() {
-    // If we don't have at least 1 seed, return because we can't generate a playlist.
-    if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
-        return;
-    }
-    
+/*
+    Playlist methods: 
+        Used for creating a new playlist, retrieving recommended tracks and adding them.
+*/
+
+function addTracksToPlaylist(playlistID, uriArr, trackInfo, second_pass) {
+    spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) {
+        if (!err) {
+            var genPlaylistDiv = d3.select("#recommendedTracks");
+            genPlaylistDiv.html("");
+            d3.select("#generatedPlaylistTracks").style("display", "block");
+            
+            trackInfo.forEach(function(d) {
+                genPlaylistDiv.append("div")
+                    .attr("class", "trackBox")
+                    .attr("font-family", "sans-serif")
+                    .attr("font-size", "10px")
+                    .html(d);
+            });
+        } else if (!second_pass) {
+            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, true); }, true);
+        }
+    });
+}
+
+function getRecommendedPlaylistTracks(playlistID, second_pass) {
+    // Get the recommended tracks.
     var popValues = $("#filter_pop_slider").slider("values");
     var popularityMin = popValues[0];
     var popularityMax = popValues[1];
@@ -1468,25 +1530,25 @@ function createPlaylist() {
     {
         // We want to include our selected tracks, so we need to find the remainder of songs
         // There should be a maximum total of 25 tracks.
-        "limit": 25 - (selectedTrack.length),
+        limit: 25 - (selectedTrack.length),
         
-        "seed_tracks": selectedTrack, 
-        "seed_artists": selectedArtist, 
-        "seed_genres": selectedGenre, 
+        seed_tracks: selectedTrack, 
+        seed_artists: selectedArtist, 
+        seed_genres: selectedGenre, 
         
-        "min_popularity": popularityMin, 
-        "max_popularity": popularityMax, 
+        min_popularity: popularityMin, 
+        max_popularity: popularityMax, 
         
-        "min_danceability": danceMin / 100, 
-        "max_danceability": danceMax / 100, 
+        min_danceability: danceMin / 100, 
+        max_danceability: danceMax / 100, 
         
-        "min_energy": energyMin / 100, 
-        "max_energy": energyMax / 100, 
+        min_energy: energyMin / 100, 
+        max_energy: energyMax / 100, 
         
-        "min_valence": positivityMin / 100, 
-        "max_valence": positivityMax / 100, 
+        min_valence: positivityMin / 100, 
+        max_valence: positivityMax / 100, 
         
-        "market": "US"
+        market: "US"
     }, 
     function(err, data) {
         if (!err) {
@@ -1507,32 +1569,32 @@ function createPlaylist() {
                 }
             });
             
-            spotifyApi.createPlaylist(me.uid, 
-            {
-                name: "[Rootify] Playlist", 
-                public: true, 
-            }, 
-            function(err, data) {
-                if (!err) {
-                    var playlistID = data.id;
-                    console.log("Playlist successfully created: " + playlistID);
-                    
-                    spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) { if (!err) {
-                        
-                        var genPlaylistDiv = d3.select("#recommendedTracks");
-                        genPlaylistDiv.html("");
-                        d3.select("#generatedPlaylistTracks").style("display", "block");
-                        
-                        trackInfo.forEach(function(d) {
-                            genPlaylistDiv.append("div")
-                                .attr("class", "trackBox")
-                                .attr("font-family", "sans-serif")
-                                .attr("font-size", "10px")
-                                .html(d);
-                        });
-                    } });
-                }
-            });
+            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
+        } else if (!second_pass) {
+            callAPI(function() { getRecommendedPlaylistTracks(playlistID, true) }, true);
+        }
+    });
+}
+
+function createPlaylist(name, second_pass) {
+    // If we don't have at least 1 seed, return because we can't generate a playlist.
+    if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
+        return;
+    }
+    
+    spotifyApi.createPlaylist(me.uid, 
+    {
+        name: name,  
+        public: true, 
+    }, 
+    function(err, data) {
+        if (!err) {
+            var playlistID = data.id;
+            console.log("Playlist successfully created: " + playlistID);
+            
+            callAPI(function() { getRecommendedPlaylistTracks(playlistID); });
+        } else if (second_pass) {
+            callAPI(createPlaylist, true);
         }
     });
 }
