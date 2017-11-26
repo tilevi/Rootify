@@ -1,4 +1,5 @@
 $("#search_tracks").select2({
+    placeholder: "Please click to search for a track.", 
     ajax: {
         url: "https://api.spotify.com/v1/search",
         dataType: 'json',
@@ -40,18 +41,20 @@ function formatTrack(track) {
         return "<div>Searching for tracks..</div>";
     }
     
-    var html = 
-        '<div class="sa_container" height="80px">' +
-        '<div class="avatar">' +
-        '<img src="' + ((track.album.images.length > 2) ? track.album.images[2].url : '') + '" style="max-width: 100%" width="50px" height="50px"/>' +
-        '</div>' +
-        '<p class="info">' + track.name + '</p></div>';
+    var html = "<div class='select2-result-repository clearfix'>" +
+    "<div class='select2-result-repository__avatar'><img src='" +  ((track.album.images.length > 2) ? track.album.images[2].url : '../assets/unknown.png') + "' /></div>" +
+    "<div class='select2-result-repository__meta'>" +
+      "<div class='select2-result-repository__title'>" + track.name + " -<br/>" + track.album.artists[0].name + "</div></div></div>";
     
     return html;
 }
 
 function formatTrackSelection(track) {
-    return "";
+    if (track.id == "") {
+        return "Click to search for a track.";
+    } else {
+        return "Last selected: " + track.name + " - " + (track.album.artists[0].name);
+    }
 }
 
 $('#search_tracks').on("select2:open", function(e) {

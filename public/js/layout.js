@@ -339,7 +339,36 @@ function addToOrRemoveFromSelected(name, artistName, id, typ, node) {
     if (selectedArr.indexOf(id) == -1) {
         // If we exceed a maximum combination of 5 artists, tracks and genres, return.
         if (doesNotMeetCap()) { return; }
+        
+        var clicked = true;
+        
+        if (!node) {
+            clicked = false;
+            var notFound = true;
 
+            if (typ == "artist") {
+                svgGroup.selectAll("g.node").each(function(d) {
+                    if (notFound && d.aid == id && lastSelected != this) {
+                        node = this;
+                        d3.select(this).select("circle").style("stroke", "#4B9877");
+                        notFound = false;
+                    }
+                });
+            } else {
+                svgGroup.selectAll("g.node").each(function(d) {
+                    if (notFound && d.tid == id && lastSelected != this) {
+                        node = this;
+                        d3.select(this).select("rect").style("stroke", "#4B9877");
+                        notFound = false;
+                    }
+                });
+            }
+        }
+        
+        if (node) {
+            d3.select(node).select((typ == "track") ? "rect" : "circle").style("stroke", "#4B9877");
+        }
+        
         var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
         d3.select(selectType)
                 .append("div")
@@ -349,17 +378,14 @@ function addToOrRemoveFromSelected(name, artistName, id, typ, node) {
                 .attr("font-size", "10px")
                 .html(name + (artistName != null ? (" - <br/>" + artistName) : ""))
                 .append("div").attr("id", "closeButton").html("&times").on("click", function() {
+            
                     if (node) {
-                        var parNode = d3.select(node.parentNode);
-                        var parCircle = parNode.select("circle"); 
-                        if (parCircle[0][0] != null) {
-                            parCircle.style("stroke", "none");
-                        } else {
-                            parNode.select("rect").style("stroke", "none");
-                        }
+                        d3.select(node).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
+                        d3.select(node.parentNode).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
                     }
                     
                     selectedArr.splice(selectedArr.indexOf(id), 1);
+                    
                     if (typ == "track") {
                         selectedTrackInfo[id] = null;
                     }
@@ -371,23 +397,8 @@ function addToOrRemoveFromSelected(name, artistName, id, typ, node) {
             selectedTrackInfo[id] = name + " <br/>" + artistName;
         }
         
-        if (node != null) {
+        if (clicked) {
             loadDetailsTabForNode(node, typ, true);
-        } else {
-            
-            if (typ == "artist") {
-                svgGroup.selectAll("g.node").each(function(d) {
-                    if (d.aid == id && lastSelected != this) {
-                        d3.select(this).select("circle").style("stroke", "#4B9877");
-                    }
-                });
-            } else {
-                svgGroup.selectAll("g.node").each(function(d) {
-                    if (d.tid == id && lastSelected != this) {
-                        d3.select(this).select("rect").style("stroke", "#4B9877");
-                    }
-                });
-            }
         }
     } else {
         // Removes the track box
@@ -507,7 +518,9 @@ var populateChildrenArray = function(data, source, typ, audioFeatures) {
                     name: obj.name, 
                     artist: obj.artists.length > 0 ? obj.artists[0].name : "N/A", 
                     tid: obj.id, 
-                    url: obj.album.images.length > 1 ? obj.album.images[1].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
+                    // Original question mark by Yannick Lung 
+                    // Source: https://www.iconfinder.com/icons/183285/help_mark_question_icon#size=128
+                    url: obj.album.images.length > 1 ? obj.album.images[1].url : "../assets/unknown.png", 
                     popularity: obj.popularity / 100, 
                     energy: audioFeat.energy, 
                     dance: audioFeat.dance, 
@@ -520,7 +533,7 @@ var populateChildrenArray = function(data, source, typ, audioFeatures) {
                    index: baseIndex + i, 
                    name: obj.name, 
                    aid: obj.id, 
-                   url: obj.images.length > 2 ? obj.images[2].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png", 
+                   url: obj.images.length > 2 ? obj.images[2].url : "../assets/unknown.png", 
                    popularity: obj.popularity / 100, 
                    genres: obj.genres
                }); 
@@ -1392,7 +1405,7 @@ function loadTopTracks(second_pass) {
 var loadMe = function(second_pass) {
     spotifyApi.getMe({}, function(err, data) {
         if (!err) {
-            me.url = data.images.length > 0 ? data.images[0].url : "http://primusdatabase.com/images/8/83/Unknown_avatar.png";
+            me.url = data.images.length > 0 ? data.images[0].url : "../assets/unknown.png";
             me.uid = data.id;
             callAPI(loadTopTracks);
         } else {

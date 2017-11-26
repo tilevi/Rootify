@@ -1,4 +1,5 @@
 $("#search_artists").select2({
+    placeholder: "Please click to search for an artist.", 
     ajax: {
         url: "https://api.spotify.com/v1/search",
         dataType: 'json',
@@ -40,18 +41,20 @@ function formatArtist(artist) {
         return "<div>Searching for artists..</div>";
     }
     
-    var html = 
-        '<div class="sa_container" height="80px">' +
-        '<div class="avatar">' +
-        '<img src="' + ((artist.images.length > 2) ? artist.images[2].url : '') + '" style="max-width: 100%" width="50px" height="50px"/>' +
-        '</div>' +
-        '<p class="info">' + artist.name + '</p></div>';
+    var html = "<div class='select2-result-repository clearfix'>" +
+    "<div class='select2-result-repository__avatar'><img src='" +  ((artist.images.length > 2) ? artist.images[2].url : '../assets/unknown.png') + "' /></div>" +
+    "<div class='select2-result-repository__meta'>" +
+      "<p class='select2-result-repository__title'>" + artist.name + "</p></div></div>";
     
     return html;
 }
 
 function formatArtistSelection(artist) {
-    return "";
+    if (artist.id == "") {
+        return "Click to search for an artist.";
+    } else {
+        return "Last selected: " + artist.name;
+    }
 }
 
 $('#search_artists').on("select2:open", function(e) {
