@@ -35,18 +35,29 @@
 	</head>
     
 	<body>
-        
-        <div id="dialog" title="Generate Playlist">
+        <div id="dialog" style="display:none;" title="Generate Playlist">
             <font style="color: black;">Playlist name:</font><br/>
-            <input type="text" name="playlistName" style="margin-top: 5px; width: 100%;"><br/>
+            <input type="text" id="playlistName" name="playlistName" style="margin-top: 5px; width: 100%;"><br/>
             
             <div id="max_tracks_slider_text" class="range-slider-text2">Max tracks: 25</div>
             <div id="max_tracks_slider" class=".range-slider2"></div>
             
-            <button id="geneatePlaylistBtn2" class="playlistbtn2">Generate Playlist</button>
+            <button id="geneatePlaylistBtn2" class="playlistbtn2" onclick="finallyCreatePlaylist()">Generate Playlist</button>
         </div>
         
         <script type="text/javascript">
+            
+            var finallyCreatePlaylist = function() {
+                document.getElementById('geneatePlaylistBtn2').innerHTML = 'CREATING PLAYLIST...';
+                // https://stackoverflow.com/questions/12754256/removing-invalid-characters-in-javascript
+                var name = ($('#playlistName').val()).replace(/\uFFFD/g, '');
+                if (name == "") {
+                    name = "[Rootify] Playlist";
+                }
+                var maxTracks = $("#max_tracks_slider").slider("value");                
+                createPlaylist(name, maxTracks);
+            }
+            
             $(function() {
                 $("#dialog").dialog({
                     modal: true, 
@@ -64,20 +75,22 @@
                 });
                 
                 $("#geneatePlaylistBtn").on("click", function() {
-                    
-                    $("#max_tracks_slider").slider({
-                        min: d3.max([1, selectedTrack.length]), 
-                        max: 50, 
-                        value: 25, 
-                        change: function (event, ui) {
-                        }, 
-                        slide: function(event, ui) {
-                            var val = ui.value;
-                            $("#max_tracks_slider_text").html("Max tracks: " + val);
-                        }
-                    });
-                    
-                    $("#dialog").dialog("open");
+                    if ((selectedTrack.length + selectedArtist.length + selectedGenre.length) > 0) {
+                        $("#max_tracks_slider").slider({
+                            min: d3.max([1, selectedTrack.length]), 
+                            max: 50, 
+                            value: 25, 
+                            change: function (event, ui) {
+                            }, 
+                            slide: function(event, ui) {
+                                var val = ui.value;
+                                $("#max_tracks_slider_text").html("Max tracks: " + val);
+                            }
+                        });
+                        
+                        //$("#dialog").css("display", "block");
+                        $("#dialog").dialog("open");
+                    }
                 });
             });
         </script>
@@ -407,7 +420,7 @@
                         </div>
                         
                         <!-- Button  -->
-                        <a id="geneatePlaylistBtn" class="playlistbtn" href="#" onclick="createPlaylist('[Rootify] Playlist')">Generate Playlist</a>
+                        <a id="geneatePlaylistBtn" class="playlistbtn" href="#">Generate Playlist</a>
                     </div>
                 </div>
             </div>

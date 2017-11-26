@@ -406,7 +406,7 @@ function addToOrRemoveFromSelected(name, artistName, id, typ, node) {
 
         selectedArr.push(id);
         if (selectedArr == selectedTrack) {
-            selectedTrackInfo[id] = name + " <br/>" + artistName;
+            selectedTrackInfo[id] = name + " - <br/>" + artistName;
         }
         
         if (clicked) {
@@ -1553,81 +1553,91 @@ function addTracksToPlaylist(playlistID, uriArr, trackInfo, second_pass) {
                     .attr("font-size", "10px")
                     .html(d);
             });
+            
+            document.getElementById('geneatePlaylistBtn2').innerHTML = 'PLAYLIST CREATED!';
+            setTimeout(function() {
+                $('#dialog').dialog('close');
+                document.getElementById('geneatePlaylistBtn2').innerHTML = 'GENERATE PLAYLIST';
+            }, 750); 
         } else if (!second_pass) {
             callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, true); }, true);
         }
     });
 }
 
-function getRecommendedPlaylistTracks(playlistID, second_pass) {
-    // Get the recommended tracks.
-    var popValues = $("#filter_pop_slider").slider("values");
-    var popularityMin = popValues[0];
-    var popularityMax = popValues[1];
+function getRecommendedPlaylistTracks(playlistID, maxTracks, second_pass) {
     
-    var danceValues = $("#filter_dance_slider").slider("values");
-    var danceMin = danceValues[0];
-    var danceMax = danceValues[1];
-    
-    var energyValues = $("#filter_energy_slider").slider("values");
-    var energyMin = energyValues[0];
-    var energyMax = energyValues[1];
-    
-    var positivityValues = $("#filter_valence_slider").slider("values");
-    var positivityMin = positivityValues[0];
-    var positivityMax = positivityValues[1];
-    
-    spotifyApi.getRecommendations(
-    {
-        // We want to include our selected tracks, so we need to find the remainder of songs
-        // There should be a maximum total of 25 tracks.
-        limit: 25 - (selectedTrack.length),
-        
-        seed_tracks: selectedTrack, 
-        seed_artists: selectedArtist, 
-        seed_genres: selectedGenre, 
-        
-        min_popularity: popularityMin, 
-        max_popularity: popularityMax, 
-        
-        min_danceability: danceMin / 100, 
-        max_danceability: danceMax / 100, 
-        
-        min_energy: energyMin / 100, 
-        max_energy: energyMax / 100, 
-        
-        min_valence: positivityMin / 100, 
-        max_valence: positivityMax / 100, 
-        
-        market: "US"
-    }, 
-    function(err, data) {
-        if (!err) {
-            
-            var uriArr = [];
-            var trackInfo = [];
-            
-            selectedTrack.forEach(function(d) {
-                uriArr.push("spotify:track:" + d);
-                trackInfo.push(selectedTrackInfo[d]);
-            });
-            
-            data.tracks.forEach(function(d) {
-                // Make sure there can't be duplicate tracks
-                if (uriArr.indexOf(d.uri) == -1) {
-                    uriArr.push(d.uri);
-                    trackInfo.push(d.name + " <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
-                }
-            });
-            
-            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
-        } else if (!second_pass) {
-            callAPI(function() { getRecommendedPlaylistTracks(playlistID, true) }, true);
-        }
+    var uriArr = [];
+    var trackInfo = [];
+
+    selectedTrack.forEach(function(d) {
+        uriArr.push("spotify:track:" + d);
+        trackInfo.push(selectedTrackInfo[d]);
     });
+    
+    if ((maxTracks - (selectedTrack.length)) > 0) {
+        // Get the recommended tracks.
+        var popValues = $("#filter_pop_slider").slider("values");
+        var popularityMin = popValues[0];
+        var popularityMax = popValues[1];
+
+        var danceValues = $("#filter_dance_slider").slider("values");
+        var danceMin = danceValues[0];
+        var danceMax = danceValues[1];
+
+        var energyValues = $("#filter_energy_slider").slider("values");
+        var energyMin = energyValues[0];
+        var energyMax = energyValues[1];
+
+        var positivityValues = $("#filter_valence_slider").slider("values");
+        var positivityMin = positivityValues[0];
+        var positivityMax = positivityValues[1];
+
+        spotifyApi.getRecommendations(
+        {
+            // We want to include our selected tracks, so we need to find the remainder of songs
+            // There should be a maximum total of 25 tracks.
+            limit: maxTracks - (selectedTrack.length),
+
+            seed_tracks: selectedTrack, 
+            seed_artists: selectedArtist, 
+            seed_genres: selectedGenre, 
+
+            min_popularity: popularityMin, 
+            max_popularity: popularityMax, 
+
+            min_danceability: danceMin / 100, 
+            max_danceability: danceMax / 100, 
+
+            min_energy: energyMin / 100, 
+            max_energy: energyMax / 100, 
+
+            min_valence: positivityMin / 100, 
+            max_valence: positivityMax / 100, 
+
+            market: "US"
+        }, 
+        function(err, data) {
+            if (!err) {
+                data.tracks.forEach(function(d) {
+                    // Make sure there can't be duplicate tracks
+                    if (d.uri && uriArr.indexOf(d.uri) == -1) {
+                        uriArr.push(d.uri);
+                        trackInfo.push(d.name + " <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
+                    }
+                });
+
+                callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
+            } else if (!second_pass) {
+                callAPI(function() { getRecommendedPlaylistTracks(playlistID, maxTracks, true) }, true);
+            }
+        });
+    } else {
+        callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
+    }
 }
 
-function createPlaylist(name, second_pass) {
+function createPlaylist(name, maxTracks, second_pass) {
     // If we don't have at least 1 seed, return because we can't generate a playlist.
     if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
         return;
@@ -1641,11 +1651,9 @@ function createPlaylist(name, second_pass) {
     function(err, data) {
         if (!err) {
             var playlistID = data.id;
-            console.log("Playlist successfully created: " + playlistID);
-            
-            callAPI(function() { getRecommendedPlaylistTracks(playlistID); });
+            callAPI(function() { getRecommendedPlaylistTracks(playlistID, maxTracks); });
         } else if (second_pass) {
-            callAPI(createPlaylist, true);
+            callAPI(function() { createPlaylist(name, maxTracks, true) }, true);
         }
     });
 }
