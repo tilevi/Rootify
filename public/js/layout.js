@@ -1623,7 +1623,7 @@ function getRecommendedPlaylistTracks(playlistID, maxTracks, second_pass) {
                     // Make sure there can't be duplicate tracks
                     if (d.uri && uriArr.indexOf(d.uri) == -1) {
                         uriArr.push(d.uri);
-                        trackInfo.push(d.name + " <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
+                        trackInfo.push(d.name + " - <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
                     }
                 });
 
