@@ -57,8 +57,22 @@ function formatTrackSelection(track) {
     }
 }
 
+/*
+    Fix for Select2 dropdown
+    https://github.com/select2/select2/issues/4614
+*/
+$('#search_tracks').data('select2').on('results:message', function(params){
+    this.dropdown._resizeDropdown();
+    this.dropdown._positionDropdown();
+});
+
 $('#search_tracks').on("select2:open", function(e) {
+    tokenSanityCheck();
     $('#search_tracks').val('');
+});
+
+$('#search_tracks').on("select2:close", function(e) {
+   $('#search_tracks').val(''); 
 });
 
 $('#search_tracks').on("select2:select", function(e) {

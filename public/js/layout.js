@@ -130,7 +130,19 @@ var callAPI = function(callback, second_pass) {
     }
 }
 
-
+/*
+    Sanity check.
+    This is used to generate a new access token if ours has expired.
+*/
+var tokenSanityCheck = function() {
+    spotifyApi.getMe({}, function(err, data) {
+        if (err) {
+            // Generate a new access token.
+            callAPI(function() {}, true);
+        }
+    });
+}
+        
 /*
     Populate children array with tracks.
 */

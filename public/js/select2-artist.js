@@ -57,8 +57,22 @@ function formatArtistSelection(artist) {
     }
 }
 
+/*
+    Fix for Select2 dropdown
+    https://github.com/select2/select2/issues/4614
+*/
+$('#search_artists').data('select2').on('results:message', function(params){
+    this.dropdown._resizeDropdown();
+    this.dropdown._positionDropdown();
+});
+
 $('#search_artists').on("select2:open", function(e) {
+    tokenSanityCheck();
     $('#search_artists').val('');
+});
+
+$('#search_artists').on("select2:close", function(e) {
+   $('#search_artists').val(''); 
 });
 
 $('#search_artists').on("select2:select", function(e) {
