@@ -1,5 +1,8 @@
 /*
-    This is a singleton class that manages the 'Details' tab bars.
+    File:
+            details-tab.js
+    Purpose:
+            This is a singleton class that manages the 'Details' tab bars.
 */
 var BarManager = function() {
     // Padding is the distance between each grey bar

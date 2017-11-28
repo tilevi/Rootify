@@ -21,6 +21,9 @@
 		<!-- Spotify Web API (JS client-side wrapper) -->
 		<script src="/js/spotify-web-api.js"></script>
         
+        <!-- Refresh token code -->
+        <script src="/js/refresh-token.js"></script>
+        
         <!-- Main CSS -->
         <link rel="stylesheet" type="text/css" href="/css/home.css">
         
@@ -32,6 +35,13 @@
         
         <!-- Select2 CSS -->
         <link rel="stylesheet" type="text/css" href="/css/select2.css">
+        
+        <!-- Jasmine Testing Suite -->
+        <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine.min.css">
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine-html.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/boot.min.js"></script> -->
 	</head>
     
 	<body>
@@ -88,7 +98,10 @@
                             }
                         });
                         
-                        //$("#dialog").css("display", "block");
+                        // Reset the text (could be different).
+                        document.getElementById('geneatePlaylistBtn2').innerHTML = 'GENERATE PLAYLIST';
+                        // Set the text back to 25 (default max tracks).
+                        $("#max_tracks_slider_text").html("Max tracks: 25");
                         $("#dialog").dialog("open");
                     }
                 });
@@ -113,37 +126,7 @@
                         energy_slider: { typ: "energy", values: [0, 100] }, 
                         valence_slider: { typ: "valence", values: [0, 100] }
                     };
-                    
-                    function filterNode(d, element) {
-                        if (d.root || d.spacer) { return; }
-                        var pass = true;
-
-                        for (var key in filterOptions) {
-                            var typ = filterOptions[key].typ;
-                            var range = filterOptions[key].values;
-                            
-                            var featValue = d[typ] * 100;
-                            var min = range[0];
-                            var max = range[1];
-                            
-                            if (featValue < min || featValue > max) {
-                                pass = false;
-                                break;
-                            }
-                        }
-
-                        d3.select(element).select("image").style("opacity", pass ? 1 : 0.05);
-                    }
-                    
-                    function filterNodes() {
-                        var node = svgGroup.selectAll("g.node");
-    
-                        // For each node in the set..
-                        node.each(function(d) {
-                            filterNode(d, this);
-                        });
-                    }
-                    
+                                    
                     function upperCaseFirstLetter(string) {    
                         if (string == "valence") {
                             return "Happiness";
@@ -183,7 +166,6 @@
                                     
                                     var id = $(this).attr("id");
                                     filterOptions[id].values = [min, max];
-                                    
                                     filterNodes();
                                 }, 
                                 slide: function(event, ui) {
@@ -398,7 +380,7 @@
                         <select id="search_artists" style="width: 99%"></select>
                         
                         <div class="line-div"></div>
-                        <h2> Filtering Options </h2>
+                        <h2> Filter Options </h2>
                         
                         <div id="generateFilters">
                             <div id="filter_pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
@@ -485,7 +467,7 @@
                 
                 <div id="leftSide">
                     
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.5em;">Resize Tracks & Artists</h1>
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.3em;">Resize Tracks & Artists</h1>
                     
                     <label class="container2">Popularity
                         <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
@@ -510,7 +492,7 @@
                 
                 <div id="rightSide">
                     
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.5em;">Filter Tracks & Artists</h1>
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.3em;">Filter Tracks & Artists</h1>
                     
                     <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
                     <div id="pop_slider" class="range-slider"></div>
@@ -554,40 +536,9 @@
             var atDiv = document.getElementById("at-container");
             
             var selectedType = null;
-            var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
-            
-            var viewerWidth, viewerHeight;
-            var viewerW2, viewerH2;
-            
-            // This variable is true if the 'Generate' tab is selected.
             var generateTabIsActive = false;
-            
-            function generateTabSwitched(isActive) {
-                generateTabIsActive = isActive;
-                if (lastSelected != null) {
-                    var color;
-                    if (isActive) {
-                        color = (isNodeSelected(lastSelected)) ? "#4B9877" : "#282828";
-                    } else {
-                        color = "#FF8C00";
-                    }
-                    var parNode = d3.select(lastSelected.parentNode);
-                    var parCircle = parNode.select("circle"); 
-                    if (parCircle[0][0] != null) {
-                        parCircle.style("stroke", color);
-                    } else {
-                        parNode.select("rect").style("stroke", color);
-                    }
-                    
-                    var d = d3.select(lastSelected).datum();
-                    
-                    // We switched to the 'Details' tab, show the previous information.
-                    if (!isActive) {
-                        barManager.showBars();
-                    }
-                }
-            }
-            
+            var svg = d3.select(treeDiv).append("svg").attr("id", "baseSVG");
+                
             // For the bars in the 'Details' tab
             var barManager = new BarManager();
             
@@ -630,5 +581,7 @@
             });
             myTabs.init();
         </script>
+        
+        <!-- <script src="/js/unit-tests.js"></script> -->
 	</body>
 </html>
