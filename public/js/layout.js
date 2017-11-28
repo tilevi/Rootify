@@ -1596,9 +1596,7 @@ var selectedGenre = [];
         switchMode("short");
     });
 
-    document.getElementById("reset_tree").addEventListener("click", function() {
-        spotifyApi.setAccessToken("");
-        
+    document.getElementById("reset_tree").addEventListener("click", function() {s
         // Don't reset the tree if we're switching modes.
         if (switchingMode || root.children == null) {
             return;
