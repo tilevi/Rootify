@@ -1243,21 +1243,23 @@ function update(source, switchM) {
     // Transition links to their new position.
     link.transition()
                 .duration(duration)
+                .style("opacity", 1)
                 .attr("d", elbow);
     
     // Enter any new nodes.
     var linkEnter = link.enter().append("path")
                         .classed("link", true)
-                        .style("opacity", 0)
-                        .transition()
-                        .duration(duration)
-                        .style("opacity", function(d) {
-                            if (d.target.spacer) {
-                                return 0;
-                            }
-                            return 1;
-                        })
-                        .attr("d", elbow);
+                        .style("opacity", 0);
+    
+    linkEnter.transition()
+        .duration(duration)
+        .style("opacity", function(d) {
+            if (d.target.spacer) {
+                return 0;
+            }
+            return 1;
+        })
+        .attr("d", elbow);
     
     // Transition exiting nodes to the parent's new position.
     link.exit().remove();
