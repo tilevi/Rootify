@@ -28,10 +28,36 @@ div {
 	margin-top: 30px;
     color: #fff;
     background-color:#00B685;
-    padding: 20px 80px;
+    padding: 20px 70px;
     text-decoration: none;
     text-transform: uppercase;
     font-family: "Source Sans Pro", sans-serif;
     font-weight: 400;
     text-align: center;
 }
+
+.logo {
+    width:400px;
+}
+
+@media screen and (max-width: 700px) {
+    body{
+        font-size: .8em;
+        text-align: left;
+    }
+    #thediv a{
+        font-size: 10pt;
+        padding: 20px 60px;
+    }
+    .logo {
+    width:60%;
+    }
+}
+
+
+@media screen and (max-width: 600px) {
+     body{
+        font-size:.6em;
+        text-align: left;
+    }
+    }
