@@ -105,28 +105,17 @@ function doesNotMeetCap() {
     return ((1 + selectedArtist.length + selectedTrack.length + selectedGenre.length) > 5);
 }
 
-
 /*
     Call Spotify Web API
 */
 
-var callAPI = function(callback, second_pass) {
+var callAPI = function(callback, second_pass, special) {
     if (!second_pass) {
         callback();
     } else {
         // Second pass, attempt to get a new access token
-        var refresh_token = getCookie("myRefreshToken");
-        
-        $.ajax({
-            url: '/refresh_token',
-            data: {
-            'refresh_token': refresh_token
-            }
-        }).done(function(data) {
-            setCookie('myToken', data.access_token, 5);
-            spotifyApi.setAccessToken(data.access_token);
-            callback(second_pass);
-        });
+        console.log("This");
+        refreshAccessToken(function() { callback(second_pass) });
     }
 }
 
@@ -172,7 +161,7 @@ var getAudioFeatures = function(data, source, second_pass) {
                         dance: item.danceability, 
                         valence: item.valence, 
                         tonic: item.key, 
-                        mode: item.mode 
+                        mode: item.mode
                     }
                 }
                 j++;
@@ -303,6 +292,7 @@ var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
                 };
 
                 var obj = { id: d.tid, typ: "track" };
+                obj.typ = (d.hasAudioFeatures) ? "track" : "artist";
                 
                 if (isGenerateTab) {
                     barManager.setTrackInfo(trackInfo, obj);
@@ -524,8 +514,7 @@ var populateChildrenArray = function(data, source, typ, audioFeatures) {
 
         if (obj != null && blacklist.indexOf(obj.id) === -1) {
             if (typ == "track") {
-                var audioFeat = audioFeatures[obj.id];
-                source.children.push({
+                var trackObj = {
                     index: baseIndex + i, 
                     name: obj.name, 
                     artist: obj.artists.length > 0 ? obj.artists[0].name : "N/A", 
@@ -534,12 +523,29 @@ var populateChildrenArray = function(data, source, typ, audioFeatures) {
                     // Source: https://www.iconfinder.com/icons/183285/help_mark_question_icon#size=128
                     url: obj.album.images.length > 1 ? obj.album.images[1].url : "../assets/unknown.png", 
                     popularity: obj.popularity / 100, 
-                    energy: audioFeat.energy, 
-                    dance: audioFeat.dance, 
-                    valence: audioFeat.valence, 
-                    tonic: audioFeat.tonic, 
-                    mode: audioFeat.mode 
-                });
+                    energy: 0, 
+                    dance: 0, 
+                    valence: 0, 
+                    tonic: 0, 
+                    mode: 0, 
+                    hasAudioFeatures: false
+                };
+                
+                var audioFeat = audioFeatures[obj.id];
+                var hasAudioFeatures = (audioFeat != null);
+                
+                if (hasAudioFeatures) {
+                    trackObj.energy = audioFeat.energy;
+                    trackObj.dance = audioFeat.dance;
+                    trackObj.valence = audioFeat.valence;
+                    trackObj.tonic = audioFeat.tonic;
+                    trackObj.mode = audioFeat.mode;
+                    trackObj.hasAudioFeatures = true;
+                    source.children.push(trackObj);
+                } else {
+                    // This track doesn't have audio feature analysis.
+                    source.children.push(trackObj);
+                }
             } else {
                source.children.push({
                    index: baseIndex + i, 
@@ -762,15 +768,15 @@ var sizeScale = d3.scale.linear()
 
 function getNodeSize(d) {
     var num = 1;
-
+    var features = false;
+    
     if (d.aid || d.tid) {
         for (var key in scaleOptions) {
             var value = scaleOptions[key];
             if (value) {
                 if (key == "popCheck") {
                     num = num * d.popularity;
-                }
-                if (d.tid) {
+                } else if (d.tid) {
                     if (key == "energyCheck") {
                         num = num * d.energy;
                     } else if (key == "danceCheck") {
@@ -778,11 +784,17 @@ function getNodeSize(d) {
                     } else if (key == "posCheck") {
                         num = num * d.valence;
                     }
+                    // We are resizing by audio features.
+                    features = true;
                 }
             }
         }
     }
-    return sizeScale(num);
+    
+    return {
+        size: sizeScale(num), 
+        features: features
+    }
 }
 
 function resizeNodes() {
@@ -794,7 +806,10 @@ function resizeNodes() {
         // Don't resize the root node.
         if (d.root) { return; }
         
-        var newSize = getNodeSize(d);
+        var result = getNodeSize(d);
+        var newSize = result.size;
+        var audioFeatures = result.features;
+        
         var d3This = d3.select(this);
         
         d.howTall = Math.floor(newSize/2);
@@ -834,7 +849,8 @@ function resizeNodes() {
                     .attr('x', Math.floor(-imageWidth/2))
                     .attr('y', Math.floor(-imageHeight/2))
                     .attr('width', imageWidth)
-                    .attr('height', imageHeight);
+                    .attr('height', imageHeight)
+                    .style("opacity", (audioFeatures && !d.hasAudioFeatures) ? 0.05 : 1);
         }
         
         // Update the position of the vertical line (below the node)
@@ -989,7 +1005,10 @@ function update(source, switchM) {
     
     nodeEnter.each(function(d, i) {
         // For each new node, we need to set its appearance and assets.
-        var newSize = getNodeSize(d);
+        var result = getNodeSize(d);
+        var newSize = result.size;
+        var audioFeatures = result.features;
+        
         var d3This = d3.select(this);
         var regNode = (d.aid || d.tid);
         
@@ -1102,10 +1121,15 @@ function update(source, switchM) {
                     
                     handleSelection(this, "track", trackID, trackName, trackArtistName);
                 });
-                
-                if (selectedTrack.indexOf(d.tid) != -1) {
-                    d3.select(this).select("rect").style("stroke", "#4B9877");
-                }
+            
+            // For some reason we can't set the image opacity immediately, so we wait.
+            setTimeout(function() {
+                d3This.select('image').style("opacity", (audioFeatures && !d.hasAudioFeatures) ? 0.05 : 1);
+            }, 0);
+            
+            if (selectedTrack.indexOf(d.tid) != -1) {
+                d3.select(this).select("rect").style("stroke", "#4B9877");
+            }
         } else if (d.root) { // And lastly, if the node is the root, then ...
             d3This.style("cursor", "none").style("pointer-events", "none");
             
@@ -1243,7 +1267,9 @@ function update(source, switchM) {
     // Transition links to their new position.
     link.transition()
                 .duration(duration)
-                .style("opacity", 1)
+                .style("opacity", function(d) {
+                    return (d.target.aid || d.target.tid) ? 1 : 0;
+                })
                 .attr("d", elbow);
     
     // Enter any new nodes.
@@ -1558,8 +1584,11 @@ function addTracksToPlaylist(playlistID, uriArr, trackInfo, second_pass) {
             
             document.getElementById('geneatePlaylistBtn2').innerHTML = 'PLAYLIST CREATED!';
             setTimeout(function() {
+                // Close the dialog box
                 $('#dialog').dialog('close');
-                document.getElementById('geneatePlaylistBtn2').innerHTML = 'GENERATE PLAYLIST';
+                
+                // Scroll down to the recommended playlist.
+                $('#generatedPlaylistTracks')[0].scrollIntoView( true );
             }, 750); 
         } else if (!second_pass) {
             callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, true); }, true);
@@ -1647,15 +1676,16 @@ function createPlaylist(name, maxTracks, second_pass) {
     
     spotifyApi.createPlaylist(me.uid, 
     {
-        name: name,  
+        name: name, 
         public: true, 
     }, 
     function(err, data) {
         if (!err) {
             var playlistID = data.id;
             callAPI(function() { getRecommendedPlaylistTracks(playlistID, maxTracks); });
-        } else if (second_pass) {
-            callAPI(function() { createPlaylist(name, maxTracks, true) }, true);
+        } else if (!second_pass) {
+            console.log("second pass.");
+            callAPI(function() { createPlaylist(name, maxTracks, true) }, true, true);
         }
     });
 }

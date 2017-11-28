@@ -21,6 +21,9 @@
 		<!-- Spotify Web API (JS client-side wrapper) -->
 		<script src="/js/spotify-web-api.js"></script>
         
+        <!-- Refresh token code -->
+        <script src="/js/refresh-token.js"></script>
+        
         <!-- Main CSS -->
         <link rel="stylesheet" type="text/css" href="/css/home.css">
         
@@ -95,7 +98,10 @@
                             }
                         });
                         
-                        //$("#dialog").css("display", "block");
+                        // Reset the text (could be different).
+                        document.getElementById('geneatePlaylistBtn2').innerHTML = 'GENERATE PLAYLIST';
+                        // Set the text back to 25 (default max tracks).
+                        $("#max_tracks_slider_text").html("Max tracks: 25");
                         $("#dialog").dialog("open");
                     }
                 });
@@ -133,7 +139,7 @@
                             var min = range[0];
                             var max = range[1];
                             
-                            if (featValue < min || featValue > max) {
+                            if (featValue < min || featValue > max || (typ != "popularity" && !d.aid && !(min == 0 && max == 100) && !d.hasAudioFeatures)) {
                                 pass = false;
                                 break;
                             }
@@ -492,7 +498,7 @@
                 
                 <div id="leftSide">
                     
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.5em;">Resize Tracks & Artists</h1>
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.3em;">Resize Tracks & Artists</h1>
                     
                     <label class="container2">Popularity
                         <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
@@ -517,7 +523,7 @@
                 
                 <div id="rightSide">
                     
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.5em;">Filter Tracks & Artists</h1>
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.3em;">Filter Tracks & Artists</h1>
                     
                     <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
                     <div id="pop_slider" class="range-slider"></div>
