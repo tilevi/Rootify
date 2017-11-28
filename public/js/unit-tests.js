@@ -1,3 +1,9 @@
+/*
+    File:
+            unit-tests.js
+    Purpose:
+            Perform unit tests on Rootify.
+*/
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 120000;
 
 describe('Root children tests', function() {

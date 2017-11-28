@@ -1,5 +1,8 @@
 /*
-    This code handles refreshing our access token.
+    File:
+            refresh-token.js
+    Purpose:
+            This code handles retrieving a new access token.
 */
 var refreshAccessToken = function(callback) {
     var refresh_token = getCookie("myRefreshToken");
