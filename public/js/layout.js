@@ -1596,7 +1596,7 @@ var selectedGenre = [];
         switchMode("short");
     });
 
-    document.getElementById("reset_tree").addEventListener("click", function() {s
+    document.getElementById("reset_tree").addEventListener("click", function() {
         // Don't reset the tree if we're switching modes.
         if (switchingMode || root.children == null) {
             return;
