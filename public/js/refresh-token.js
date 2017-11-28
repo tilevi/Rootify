@@ -17,7 +17,7 @@ var refreshAccessToken = function(callback) {
         spotifyApi.setAccessToken(data.access_token);
         
         if (callback) {
-            callback();
+            callback(true);
         }
     });
 }
