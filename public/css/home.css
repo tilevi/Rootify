@@ -221,10 +221,12 @@ a {
     background-color:#252F41;
     box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.2);
     border-bottom: .5px solid #242A34;
+
 }
 .navbar {
-    position:fixed;
-    min-height:60px;
+
+    position:absolute;
+    height:60px;
     width:100%;
     padding-top: 2vh;
     padding-left: 4vh;
@@ -232,7 +234,8 @@ a {
 }
 
 .navbar a {
-  height:1.5vh;
+    display: block;
+    height:10px;
     -moz-user-select: none;
    -khtml-user-select: none;
    -webkit-user-select: none;
@@ -240,7 +243,6 @@ a {
     color: #fff;
     border: 1px solid #B5BDC4;
     float:left;
-    display: inline-block;
     padding: 10px 30px;
     text-decoration: none;
     text-transform: uppercase;

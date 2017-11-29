@@ -952,6 +952,7 @@ var selectedGenre = [];
             .transition()
             .duration(duration)
             .style("opacity", 1);    
+
     }
     
     /*
@@ -1174,14 +1175,21 @@ var selectedGenre = [];
                     .attr('height', 10)
                     .attr('fill', '#2F394C');
 
+
                 d3This.append('text')
                     .attr('x', 0)
                     .attr('y', Math.floor(imageHeight/2 + 20))
                     .attr('width', imageWidth)
                     .attr('height', 10)
+                    .style("font-size", ".5em")
+                    .style("background-color", "#2f384d")
+                    .style("font-family", "Arial, Helvetica, sans-serif")
+                    .style("line-height", "90%")
+                    .style('fill', '#00B685')
                     .text(d.name)
-                    .attr('fill', 'white')
                     .style('text-anchor', 'middle');
+                d3This.insert("rect","text")
+                    .style('fill', '#2F394C');
 
                     if (selectedArtist.indexOf(d.aid) != -1) {
                         d3.select(this).select("circle").style("stroke", "#4B9877");
@@ -1229,6 +1237,11 @@ var selectedGenre = [];
                     .attr('y', Math.floor(imageHeight/2 + 20))
                     .attr('width', imageWidth)
                     .attr('height', 10)
+                    .style("font-size", ".5em")
+                    .style("background-color", "#2f384d")
+                    .style("font-family", "Arial, Helvetica, sans-serif")
+                    .style("line-height", "90%")
+                    .style("background-color", "#2f384d")
                     .text(d.name)
                     .attr('fill', 'white')
                     .style('text-anchor', 'middle');
