@@ -183,7 +183,6 @@ var selectedGenre = [];
     /*
         Populate children array with tracks.
     */
-
     var loadTopArtists = function() {}
     var doneLoading = function() {}
 
@@ -382,7 +381,7 @@ var selectedGenre = [];
                 }
             }
     }
-
+    
     addToOrRemoveFromSelected = function(name, artistName, id, typ, node) {
         var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);        
         // If the selected artist is not in the selected artist array
@@ -955,6 +954,58 @@ var selectedGenre = [];
 
     }
     
+     function wrap(d3This, maxWidth) {
+        var self = d3This,
+            textLength = self.node().getComputedTextLength(),
+            text = self.text();
+        while ((textLength > maxWidth) && text.length > 0) {
+            text = text.slice(0, -1);
+            self.text(text + '..');
+            textLength = self.node().getComputedTextLength();
+        }
+    } 
+    
+    /*
+        Creates the text box under a node.
+    */
+    var createTextbox = function(d3This, newSize) {
+        var d = d3This.datum();
+        var imageWidth = newSize + 8;
+        var imageHeight = newSize - 2;
+        
+        d3This.selectAll(".textbox").remove();
+        
+        var textBox = d3This.append("g")
+            .attr("class", "textboxLabel")
+            .attr("transform", function(d, i) { return "translate(" + Math.floor(-imageWidth/2) + "," + Math.floor(imageHeight/2 + 10) + ")"; });
+
+        textBox.append('rect')
+            .attr('width', imageWidth)
+            .attr('height', 10)
+            .attr('fill', '#2F394C');
+        
+        var nodeText = textBox.append('text')
+            .attr('x', imageWidth/2)
+            .attr('y', 5)
+            .attr("dy", ".35em")
+            .style("font-size", ".5em")
+            .style("background-color", "#2f384d")
+            .style("font-family", "Arial, Helvetica, sans-serif")
+            .style("line-height", "90%")
+            .style('fill', d.tid ? '#FFF' : '#00B685')
+            .text(d.name)
+            .style('text-anchor', 'middle');
+        
+        wrap(nodeText, imageWidth);
+        
+        /*
+        var textWidth = nodeText.node().getComputedTextLength();
+        if (Math.round(textWidth) > imageWidth) {
+            console.log(d.name);
+        }
+        */
+    }
+    
     /*
         This function is important.
         We call this function after we update the children of certain nodes.
@@ -1032,9 +1083,12 @@ var selectedGenre = [];
                             .duration(duration)
                             .style("stroke-width", 1)
                             .style("stroke", "#ccc");
-
+                    
                     // We don't want the root to be able to expand or collapse its children.
                     if (d.aid || d.tid) {
+                        // Recreate its text label (to go over the vertical line).
+                        createTextbox(d3This, d.newSize);
+                        
                         d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0)
                             .style("pointer-events", "none");
 
@@ -1115,8 +1169,11 @@ var selectedGenre = [];
                     .duration(duration)
                     .style("stroke-width", 1)
                     .style("stroke", "#ccc");
-
+                
                 if (regNode) {
+                    // Recreate its text label (to go over the vertical line).
+                    createTextbox(d3This, d.newSize);
+                    
                     // Create an up triangle (this new node has children).
                     createUpTriangle(d3This);
                 }
@@ -1166,31 +1223,9 @@ var selectedGenre = [];
 
                         handleSelection(this, "artist", artistID, artistName);
                     });
-
-                //TextBox
-                d3This.append('rect')
-                    .attr('x', Math.floor(-imageWidth/2))
-                    .attr('y', Math.floor(imageHeight/2 + 10))
-                    .attr('width', imageWidth)
-                    .attr('height', 10)
-                    .attr('fill', '#2F394C');
-
-
-                d3This.append('text')
-                    .attr('x', 0)
-                    .attr('y', Math.floor(imageHeight/2 + 20))
-                    .attr('width', imageWidth)
-                    .attr('height', 10)
-                    .style("font-size", ".5em")
-                    .style("background-color", "#2f384d")
-                    .style("font-family", "Arial, Helvetica, sans-serif")
-                    .style("line-height", "90%")
-                    .style('fill', '#00B685')
-                    .text(d.name)
-                    .style('text-anchor', 'middle');
-                /*d3This.insert("rect","text")
-                    .style('fill', '#2F394C');*/
-
+                
+                createTextbox(d3This, newSize);
+                
                 if (selectedArtist.indexOf(d.aid) != -1) {
                     d3.select(this).select("circle").style("stroke", "#4B9877");
                 }
@@ -1225,26 +1260,7 @@ var selectedGenre = [];
                         handleSelection(this, "track", trackID, trackName, trackArtistName);
                     });
 
-                d3This.append('rect')
-                    .attr('x', Math.floor(-imageWidth/2))
-                    .attr('y', Math.floor(imageHeight/2 + 10))
-                    .attr('width', imageWidth)
-                    .attr('height', 10)
-                    .attr('fill', '#2F394C');
-
-                d3This.append('text')
-                    .attr('x', 0)
-                    .attr('y', Math.floor(imageHeight/2 + 20))
-                    .attr('width', imageWidth)
-                    .attr('height', 10)
-                    .style("font-size", ".5em")
-                    .style("background-color", "#2f384d")
-                    .style("font-family", "Arial, Helvetica, sans-serif")
-                    .style("line-height", "90%")
-                    .style("background-color", "#2f384d")
-                    .text(d.name)
-                    .attr('fill', 'white')
-                    .style('text-anchor', 'middle');
+                createTextbox(d3This, newSize);
 
                 if (selectedTrack.indexOf(d.tid) != -1) {
                     d3.select(this).select("rect").style("stroke", "#4B9877");
@@ -1345,13 +1361,16 @@ var selectedGenre = [];
                 line.remove();
                 d3This.selectAll("path").remove();
             }
+            
+            // Remove the text box labels immediately
+            d3This.selectAll(".textboxLabel").remove();
 
             // If it's an artist node, we want to set its clip path
             if (d.aid) {
                 d3This.select('image')
                         .attr("clip-path", "url(#clip-r-resize-" + Math.floor(d.howTall-1) + ")");
             }
-
+            
             // Transition the exiting node to its parent's position and then remove it.
             var exitVar = d3This
                 .transition()

@@ -74,6 +74,10 @@ a {
     font-family: "Source Sans Pro", sans-serif;
 }
 
+.textboxLabel {
+    pointer-events: none;
+}
+
 /* ------------- Bottom Bar ------------ */
 #bottom-bar {
   position: fixed;
