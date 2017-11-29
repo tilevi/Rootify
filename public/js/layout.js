@@ -47,7 +47,7 @@ var selectedGenre = [];
     var duration = 700;
 
     // This is used as a measure for vertical spacing between nodes
-    var verticalSpacing = 78;
+    var verticalSpacing = 80;
 
     // These will be arrays that hold the root's children for each mode.
     var longChildren = null;
@@ -954,7 +954,7 @@ var selectedGenre = [];
 
     }
     
-     function wrap(d3This, maxWidth) {
+    var wrap = function(d3This, maxWidth) {
         var self = d3This,
             textLength = self.node().getComputedTextLength(),
             text = self.text();
@@ -964,6 +964,58 @@ var selectedGenre = [];
             textLength = self.node().getComputedTextLength();
         }
     } 
+    
+    function twoWrap(text, width) {
+        text.each(function() {
+
+            var breakChars = ['/', '&', '-'],
+              text = d3.select(this),
+              textContent = text.text(),
+              spanContent;
+
+            breakChars.forEach(char => {
+              // Add a space after each break char for the function to use to determine line breaks
+              textContent = textContent.replace(char, char + ' ');
+            });
+
+            var words = textContent.split(/\s+/).reverse(),
+              word,
+              line = [],
+              lineNumber = 0,
+              lineHeight = 1.1, // ems
+              x = text.attr('x'),
+              y = text.attr('y'),
+              dy = parseFloat(text.attr('dy') || 0),
+              tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
+
+            while (word = words.pop()) {
+                if (lineNumber == 1) {
+                    line = word + ' ' + words.reverse().join(' ');
+                    tspan.text(line);
+                    wrap(tspan, width);
+                    break;
+                }
+                
+                line.push(word);
+                tspan.text(line.join(' '));
+                
+              
+              if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                spanContent = line.join(' ');
+                breakChars.forEach(char => {
+                  // Remove spaces trailing breakChars that were added above
+                  spanContent = spanContent.replace(char + ' ', char);
+                });
+                
+                tspan.text(spanContent);                
+                words.push(word);
+                
+                tspan = text.append('tspan').attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(null);
+              }
+            }
+        });
+    }
     
     /*
         Creates the text box under a node.
@@ -979,7 +1031,7 @@ var selectedGenre = [];
             .attr("class", "textboxLabel")
             .attr("transform", function(d, i) { return "translate(" + Math.floor(-imageWidth/2) + "," + Math.floor(imageHeight/2 + 10) + ")"; });
 
-        textBox.append('rect')
+        var textboxRect = textBox.append('rect')
             .attr('width', imageWidth)
             .attr('height', 10)
             .attr('fill', '#2F394C');
@@ -996,14 +1048,11 @@ var selectedGenre = [];
             .text(d.name)
             .style('text-anchor', 'middle');
         
-        wrap(nodeText, imageWidth);
+        // Two line wrap
+        twoWrap(nodeText, imageWidth);
         
-        /*
-        var textWidth = nodeText.node().getComputedTextLength();
-        if (Math.round(textWidth) > imageWidth) {
-            console.log(d.name);
-        }
-        */
+        // Adjust the textbox height.
+        textboxRect.attr('height', Math.round(nodeText.node().getBBox().height) + 2);;
     }
     
     /*
