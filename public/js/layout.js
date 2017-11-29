@@ -1036,7 +1036,7 @@ var selectedGenre = [];
                         d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0)
                             .style("pointer-events", "none");
 
-                        // This already existing note who now has children.
+                        // This already existing node who now has children.
                         createUpTriangle(d3This);
                     }
                 }
