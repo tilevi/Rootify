@@ -1217,6 +1217,22 @@ var selectedGenre = [];
                         handleSelection(this, "track", trackID, trackName, trackArtistName);
                     });
 
+                d3This.append('rect')
+                    .attr('x', Math.floor(-imageWidth/2))
+                    .attr('y', Math.floor(imageHeight/2 + 10))
+                    .attr('width', imageWidth)
+                    .attr('height', 10)
+                    .attr('fill', '#2F394C');
+
+                d3This.append('text')
+                    .attr('x', 0)
+                    .attr('y', Math.floor(imageHeight/2 + 20))
+                    .attr('width', imageWidth)
+                    .attr('height', 10)
+                    .text(d.name)
+                    .attr('fill', 'white')
+                    .style('text-anchor', 'middle');
+
                 if (selectedTrack.indexOf(d.tid) != -1) {
                     d3.select(this).select("rect").style("stroke", "#4B9877");
                 }
