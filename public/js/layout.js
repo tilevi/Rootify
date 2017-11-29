@@ -925,7 +925,9 @@ var selectedGenre = [];
                                 y: (verticalSpacing - 15)
                             }
                         ]));
-
+            
+            createTextbox(d3This, 50);
+            
             // Update the position of the down triangle (expand or collapse tree)
             d3This.select("path.triangleDown")
                     .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.55) + ")"; });
@@ -986,7 +988,7 @@ var selectedGenre = [];
               x = text.attr('x'),
               y = text.attr('y'),
               dy = parseFloat(text.attr('dy') || 0),
-              tspan = text.text(null).append('tspan').attr('x', x).attr('y', y).attr('dy', dy + 'em');
+              tspan = text.text(null).append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', dy + 'em');
 
             while (word = words.pop()) {
                 if (lineNumber == 1) {
@@ -1011,7 +1013,7 @@ var selectedGenre = [];
                 tspan.text(spanContent);                
                 words.push(word);
                 
-                tspan = text.append('tspan').attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(null);
+                tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(null);
               }
             }
         });
@@ -1025,7 +1027,9 @@ var selectedGenre = [];
         var imageWidth = newSize + 8;
         var imageHeight = newSize - 2;
         
-        d3This.selectAll(".textbox").remove();
+        // Remove the text box labels immediately
+        d3This.selectAll(".textboxLabel").remove();
+        d3This.selectAll(".tSpanText").remove();
         
         var textBox = d3This.append("g")
             .attr("class", "textboxLabel")
@@ -1136,7 +1140,7 @@ var selectedGenre = [];
                     // We don't want the root to be able to expand or collapse its children.
                     if (d.aid || d.tid) {
                         // Recreate its text label (to go over the vertical line).
-                        createTextbox(d3This, d.newSize);
+                        createTextbox(d3This, 50);
                         
                         d3This.select(".triangleDown").style("opacity", 0).style("fill-opacity", 0)
                             .style("pointer-events", "none");
@@ -1221,7 +1225,7 @@ var selectedGenre = [];
                 
                 if (regNode) {
                     // Recreate its text label (to go over the vertical line).
-                    createTextbox(d3This, d.newSize);
+                    createTextbox(d3This, 50);
                     
                     // Create an up triangle (this new node has children).
                     createUpTriangle(d3This);
@@ -1273,7 +1277,7 @@ var selectedGenre = [];
                         handleSelection(this, "artist", artistID, artistName);
                     });
                 
-                createTextbox(d3This, newSize);
+                createTextbox(d3This, 50);
                 
                 if (selectedArtist.indexOf(d.aid) != -1) {
                     d3.select(this).select("circle").style("stroke", "#4B9877");
@@ -1309,7 +1313,7 @@ var selectedGenre = [];
                         handleSelection(this, "track", trackID, trackName, trackArtistName);
                     });
 
-                createTextbox(d3This, newSize);
+                createTextbox(d3This, 50);
 
                 if (selectedTrack.indexOf(d.tid) != -1) {
                     d3.select(this).select("rect").style("stroke", "#4B9877");
@@ -1413,6 +1417,7 @@ var selectedGenre = [];
             
             // Remove the text box labels immediately
             d3This.selectAll(".textboxLabel").remove();
+            d3This.selectAll(".tSpanText").remove();
 
             // If it's an artist node, we want to set its clip path
             if (d.aid) {
