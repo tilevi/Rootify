@@ -1188,12 +1188,12 @@ var selectedGenre = [];
                     .style('fill', '#00B685')
                     .text(d.name)
                     .style('text-anchor', 'middle');
-                d3This.insert("rect","text")
-                    .style('fill', '#2F394C');
+                /*d3This.insert("rect","text")
+                    .style('fill', '#2F394C');*/
 
-                    if (selectedArtist.indexOf(d.aid) != -1) {
-                        d3.select(this).select("circle").style("stroke", "#4B9877");
-                    }
+                if (selectedArtist.indexOf(d.aid) != -1) {
+                    d3.select(this).select("circle").style("stroke", "#4B9877");
+                }
             } else if (d.tid) { // Otherwise if the node represents a track, ..
                 var rectWidth = newSize;
                 var rectHeight = newSize;
@@ -1719,9 +1719,29 @@ var selectedGenre = [];
             }
         });
     }
-
-    function getRecommendedPlaylistTracks(playlistID, maxTracks, second_pass) {
-
+    
+    var createRealPlaylist = function(name, uriArr, trackInfo, maxTracks, second_pass) {
+        spotifyApi.createPlaylist(me.uid, 
+        {
+            name: name, 
+            public: true, 
+        }, 
+        function(err, data) {
+            if (!err) {
+                var playlistID = data.id;
+                callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
+            } else if (!second_pass) {
+                callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks, true) }, true);
+            }
+        });
+    }
+    
+    createPlaylist = function(name, maxTracks, second_pass) {
+        // If we don't have at least 1 seed, return because we can't generate a playlist.
+        if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
+            return;
+        }
+        
         var uriArr = [];
         var trackInfo = [];
 
@@ -1774,6 +1794,14 @@ var selectedGenre = [];
             }, 
             function(err, data) {
                 if (!err) {
+                    if (data.tracks.length == 0) {
+                        document.getElementById('geneatePlaylistBtn2').innerHTML = 'NO TRACKS FOUND!';
+                        setTimeout(function() {
+                            // Close the dialog box
+                            $('#dialog').dialog('close');
+                        }, 1000);
+                        return;
+                    }
                     data.tracks.forEach(function(d) {
                         // Make sure there can't be duplicate tracks
                         if (d.uri && uriArr.indexOf(d.uri) == -1) {
@@ -1782,34 +1810,13 @@ var selectedGenre = [];
                         }
                     });
 
-                    callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
+                    callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks); });
                 } else if (!second_pass) {
-                    callAPI(function() { getRecommendedPlaylistTracks(playlistID, maxTracks, true) }, true);
+                    callAPI(function() { createPlaylist(name, maxTracks, true) }, true, true);
                 }
             });
         } else {
             callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
         }
-    }
-
-    createPlaylist = function(name, maxTracks, second_pass) {
-        // If we don't have at least 1 seed, return because we can't generate a playlist.
-        if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
-            return;
-        }
-
-        spotifyApi.createPlaylist(me.uid, 
-        {
-            name: name, 
-            public: true, 
-        }, 
-        function(err, data) {
-            if (!err) {
-                var playlistID = data.id;
-                callAPI(function() { getRecommendedPlaylistTracks(playlistID, maxTracks); });
-            } else if (!second_pass) {
-                callAPI(function() { createPlaylist(name, maxTracks, true) }, true, true);
-            }
-        });
     }
 })();
