@@ -78,18 +78,16 @@ var selectedGenre = [];
         .size([viewerWidth, viewerHeight]);
 
     /*
-        This is our path generator which creates an elbow shape.
+        This is a path generator that creates an elbow shape.
     */
-
     function elbow(d, i) {
         var targetY = -10;
-
+        var circleRadiusOrRectHeight = d.target.newSize;
         if (d.target.aid) {
-            var circleRadius = d.target.newSize;
-            targetY = d.target.y + Math.floor(-circleRadius/2);
+            // Taking the ceiling (instead of floor) for an artist looks better
+            targetY = d.target.y + Math.ceil(-circleRadiusOrRectHeight/2);
         } else if (d.target.tid) {
-            var rectHeight = d.target.newSize;
-            targetY = d.target.y + Math.floor(-rectHeight/2);
+            targetY = d.target.y + Math.floor(-circleRadiusOrRectHeight/2);
         }
 
         return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : verticalSpacing))
@@ -157,7 +155,6 @@ var selectedGenre = [];
     /*
         Call Spotify Web API
     */
-
     var callAPI = function(callback, second_pass, special) {
         if (!second_pass) {
             callback();
@@ -166,20 +163,7 @@ var selectedGenre = [];
             refreshAccessToken(function() { callback(second_pass) });
         }
     }
-
-    /*
-        Sanity check.
-        This is used to generate a new access token if ours has expired.
-    */
-    tokenSanityCheck = function() {
-        spotifyApi.getMe({}, function(err, data) {
-            if (err) {
-                // Generate a new access token.
-                callAPI(function() {}, true);
-            }
-        });
-    }
-
+    
     /*
         Populate children array with tracks.
     */
@@ -420,15 +404,15 @@ var selectedGenre = [];
 
             var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
             var trackBox = d3.select(selectType)
-                    .append("div")
+                    .append('div')
                     .attr("id", "selected_" + id)
                     .attr("class", "trackBox")
                     .attr("font-family", "sans-serif")
                     .attr("font-size", "10px")
-            trackBox.append("div")
+            trackBox.append('div')
                     .attr("class", "trackBoxText")
                     .html(name + (artistName != null ? (" - <br/>" + artistName) : ""))
-            trackBox.append("div").attr("id", "closeButton").html("&times").on("click", function() {
+            trackBox.append('div').attr("id", "closeButton").html("&times").on("click", function() {
                         if (node) {
                             d3.select(node).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
                             d3.select(node.parentNode).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
@@ -646,38 +630,33 @@ var selectedGenre = [];
     /*
         Our clip paths.
         One is for our avatar (bigger radius), another is for the nodes (smaller radii).
-    */
-
-    var customClip = [];
-    var custClipResize = [];
-
-    /*
+        
         We need to create clip paths for a range of radii due to the resize functionality.
     */
     for (var i = 0; i <= 15; i++) {
-        customClip[i] = baseSvg.append("defs")
-                        .append("clipPath")
-                        .attr("id", "clip-r-" + (10 + i))
-                        .append("circle")
-                            .attr("cx", 0)
-                            .attr("cy", 0)
-                            .attr("r", (10 + i - 1));
+        baseSvg.append('defs')
+            .append('clipPath')
+            .attr("id", "clip-r-" + (10 + i))
+            .append('circle')
+                .attr("cx", 0)
+                .attr("cy", 0)
+                .attr("r", (10 + i - 1));
 
-        custClipResize[i] = baseSvg.append("defs")
-                        .append("clipPath")
-                        .attr("id", "clip-r-resize-" + (10 + i))
-                        .append("circle")
-                            .classed("clipResize", true)
-                            .attr("cx", 0)
-                            .attr("cy", 0)
-                            .attr("r", (10 + i - 1));
+        baseSvg.append('defs')
+            .append('clipPath')
+            .attr("id", "clip-r-resize-" + (10 + i))
+            .append('circle')
+                .classed("clipResize", true)
+                .attr("cx", 0)
+                .attr("cy", 0)
+                .attr("r", (10 + i - 1));
     }
 
     /* Clip path for the root node. */
-    baseSvg.append("defs")
-        .append("clipPath")
+    baseSvg.append('defs')
+        .append('clipPath')
             .attr("id", "clip-root")
-            .append("circle")
+            .append('circle')
                 .attr("cx", 0)
                 .attr("cy", 0)
                 .attr("r", 31);
@@ -687,7 +666,6 @@ var selectedGenre = [];
 
         Reference: https://stackoverflow.com/questions/18554224/getting-screen-positions-of-d3-nodes-after-transform/18561829
     */
-
     function getScreenCoords(x, y, ctm) {
         var xn = ctm.e + x*ctm.a + y*ctm.c;
         var yn = ctm.f + x*ctm.b + y*ctm.d;
@@ -702,7 +680,6 @@ var selectedGenre = [];
         In the update() function, we do some checks for the newly entered nodes, 
         and then return shouldPan. We then call centerNode(...) with this return value as a parameter.
     */
-
     function centerNode(source, first, shouldPan) {
         // Don't pan if you're not root or if you're on the screen.
         if (!first && !shouldPan) { return; }
@@ -941,7 +918,7 @@ var selectedGenre = [];
         link.attr("d", elbow);
     }
 
-    function createUpTriangle(d3This) {
+    var createUpTriangle = function(d3This) {
         d3This.append('path')
             .classed("triangleUp", true)
             .attr("d", d3.svg.symbol().type("triangle-up").size(50))
@@ -953,8 +930,31 @@ var selectedGenre = [];
             .on("click", click)
             .transition()
             .duration(duration)
-            .style("opacity", 1);    
-
+            .style("opacity", 1);
+    }
+    
+    var createVerticalLine = function(d3This) {
+        var d = d3This.datum();
+        
+        d3This.append('path')
+            .classed("line", true)
+            .attr("d", lineFunction(
+                [
+                    {
+                        x: 0,
+                        y: (d.root ? 30 : (d.howTall ? d.howTall : 26)) 
+                    }, 
+                    {
+                        x: 0, 
+                        y: (d.root ? 55 : (verticalSpacing - 2))
+                    }
+                ]))
+            .style("stroke", "#ccc")
+            .style("stroke-width", 0)
+            .transition()
+            .duration(duration)
+            .style("stroke-width", 1)
+            .style("stroke", "#ccc");
     }
     
     var wrap = function(d3This, maxWidth) {
@@ -1039,7 +1039,7 @@ var selectedGenre = [];
         d3This.selectAll(".textboxLabel").remove();
         d3This.selectAll(".tSpanText").remove();
         
-        var textBox = d3This.append("g")
+        var textBox = d3This.append('g')
             .attr("class", "textboxLabel")
             .attr("transform", function(d, i) { return "translate(" + Math.floor(-imageWidth/2) + "," + Math.floor(imageHeight/2 + 10) + ")"; });
 
@@ -1124,26 +1124,8 @@ var selectedGenre = [];
             // If a node has children but not a vertical line, we need to create one.
             if (d.children) {
                 if (line.length > 0 && line[0][0] == null) {
-                    d3This.append("path")
-                            .classed("line", true)
-                            .attr("d", lineFunction(
-                                [
-                                    {
-                                        x: 0,
-                                        y: (d.root ? 30 : (d.howTall ? d.howTall : 26)) 
-                                    }, 
-                                    {
-                                        x: 0, 
-                                        y: (d.root ? 55 : (verticalSpacing - 2))
-                                    }
-                                ]))
-                            .style("stroke", "#ccc")
-                            .style("stroke-width", 0)
-                            .transition()
-                            .duration(duration)
-                            .style("stroke-width", 1)
-                            .style("stroke", "#ccc");
-                    
+                    createVerticalLine(d3This);
+                                    
                     // We don't want the root to be able to expand or collapse its children.
                     if (d.aid || d.tid) {
                         // Recreate its text label (to go over the vertical line).
@@ -1186,7 +1168,7 @@ var selectedGenre = [];
                 });
 
         // Enter any new nodes at the parent's previous position.
-        var nodeEnter = node.enter().append("g")
+        var nodeEnter = node.enter().append('g')
                             .attr("class", "node")
                             .attr("transform", function(d) {
                                 return "translate(" + source.x0 + "," + source.y0 + ")";
@@ -1210,25 +1192,7 @@ var selectedGenre = [];
 
             if (d.children) {
                 // We must add this node's vertical line if it has children.
-                d3This.append("path")
-                    .classed("line", true)
-                    .attr("d", lineFunction(
-                        [
-                            { 
-                                x: 0, 
-                                y: (d.root ? 30 : (d.howTall ? d.howTall : 26))
-                            }, 
-                            {
-                                x: 0, 
-                                y: (d.root ? 55 : (verticalSpacing - 2))
-                            }
-                        ]))
-                    .style("stroke", "#ccc")
-                    .style("stroke-width", 0)
-                    .transition()
-                    .duration(duration)
-                    .style("stroke-width", 1)
-                    .style("stroke", "#ccc");
+                createVerticalLine(d3This);
                 
                 if (regNode) {
                     // Recreate its text label (to go over the vertical line).
@@ -1257,7 +1221,6 @@ var selectedGenre = [];
             /*
                 This section deals with adding the node's DOM elements.
             */
-
             // If the node represents an artist..
             if (d.aid) {
                 var circleRadius = Math.floor(newSize/2);
@@ -1328,7 +1291,7 @@ var selectedGenre = [];
             } else if (d.root) { // And lastly, if the node is the root, then ...
                 d3This.style("cursor", "none").style("pointer-events", "none");
 
-                d3This.append("circle")
+                d3This.append('circle')
                     .attr('class', 'node')
                     .attr("r", 32)
                     .style("fill", function(d) {
@@ -1472,7 +1435,7 @@ var selectedGenre = [];
                     .attr("d", elbow);
 
         // Enter any new nodes.
-        var linkEnter = link.enter().append("path")
+        var linkEnter = link.enter().append('path')
                             .classed("link", true)
                             .style("opacity", 0);
 
@@ -1534,7 +1497,7 @@ var selectedGenre = [];
 
 
     // Append a group which holds all nodes and which the zoom Listener can act upon.
-    var svgGroup = baseSvg.append("g");
+    var svgGroup = baseSvg.append('g');
 
     /*
         Define the root by setting its initial data.
@@ -1543,7 +1506,6 @@ var selectedGenre = [];
 
         We can store extra information in these nodes if we need to.
     */
-
     root = treeData;
 
     root.x = 0, root.x0 = 0;
@@ -1552,7 +1514,6 @@ var selectedGenre = [];
     /*
         Booleans to indicate if we properly loaded our top artists and tracks.
     */
-
     var loadedArtists = false;
     var loadedTracks = false;
 
@@ -1598,7 +1559,6 @@ var selectedGenre = [];
     /*
         This function loads all of our top artists.
     */
-
     loadTopArtists = function(second_pass) {
         spotifyApi.getMyTopArtists(
         {
@@ -1670,7 +1630,6 @@ var selectedGenre = [];
         This function switches the mode.
         The possible modes are 'short' or 'long'.
     */
-
     var switchMode = function(m) {
         // Don't switch if we're in the same mode or currently switching modes
         if (mode == m || switchingMode) {
@@ -1770,7 +1729,6 @@ var selectedGenre = [];
         Playlist methods: 
             Used for creating a new playlist, retrieving recommended tracks and adding them.
     */
-
     var addTracksToPlaylist = function(playlistID, uriArr, trackInfo, second_pass) {
         spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) {
             if (!err) {
@@ -1779,7 +1737,7 @@ var selectedGenre = [];
                 d3.select("#generatedPlaylistTracks").style("display", "block");
 
                 trackInfo.forEach(function(d) {
-                    genPlaylistDiv.append("div")
+                    genPlaylistDiv.append('div')
                         .attr("class", "trackBox")
                         .attr("font-family", "sans-serif")
                         .attr("font-size", "10px")
