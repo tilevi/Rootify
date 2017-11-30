@@ -34,6 +34,12 @@ div {
 	width: 50%;
 	margin-bottom: 5%;
 }
+
+div p {
+    text-align: left;
+    line-height: 1.3em;
+}
+
 #thediv {
 	width: 80%;
 	margin: 0 auto;
