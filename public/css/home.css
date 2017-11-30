@@ -420,6 +420,7 @@ a {
   background-color: #01B482;
   text-align: center;
   transition: color 0.3s;
+  height: 15px;
 
 }
 .tablinkside {
@@ -514,15 +515,12 @@ a {
   margin-bottom: 0;
 }
 
-
 #overflowss {
-
-    height: 78vh;
+    height: calc(95vh - 75px - 15px);
     overflow-y:auto;
     max-width: 100%;
     overflow-x: hidden;   
 }
-
 
 .playlistbtn {
     z-index: 10;
