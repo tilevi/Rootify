@@ -35,6 +35,10 @@
         
         <!-- Select2 CSS -->
         <link rel="stylesheet" type="text/css" href="/css/select2.css">
+
+        <!-- Font Awesome CSS -->
+        <link rel="stylesheet" type="text/css" href="/css/font-awesome.css">
+        <link rel="stylesheet" type="text/css" href="/css/font-awesome.min.css">
         
         <!-- Jasmine Testing Suite -->
         <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine.min.css">
@@ -42,10 +46,31 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine-html.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/boot.min.js"></script> -->
+
 	</head>
     
 	<body>
-        <div id="dialog" style="display:none;" title="Generate Playlist">
+        
+        <!-- Header  -->
+        <div id="tophead">
+            <div class="navbar">
+                <ul>
+                <li><a id="logout-b">Logout</a></li>
+                <li><a style="margin-left: 25px;" id="short-term">Short-Term</a></li>
+                <li><a id="long-term">Long-Term</a></li>
+                <li><a style="margin-left: 25px;" id="reset_tree">Reset Tree</a></li>
+                </ul>
+            </div>
+             <div class="floatright">
+        
+                    <div style="display:inline-block;vertical-align: middle;"><a href="/help.html"><i class="fa fa-question-circle-o" aria-hidden="true"></i></a></div>
+                    <img width="80px" style="vertical-align:middle; margin-left: 70px"  src="/assets/rootify.png">
+                </div>
+        </div>
+
+        <!-- Sidebar -->
+        <!-- Generate Playlist -->
+          <div id="dialog" style="display:none;" title="Generate Playlist">
             <font style="color: black;">Playlist name:</font><br/>
             <input type="text" id="playlistName" name="playlistName" style="margin-top: 5px; width: 100%;"><br/>
             
@@ -55,149 +80,7 @@
             <button id="geneatePlaylistBtn2" class="playlistbtn2" onclick="finallyCreatePlaylist()">Generate Playlist</button>
         </div>
         
-        <script type="text/javascript">
-            
-            var finallyCreatePlaylist = function() {
-                document.getElementById('geneatePlaylistBtn2').innerHTML = 'CREATING PLAYLIST...';
-                // https://stackoverflow.com/questions/12754256/removing-invalid-characters-in-javascript
-                var name = ($('#playlistName').val()).replace(/\uFFFD/g, '');
-                if (name == "") {
-                    name = "[Rootify] Playlist";
-                }
-                var maxTracks = $("#max_tracks_slider").slider("value");                
-                createPlaylist(name, maxTracks);
-            }
-            
-            $(function() {
-                $("#dialog").dialog({
-                    modal: true, 
-                    autoOpen: false, 
-                    resizable: false, 
-                    height: 180, 
-                    show: {
-                        effect: "blind", 
-                        duration: 500
-                    },
-                    hide: {
-                        effect: "blind", 
-                        duration: 500
-                    }
-                });
-                
-                $("#geneatePlaylistBtn").on("click", function() {
-                    if ((selectedTrack.length + selectedArtist.length + selectedGenre.length) > 0) {
-                        $("#max_tracks_slider").slider({
-                            min: d3.max([1, selectedTrack.length]), 
-                            max: 50, 
-                            value: 25, 
-                            change: function (event, ui) {
-                            }, 
-                            slide: function(event, ui) {
-                                var val = ui.value;
-                                $("#max_tracks_slider_text").html("Max tracks: " + val);
-                            }
-                        });
-                        
-                        // Reset the text (could be different).
-                        document.getElementById('geneatePlaylistBtn2').innerHTML = 'GENERATE PLAYLIST';
-                        // Set the text back to 25 (default max tracks).
-                        $("#max_tracks_slider_text").html("Max tracks: 25");
-                        $("#dialog").dialog("open");
-                    }
-                });
-            });
-        </script>
-        
-        <!-- Header  -->
-        <div id="tophead">
-            <div class="navbar">
-
-                <a id="logout-b">Logout</a>
-                
-                <a style="margin-left: 25px;" id="short-term">Short-Term</a>
-                <a id="long-term">Long-Term</a>
-                
-                <a style="margin-left: 25px;" id="reset_tree">Reset Tree</a>
-                
-                <script type="application/javascript">
-                    var filterOptions = {
-                        pop_slider: { typ: "popularity", values: [0, 100] }, 
-                        dance_slider: { typ: "dance", values: [0, 100] }, 
-                        energy_slider: { typ: "energy", values: [0, 100] }, 
-                        valence_slider: { typ: "valence", values: [0, 100] }
-                    };
-                                    
-                    function upperCaseFirstLetter(string) {    
-                        if (string == "valence") {
-                            return "Happiness";
-                        } else if (string == "dance") {
-                            return "Danceability";
-                        }
-                        return string.charAt(0).toUpperCase() + string.slice(1);
-                    }
-                    
-                    $( function() {
-                        for (var key in filterOptions) {
-                            
-                            $( "#filter_" + key ).slider({
-                                range: true, 
-                                min: 0, 
-                                max: 100, 
-                                values: [0, 100], 
-                                slide: function(event, ui) {
-                                    var min = ui.values[0];
-                                    var max = ui.values[1];
-                                    var id = $(this).attr("id");
-                                    
-                                    var typ = filterOptions[id.slice(7)].typ;
-                                    
-                                    $("#" + id + "_text").html(upperCaseFirstLetter(typ) + ": " + min + " - " + max); 
-                                }
-                            });
-                            
-                            $( "#" + key ).slider({
-                                range: true,
-                                min: 0,
-                                max: 100,
-                                values: [0, 100],
-                                change: function (event, ui) {
-                                    var min = ui.values[0];
-                                    var max = ui.values[1];
-                                    
-                                    var id = $(this).attr("id");
-                                    filterOptions[id].values = [min, max];
-                                    filterNodes();
-                                }, 
-                                slide: function(event, ui) {
-                                    var min = ui.values[0];
-                                    var max = ui.values[1];
-                                    var id = $(this).attr("id");
-
-                                    var typ = filterOptions[id].typ;
-                                    
-                                    $("#" + id + "_text").html(upperCaseFirstLetter(typ) + ": " + min + " - " + max); 
-                                }
-                            });
-                        }
-                    });
-                    
-                    var scaleOptions = {
-                        popCheck: false, 
-                        energyCheck: false, 
-                        danceCheck: false, 
-                        posCheck: false
-                    };
-                    
-                    function handleClick(cb) {
-                        scaleOptions[cb.id] = cb.checked;
-                        resizeNodes();
-                    }
-                </script>
-            </div>
-        </div>
-        
-
-        <!-- Sidebar -->
+        <!-- Sidebar Start -->
         <div id="sidebar">
 
             <!-- Tabs -->
@@ -213,7 +96,7 @@
                 
                 <!-- Tabs Content  -->
                 <div class="c-tab is-active">
-                    <div id="overflowssgone" class="tabcontent">
+                    <div id="overflowss" class="tabcontent">
                         <h2> Details </h2>
                         <div class="tabcontentinner" id="detailsTab">
                             
@@ -581,6 +464,138 @@
             });
             myTabs.init();
         </script>
+
+           <!--  Graph Bar sidebar -->
+        <script type="application/javascript">
+                    var filterOptions = {
+                        pop_slider: { typ: "popularity", values: [0, 100] }, 
+                        dance_slider: { typ: "dance", values: [0, 100] }, 
+                        energy_slider: { typ: "energy", values: [0, 100] }, 
+                        valence_slider: { typ: "valence", values: [0, 100] }
+                    };
+                                    
+                    function upperCaseFirstLetter(string) {    
+                        if (string == "valence") {
+                            return "Happiness";
+                        } else if (string == "dance") {
+                            return "Danceability";
+                        }
+                        return string.charAt(0).toUpperCase() + string.slice(1);
+                    }
+                    
+                    $( function() {
+                        for (var key in filterOptions) {
+                            
+                            $( "#filter_" + key ).slider({
+                                range: true, 
+                                min: 0, 
+                                max: 100, 
+                                values: [0, 100], 
+                                slide: function(event, ui) {
+                                    var min = ui.values[0];
+                                    var max = ui.values[1];
+                                    var id = $(this).attr("id");
+                                    
+                                    var typ = filterOptions[id.slice(7)].typ;
+                                    
+                                    $("#" + id + "_text").html(upperCaseFirstLetter(typ) + ": " + min + " - " + max); 
+                                }
+                            });
+                            
+                            $( "#" + key ).slider({
+                                range: true,
+                                min: 0,
+                                max: 100,
+                                values: [0, 100],
+                                change: function (event, ui) {
+                                    var min = ui.values[0];
+                                    var max = ui.values[1];
+                                    
+                                    var id = $(this).attr("id");
+                                    filterOptions[id].values = [min, max];
+                                    filterNodes();
+                                }, 
+                                slide: function(event, ui) {
+                                    var min = ui.values[0];
+                                    var max = ui.values[1];
+                                    var id = $(this).attr("id");
+
+                                    var typ = filterOptions[id].typ;
+                                    
+                                    $("#" + id + "_text").html(upperCaseFirstLetter(typ) + ": " + min + " - " + max); 
+                                }
+                            });
+                        }
+                    });
+                    
+                    var scaleOptions = {
+                        popCheck: false, 
+                        energyCheck: false, 
+                        danceCheck: false, 
+                        posCheck: false
+                    };
+                    
+                    function handleClick(cb) {
+                        scaleOptions[cb.id] = cb.checked;
+                        resizeNodes();
+                    }
+                </script>
+
+
+        <!--  Generate Playlist -->
+            <script type="text/javascript">
+            
+            var finallyCreatePlaylist = function() {
+                document.getElementById('geneatePlaylistBtn2').innerHTML = 'CREATING PLAYLIST...';
+                // https://stackoverflow.com/questions/12754256/removing-invalid-characters-in-javascript
+                var name = ($('#playlistName').val()).replace(/\uFFFD/g, '');
+                if (name == "") {
+                    name = "[Rootify] Playlist";
+                }
+                var maxTracks = $("#max_tracks_slider").slider("value");                
+                createPlaylist(name, maxTracks);
+            }
+            
+            $(function() {
+                $("#dialog").dialog({
+                    modal: true, 
+                    autoOpen: false, 
+                    resizable: false, 
+                    height: 180, 
+                    show: {
+                        effect: "blind", 
+                        duration: 500
+                    },
+                    hide: {
+                        effect: "blind", 
+                        duration: 500
+                    }
+                });
+                
+                $("#geneatePlaylistBtn").on("click", function() {
+                    if ((selectedTrack.length + selectedArtist.length + selectedGenre.length) > 0) {
+                        $("#max_tracks_slider").slider({
+                            min: d3.max([1, selectedTrack.length]), 
+                            max: 50, 
+                            value: 25, 
+                            change: function (event, ui) {
+                            }, 
+                            slide: function(event, ui) {
+                                var val = ui.value;
+                                $("#max_tracks_slider_text").html("Max tracks: " + val);
+                            }
+                        });
+                        
+                        // Reset the text (could be different).
+                        document.getElementById('geneatePlaylistBtn2').innerHTML = 'GENERATE PLAYLIST';
+                        // Set the text back to 25 (default max tracks).
+                        $("#max_tracks_slider_text").html("Max tracks: 25");
+                        $("#dialog").dialog("open");
+                    }
+                });
+            });
+        </script>
+
         
         <!-- <script src="/js/unit-tests.js"></script> -->
 	</body>
