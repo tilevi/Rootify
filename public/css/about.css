@@ -26,6 +26,12 @@ h1{
 	font-size: 2em;
 	line-height: 1em;
 }
+
+div p {
+    text-align: left;
+    line-height: 1.3em;
+}
+
 /*----------- Other ---------*/
 
 div {
