@@ -1,0 +1,53 @@
+@font-face {
+    font-family: Source Sans Pro;
+    src: url(./assets/fonts/SourceSansPro-Regular.otf);
+}
+@font-face {
+    font-family:Avenir Next;
+    src: url(./assets/fonts/AvenirNext.ttc);
+}
+
+body {
+    background-color:#273143;
+    margin: 0;
+    font-family: "Source Sans Pro", sans-serif;
+    font-size: 1em;
+    line-height: 1em;
+}
+
+p {
+	color: #7B7B7B;
+	font-size: 1.3em;
+	line-height: 1em;
+
+}
+
+h1{
+    color:#fff;
+    font-size: 2em;
+    line-height: 1em;
+}
+/*----------- Other ---------*/
+
+div {
+	margin-top: 5%;
+	width: 50%;
+	margin-bottom: 5%;
+}
+#thediv {
+	width: 80%;
+	margin: 0 auto;
+}
+
+#thediv a{ 
+	margin-top: 30px; 
+    color: #fff;
+    background-color:#00B685;
+    padding: 20px 70px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 400;
+    text-align: center;
+
+}
