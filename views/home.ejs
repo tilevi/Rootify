@@ -293,51 +293,30 @@
 
         <!-- Tree Container -->
         <div id="tree-container">
-            
-        <script type="text/javascript">    
-            // Search genres combination box.
-            $(".chosen").chosen({
-                no_results_text: "No relevant genres found!",
-                width: "99%", 
-                max_selected_options: 5
-            });
-            
-            // Source: http://www.the-art-of-web.com/javascript/getcookie/
-            function getCookie(name)
-            {
-                var re = new RegExp(name + "=([^;]+)");
-                var value = re.exec(document.cookie);
-                return (value != null) ? unescape(value[1]) : null;
-            }
+            <script type="text/javascript" src="/js/handle-cookies.js"></script>
+            <script type="text/javascript">    
+                // Search genres combination box.
+                $(".chosen").chosen({
+                    no_results_text: "No relevant genres found!",
+                    width: "99%", 
+                    max_selected_options: 5
+                });
 
-            function setCookie(cname, cvalue, exdays) {
-                var d = new Date();
-                d.setTime(d.getTime() + (exdays*24*60*60*1000));
-                var expires = "expires="+ d.toUTCString();
-                document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
-            }
-            
-            // Source: https://stackoverflow.com/questions/2144386/how-to-delete-a-cookie
-            function deleteCookie( name ) {
-              document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-            }
-            
-            var spotifyApi = new SpotifyWebApi();
-            var access_token = "<%- access_token -%>";
-            //var access_token = "<%- access_token -%>";
-            
-            var access_token = getCookie("myToken");
-            var refresh_token = getCookie("myRefreshToken");
-            
-            spotifyApi.setAccessToken(access_token);
+                var spotifyApi = new SpotifyWebApi();
+                var access_token = "<%- access_token -%>";
+                //var access_token = "<%- access_token -%>";
 
-            if (access_token == null || access_token == "") {
-                window.location.replace('http://localhost:8888/');
-            } else {
+                var access_token = getCookie("myToken");
+                var refresh_token = getCookie("myRefreshToken");
+
                 spotifyApi.setAccessToken(access_token);
-            }
-        </script>
 
+                if (access_token == null || access_token == "") {
+                    window.location.replace('http://localhost:8888/');
+                } else {
+                    spotifyApi.setAccessToken(access_token);
+                }
+            </script>
         </div>  
         <!-- End Tree Container !Do not Delete! div make sure the script is in the tree container -->
 
