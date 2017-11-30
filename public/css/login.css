@@ -6,6 +6,7 @@
     font-family:Avenir Next;
     src: url(./assets/fonts/AvenirNext.ttc);
 }
+
 body {
     background-color:#273143;
      margin:0;
@@ -18,17 +19,17 @@ p {
 	color: #7B7B7B;
 	font-size: 1.5em;
 	line-height: 1.2em;
-
 }
 
-h1{
+h1 {
     color:#fff;
 }
+
 /*----------- Other ---------*/
 
-div {
-	margin-top: 5%;
+#div {
 	width: 50%;
+    margin-top: 5%;
 	margin-bottom: 5%;
 }
 #thediv {
@@ -49,46 +50,55 @@ div {
 }
 
 .logo {
-    width:400px;
+    width: 400px;
 }
 
 @media screen and (max-width: 700px) {
-    body{
+    body {
         font-size: .8em;
         text-align: left;
     }
-    #thediv a{
+    #thediv a {
         font-size: 10pt;
         padding: 20px 60px;
     }
     .logo {
-    width:60%;
+        width:60%;
     }
 }
 
-ul{
-list-style-type: none;
+ul {
+    list-style-type: none;
 }
-#header{
-    height: 50px;
+
+#header {
+    position: fixed;
     width: 100%;
-    text-align:right;
-    margin-right: 50px;
+    height: 50px;
+    top: 10px;
 }
+
 li {
     float:right;
     display:inline-block;
-    padding-left: 8px;
-    padding-right: 50px;
+    padding-left: 2px;
     font-size: 1.3em;
     color:white;
+}
+
+#first {
+   padding-right: 0px; 
+}
+
+#second {
+   padding-right: 20px; 
 }
 
 li a{
     color:white;
     text-decoration: none;
     font-weight: normal;
-    padding: 14px 16px;
+    padding: 0px 10px;
 }
 
 li a:hover{
@@ -97,12 +107,9 @@ li a:hover{
     transition-duration: .5s;
 }
 
-
-
-
 @media screen and (max-width: 600px) {
      body{
         font-size:.6em;
         text-align: left;
     }
-    }
+}

@@ -70,8 +70,19 @@ app.get('/logout', function(req, res) {
     res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D***REMOVED***%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Flocalhost%3A8888%252Fhome%26state%3D' + state + '%26show_dialog%3Dtrue');
 });
 
+/*
+    Error, About, and Help pages
+*/
 app.get('/oops', function(req, res) {
     res.render('oops');
+});
+
+app.get('/about', function(req, res) {
+    res.render('about');
+});
+
+app.get('/help', function(req, res) {
+    res.render('help');
 });
 
 // Callback route
