@@ -78,6 +78,10 @@ a {
     pointer-events: none;
 }
 
+.tSpanText {
+    fill: "#ff004e";
+}
+
 /* ------------- Bottom Bar ------------ */
 #bottom-bar {
   position: fixed;
@@ -629,6 +633,10 @@ rect .node {
     background-color: #212938;
     border: .5px solid #1f2126;
     color:#959da0;
+}
+
+.trackBoxText {
+    width: 90%;
 }
 
 #selectedTracks, #selectedArtists {

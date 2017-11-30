@@ -48,7 +48,7 @@ var selectedGenre = [];
 
     // This is used as a measure for vertical spacing between nodes
     var verticalSpacing = 80;
-
+    
     // These will be arrays that hold the root's children for each mode.
     var longChildren = null;
     var shortChildren = null;
@@ -92,7 +92,7 @@ var selectedGenre = [];
             targetY = d.target.y + Math.floor(-rectHeight/2);
         }
 
-        return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : (verticalSpacing-13)) )
+        return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : verticalSpacing))
         + "H" + d.target.x + "V" + ( targetY );
     }
 
@@ -419,15 +419,16 @@ var selectedGenre = [];
             }
 
             var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
-            d3.select(selectType)
+            var trackBox = d3.select(selectType)
                     .append("div")
                     .attr("id", "selected_" + id)
                     .attr("class", "trackBox")
                     .attr("font-family", "sans-serif")
                     .attr("font-size", "10px")
+            trackBox.append("div")
+                    .attr("class", "trackBoxText")
                     .html(name + (artistName != null ? (" - <br/>" + artistName) : ""))
-                    .append("div").attr("id", "closeButton").html("&times").on("click", function() {
-
+            trackBox.append("div").attr("id", "closeButton").html("&times").on("click", function() {
                         if (node) {
                             d3.select(node).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
                             d3.select(node.parentNode).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
@@ -922,7 +923,7 @@ var selectedGenre = [];
                             }, 
                             {
                                 x: 0, 
-                                y: (verticalSpacing - 15)
+                                y: (verticalSpacing - 2)
                             }
                         ]));
             
@@ -944,7 +945,7 @@ var selectedGenre = [];
         d3This.append('path')
             .classed("triangleUp", true)
             .attr("d", d3.svg.symbol().type("triangle-up").size(50))
-            .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing-19) + ")"; })
+            .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
             .style("fill", "white")
             .attr("stroke", "#293345")
             .attr("stroke-width", "1px")
@@ -967,7 +968,7 @@ var selectedGenre = [];
         }
     } 
     
-    function twoWrap(text, width) {
+    function twoWrap(text, width, track, artistName) {
         text.each(function() {
 
             var breakChars = ['/', '&', '-'],
@@ -979,7 +980,8 @@ var selectedGenre = [];
               // Add a space after each break char for the function to use to determine line breaks
               textContent = textContent.replace(char, char + ' ');
             });
-
+            
+            var textColor = (track ? '#FFF' : '#00B685');
             var words = textContent.split(/\s+/).reverse(),
               word,
               line = [],
@@ -988,7 +990,7 @@ var selectedGenre = [];
               x = text.attr('x'),
               y = text.attr('y'),
               dy = parseFloat(text.attr('dy') || 0),
-              tspan = text.text(null).append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', dy + 'em');
+              tspan = text.text(null).append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', dy + 'em').style('fill', textColor);
 
             while (word = words.pop()) {
                 if (lineNumber == 1) {
@@ -1013,8 +1015,14 @@ var selectedGenre = [];
                 tspan.text(spanContent);                
                 words.push(word);
                 
-                tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(null);
+                tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', textColor).text(null);
               }
+            }
+            
+            if (track) {
+                dy += 0.2;
+                tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', '#00B685').text(artistName);
+                wrap(tspan, width);
             }
         });
     }
@@ -1043,20 +1051,19 @@ var selectedGenre = [];
         var nodeText = textBox.append('text')
             .attr('x', imageWidth/2)
             .attr('y', 5)
-            .attr("dy", ".35em")
+            .attr("dy", ".3em")
             .style("font-size", ".5em")
             .style("background-color", "#2f384d")
             .style("font-family", "Arial, Helvetica, sans-serif")
             .style("line-height", "90%")
-            .style('fill', d.tid ? '#FFF' : '#00B685')
             .text(d.name)
             .style('text-anchor', 'middle');
         
         // Two line wrap
-        twoWrap(nodeText, imageWidth);
+        twoWrap(nodeText, imageWidth, d.tid, d.artist);
         
         // Adjust the textbox height.
-        textboxRect.attr('height', Math.round(nodeText.node().getBBox().height) + 2);;
+        textboxRect.attr('height', Math.round(nodeText.node().getBBox().height) + 2);
     }
     
     /*
@@ -1095,8 +1102,8 @@ var selectedGenre = [];
                 // For the first level, we have 100px spacing
                 d.y = 100;
             } else {
-                // For every level after the first, we have 75px per level
-                d.y = 100 + ((d.depth-1) * 100);
+                // For every level after the first, we have 115px per level
+                d.y = 100 + ((d.depth-1) * 110);
             }
         });
 
@@ -1127,7 +1134,7 @@ var selectedGenre = [];
                                     }, 
                                     {
                                         x: 0, 
-                                        y: (d.root ? 55 : (verticalSpacing - 15))
+                                        y: (d.root ? 55 : (verticalSpacing - 2))
                                     }
                                 ]))
                             .style("stroke", "#ccc")
@@ -1213,7 +1220,7 @@ var selectedGenre = [];
                             }, 
                             {
                                 x: 0, 
-                                y: (d.root ? 55 : (verticalSpacing - 15))
+                                y: (d.root ? 55 : (verticalSpacing - 2))
                             }
                         ]))
                     .style("stroke", "#ccc")
