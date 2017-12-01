@@ -232,7 +232,7 @@ a {
 
 }
 .navbar {
-    position:absolute;
+    position:fixed;
     height:60px;
     width:100%;
     vertical-align: middle;
@@ -241,7 +241,7 @@ a {
 }
 
 .floatright {
-  position: absolute;
+  position: fixed;
   font-size: 1.5em;
   font-weight:normal;
   right: 0;
@@ -516,6 +516,13 @@ a {
 }
 
 #overflowss {
+    height: calc(95vh - 75px - 45px);
+    overflow-y:auto;
+    max-width: 100%;
+    overflow-x: hidden;   
+}
+
+#overflowing {
     height: calc(95vh - 75px - 15px);
     overflow-y:auto;
     max-width: 100%;
@@ -525,17 +532,15 @@ a {
 .playlistbtn {
     z-index: 10;
     background-color: #05AC81;
-    position:absolute;
+    width: 100%;
+    position:fixed;
     bottom:0;
     color: #fff;
-    width: 100%;
     display: block;
-    padding:10px;
     padding:20px;
     padding-bottom: 15px;
-    padding-left: 0;
-    padding-right: 0;
-    text-align: center;
+    padding-left: auto;
+    padding-right: auto;
     text-decoration: none;
     text-transform: uppercase;
      transition-property: all;
