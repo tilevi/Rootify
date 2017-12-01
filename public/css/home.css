@@ -628,7 +628,7 @@ a {
 }
 
 #overflowss {
-    height: calc(95vh - 75px - 15px);
+    height: calc(95vh - 75px - 45px);
     overflow-y:auto;
     max-width: 100%;
     overflow-x: hidden;   
@@ -638,13 +638,17 @@ a {
     height: calc(95vh - 75px - 15px);
     overflow-y:auto;
     max-width: 100%;
-    overflow-x: hidden;   
+    overflow-x: hidden;
 }
 
 .playlistbtn {
-    margin-top: 15px;
+    position: fixed;
     background-color: #05AC81;
-    width: 100%;
+    
+    width: 18%;
+    height:50px;
+    z-index:10;
+    
     bottom:0;
     color: #fff;
     height: 50px;
