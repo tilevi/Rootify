@@ -571,7 +571,7 @@ a {
 .tabcontent {
   color: #fff;
   padding-left: 0.1rem;
-  height: (100vh-18vh-82vh);
+  height: (100vh - 75px - 15px);
     overflow-y:auto;
     overflow-x: hidden;
 }
@@ -628,7 +628,7 @@ a {
 }
 
 #overflowss {
-    height: calc(95vh - 75px - 45px);
+    height: calc(95vh - 75px - 15px);
     overflow-y:auto;
     max-width: 100%;
     overflow-x: hidden;   
@@ -642,23 +642,22 @@ a {
 }
 
 .playlistbtn {
-    z-index: 10;
+    margin-top: 15px;
     background-color: #05AC81;
     width: 100%;
-    position:fixed;
     bottom:0;
     color: #fff;
-    display: block;
-    padding:20px;
-    padding-bottom: 15px;
-    padding-left: auto;
-    padding-right: auto;
+    height: 50px;
+    text-align: center;
+    
     text-decoration: none;
     text-transform: uppercase;
      transition-property: all;
     transition-duration: .5s;
     transition-timing-function: ease-out;
     border-top: 1px solid #242A34;
+    
+    cursor: pointer;
 }
 
 .playlistbtn:hover {
@@ -667,6 +666,11 @@ a {
   transition-property: all;
   transition-duration: .5s;
   transition-timing-function: ease-out;
+}
+
+.playlistbtn span {
+    position: relative;
+    top: calc(50% - 0.5em);
 }
 
 .playlistbtn2 {
