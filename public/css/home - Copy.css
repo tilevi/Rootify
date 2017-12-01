@@ -1,4 +1,4 @@
-/* ------------- Body ------------ */
+/* Body */
 @font-face {
     font-family: Source Sans Pro;
     src: url(./assets/fonts/SourceSansPro-Regular.otf);
@@ -73,6 +73,14 @@ html {
 /* link options */
 a {
     font-family: "Source Sans Pro", sans-serif;
+}
+
+.textboxLabel {
+    pointer-events: none;
+}
+
+.tSpanText {
+    fill: "#ff004e";
 }
 
 /* ------------- Bottom Bar ------------ */
@@ -165,8 +173,8 @@ a {
 
 /* Hide the browser's default checkbox */
 .container2 input {
-    position: absolute;
-    opacity: 0;
+  position: absolute;
+  opacity: 0;
 }
 
 /* Create a custom checkbox */
@@ -282,7 +290,7 @@ a {
 }
 
 .navbar .icon {
-    display: none;
+  display: none;
 }
 
 .navbar ul {
@@ -292,24 +300,23 @@ a {
 }
 
 .navbar li {
-    display: inline;
+  display: inline;
 }
   
 .littleleft {
-    margin-left: 25px;
+  margin-left: 25px;
 }
 
-/* ------------- Top nav bar responsive  ------------ */
+
+/* ------------- top nav bar responsive  ------------ */
+
 @media screen and (min-width: 800px){
     .menu-toggle, .helphide, .logouthide{
         display:none !important;
     }
-    
-    .menu-toggle,
-    .main-menu .menu-close {
+    .menu-toggle, .main-menu .menu-close {
         display: none;
     }
-    
     .main-menu .menu-toggle {
         display:none;
     }
@@ -345,7 +352,7 @@ a {
         padding: .75em 15px;
         line-height: 1em;
         font-size: 1em;
-        border:none !important;
+        border: none !important;
     }
     
     .main-menu {
@@ -355,8 +362,7 @@ a {
         height: 100%;
         overflow-y: scroll;
         overflow-x: visible;
-        transition: left 0.3s ease,
-                  box-shadow 0.3s ease;
+        transition: left 0.3s ease, box-shadow 0.3s ease;
         z-index: 999;
     }
     
@@ -372,9 +378,9 @@ a {
         width: 200px;
         background: #212939;
     }
-
+    
     .main-menu li {
-        display: block;
+        display:block;
         width: 100%;
     }
 
@@ -399,16 +405,16 @@ a {
         text-decoration: none;
     }
     
-    .main-menu li:first-child a {
+    .main-menu li: first-child a {
         border-top: 1px solid #383838;
     }
-
-    .main-menu a:hover,
+    
+    .main-menu a:hover, 
     .main-menu a:focus {
         background: #333;
         text-decoration: underline;
     }
-
+    
     .main-menu .menu-close {
         position: absolute;
         right: 0;
@@ -416,27 +422,26 @@ a {
     }
 
     .main-menu:target,
-    .main-menu[aria-expanded="true"] {
-        left: 0;
-        outline: none;
+    .main-menu[aria-expanded = "true"] {
+    left: 0;
+    outline: none;
         -moz-box-shadow: 3px 0 12px rgba(20, 20, 20, .25);
         -webkit-box-shadow: 3px 0 12px rgba(20, 20, 20, .25);
         box-shadow: 3px 0 12px rgba(20, 20, 20, .25);
     }
 
     .main-menu:target .menu-close,
-    .main-menu[aria-expanded="true"] .menu-close {
+    .main-menu[aria-expanded = "true"] .menu-close {
         z-index: 1001;
     }
 
     .main-menu:target ul,
-    .main-menu[aria-expanded="true"] ul {
+    .main-menu[aria-expanded = "true"] ul {
         position: relative;
         z-index: 1000;
     }
-    
     .main-menu:target + .backdrop,
-    .main-menu[aria-expanded="true"] + .backdrop {
+    .main-menu[aria-expanded = "true"] + .backdrop {
         position: absolute;
         display: block;  
         content: "";
@@ -451,16 +456,16 @@ a {
     }
 
     @supports (position: fixed) {
-    .main-menu,
-    .main-menu:target + .backdrop,
-    .main-menu[aria-expanded="true"] + .backdrop {
+        .main-menu,
+        .main-menu: target + .backdrop,
+        .main-menu[aria-expanded = "true"] + .backdrop {
             position: fixed;
         }
     }
-    
-    .navbar a {
-        border:none;
-        display:block;
+
+    .navbar a{
+        border: none;
+        display: block;
         padding: .75em 15px;
         line-height: 1em;
         font-size: 1em;
@@ -469,7 +474,7 @@ a {
     }
 }
 
-/* ------------- Sidebar ------------ */
+/* ------------- sidebar ------------ */
 
 #sidebar {
     z-index: 5;
@@ -489,22 +494,6 @@ a {
     padding-top: 1%;
 }
 
-#detailsSVG {
-    width: 100%;
-}
-
-#detailsGenres {
-    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
-	font-size: 12px;
-	font-style: normal;
-	font-variant: normal;
-	font-weight: 500;
-    line-height: 16px;
-    background-color: #282828;
-    display: none;
-    padding: 5px 10px 5px 10px;
-}
-
 #generateFilters {
     width: 87%;
     height: 130px;
@@ -516,35 +505,6 @@ a {
     display: none;
 }
 
-.trackBox {
-    position: relative;
-    width: 90%;
-    padding: 5%;
-    background-color: #212938;
-    border: .5px solid #1f2126;
-    color: #959da0;
-}
-
-.trackBoxText {
-    width: 90%;
-}
-
-#selectedTracks, #selectedArtists {
-    width: 100%;
-}
-
-#closeButton {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 5%;
-    font-weight: bold;
-    font-size: 18px;
-    color: red;
-    cursor: pointer;
-}
-
-/* Artist and track container, contains an SVG for the 'Details' bars. */
 #at-container {
     width: 100%;
     height: 204px;
@@ -570,7 +530,6 @@ a {
   height: 15px;
 
 }
-
 .tablinkside {
 }
 
@@ -655,7 +614,7 @@ a {
     margin-bottom: 1.5rem;
 }
 
-.c-tabs.no-js .c-tab: last-child {
+.c-tabs.no-js .c-tab:last-child {
     margin-bottom: 0;
 }
 
@@ -745,8 +704,23 @@ a {
     margin: 0 auto;
 }
 
-/* ------------- Main Body of the Tree Container ------------ */
+#detailsSVG {
+    width: 100%;
+}
 
+#detailsGenres {
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+	font-size: 12px;
+	font-style: normal;
+	font-variant: normal;
+	font-weight: 500;
+    line-height: 16px;
+    background-color: #282828;
+    display: none;
+    padding: 5px 10px 5px 10px;
+}
+
+/* ------------- Main Body of the Tree Container ------------ */
 #tree-container {
     position: fixed;
     margin-top: 0;
@@ -760,14 +734,6 @@ a {
     text-overflow: ellipsis;
     white-space: nowrap;
     width: 500px;
-}
-
-.textboxLabel {
-    pointer-events: none;
-}
-
-.tSpanText {
-    fill: "#ff004e";
 }
 
 .node {
@@ -802,7 +768,35 @@ rect .node {
     pointer-events: none;
 }
 
-/* ------------- Bottom Bar Sliders ------------ */
+.trackBox {
+    position: relative;
+    width: 90%;
+    padding: 5%;
+    background-color: #212938;
+    border: .5px solid #1f2126;
+    color: #959da0;
+}
+
+.trackBoxText {
+    width: 90%;
+}
+
+#selectedTracks, #selectedArtists {
+    width: 100%;
+}
+
+#closeButton {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 5%;
+    font-weight: bold;
+    font-size: 18px;
+    color: red;
+    cursor: pointer;
+}
+
+/* -------------Bottom Bar Sliders ------------ */
 
 .range-slider {
     width: 150px;
@@ -842,16 +836,37 @@ rect .node {
     color: #000;
 }
 
+.avatar {
+    float: left;
+    position: relative;
+    line-height: 50px;
+}
+
+.info {
+    width: 80%;
+    float: right;
+    color: black;
+    font-weight: 600;
+    font-family: "Source Sans Pro", sans-serif;
+    word-wrap: break-word;
+}
+
+.clearfix {
+    width: 100%;
+    clear: both; 
+    float: none;
+    content: '';
+}
+
 li {
     overflow: auto;
 }
 
-/* --------- Select2 CSS for searching tracks and artists -------- */
+/* Select2 CSS */
 .clearfix: before, .clearfix: after {
     content: " ";
     display: table;
 }
-
 .clearfix: after {
     clear: both;
 }

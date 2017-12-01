@@ -1,3 +1,10 @@
+/*
+    File:
+            select2_track.js
+    Purpose:
+            Select2 box for searching for a track on Spotify.
+*/
+
 $("#search_tracks").select2({
     placeholder: "Please click to search for a track.", 
     ajax: {

@@ -1,6 +1,6 @@
 /*
     File:
-            details-tab.js
+            details_tab.js
     Purpose:
             This is a singleton class that manages the 'Details' tab bars.
 */

@@ -12,9 +12,9 @@ function generateTabSwitched() {}
 function doesNotMeetCap() {}
 function tokenSanityCheck() {}
 function addToOrRemoveFromSelected() {}
-function createPlaylist() {}
 function resizeNodes() {}
 function filterNodes() {}
+function callAPI() {}
 
 /*
     Selected artists, tracks, genres, and nodes
@@ -22,6 +22,20 @@ function filterNodes() {}
 var selectedArtist = [];
 var selectedTrack = [];
 var selectedGenre = [];
+
+/*
+    Define the Spotify user.
+*/
+var me = {
+    url: "", 
+    uid: ""
+};
+
+/*
+    We store the track information for nodes we've clicked.
+    This allows us to display the information when a Spotify user generates a recommended playlist.
+*/
+var selectedTrackInfo = {};
 
 (function () {
 
@@ -36,10 +50,7 @@ var selectedGenre = [];
                         root: true, 
                         children: [] 
                     };
-
-    // Initial Spotify user profile data
-    var me = { url: "", uid: "" };
-
+    
     // Used for assigning IDs to our nodes
     var i = 0;
 
@@ -64,13 +75,7 @@ var selectedGenre = [];
 
     var artistID_long = [];
     var trackID_long = [];
-
-    /*
-        We store the track information for nodes we've clicked.
-        This allows us to display the information when a Spotify user generates a recommended playlist.
-    */
-    var selectedTrackInfo = {};
-
+    
     /*
         Our initial tree layout
     */
@@ -155,7 +160,7 @@ var selectedGenre = [];
     /*
         Call Spotify Web API
     */
-    var callAPI = function(callback, second_pass, special) {
+    callAPI = function(callback, second_pass, special) {
         if (!second_pass) {
             callback();
         } else {
@@ -1704,14 +1709,18 @@ var selectedGenre = [];
         update(root);
         centerNode(root, true);
     });
+    
+    var registerLogout = function(id) {
+        document.getElementById(id).addEventListener("click", function() {
+            deleteCookie('myToken');
+            deleteCookie('myRefreshToken');
 
-    document.getElementById("logout-b").addEventListener("click", function() {
-        deleteCookie('myToken');
-        deleteCookie('myRefreshToken');
-
-        window.location.href = "http://localhost:8888/logout";
-    });
-
+            window.location.href = "http://localhost:8888/logout";
+        });
+    }
+    registerLogout("logout-b1");
+    registerLogout("logout-b2");
+    
     d3.select("#short-term").style("background-color", "#4B9877");
 
     $(".chosen").on('change', function(evt, params) {
@@ -1724,137 +1733,4 @@ var selectedGenre = [];
             }
         }
     });
-
-    /*
-        Playlist methods: 
-            Used for creating a new playlist, retrieving recommended tracks and adding them.
-    */
-    var addTracksToPlaylist = function(playlistID, uriArr, trackInfo, second_pass) {
-        spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) {
-            if (!err) {
-                var genPlaylistDiv = d3.select("#recommendedTracks");
-                genPlaylistDiv.html("");
-                d3.select("#generatedPlaylistTracks").style("display", "block");
-
-                trackInfo.forEach(function(d) {
-                    genPlaylistDiv.append('div')
-                        .attr("class", "trackBox")
-                        .attr("font-family", "sans-serif")
-                        .attr("font-size", "10px")
-                        .html(d);
-                });
-
-                document.getElementById('geneatePlaylistBtn2').innerHTML = 'PLAYLIST CREATED!';
-                setTimeout(function() {
-                    // Close the dialog box
-                    $('#dialog').dialog('close');
-
-                    // Scroll down to the recommended playlist.
-                    $('#generatedPlaylistTracks')[0].scrollIntoView( true );
-                }, 750); 
-            } else if (!second_pass) {
-                callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, true); }, true);
-            }
-        });
-    }
-    
-    var createRealPlaylist = function(name, uriArr, trackInfo, maxTracks, second_pass) {
-        spotifyApi.createPlaylist(me.uid, 
-        {
-            name: name, 
-            public: true, 
-        }, 
-        function(err, data) {
-            if (!err) {
-                var playlistID = data.id;
-                callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
-            } else if (!second_pass) {
-                callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks, true) }, true);
-            }
-        });
-    }
-    
-    createPlaylist = function(name, maxTracks, second_pass) {
-        // If we don't have at least 1 seed, return because we can't generate a playlist.
-        if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
-            return;
-        }
-        
-        var uriArr = [];
-        var trackInfo = [];
-
-        selectedTrack.forEach(function(d) {
-            uriArr.push("spotify:track:" + d);
-            trackInfo.push(selectedTrackInfo[d]);
-        });
-
-        if ((maxTracks - (selectedTrack.length)) > 0) {
-            // Get the recommended tracks.
-            var popValues = $("#filter_pop_slider").slider("values");
-            var popularityMin = popValues[0];
-            var popularityMax = popValues[1];
-
-            var danceValues = $("#filter_dance_slider").slider("values");
-            var danceMin = danceValues[0];
-            var danceMax = danceValues[1];
-
-            var energyValues = $("#filter_energy_slider").slider("values");
-            var energyMin = energyValues[0];
-            var energyMax = energyValues[1];
-
-            var positivityValues = $("#filter_valence_slider").slider("values");
-            var positivityMin = positivityValues[0];
-            var positivityMax = positivityValues[1];
-
-            spotifyApi.getRecommendations(
-            {
-                // We want to include our selected tracks, so we need to find the remainder of songs
-                // There should be a maximum total of 25 tracks.
-                limit: maxTracks - (selectedTrack.length),
-
-                seed_tracks: selectedTrack, 
-                seed_artists: selectedArtist, 
-                seed_genres: selectedGenre, 
-
-                min_popularity: popularityMin, 
-                max_popularity: popularityMax, 
-
-                min_danceability: danceMin / 100, 
-                max_danceability: danceMax / 100, 
-
-                min_energy: energyMin / 100, 
-                max_energy: energyMax / 100, 
-
-                min_valence: positivityMin / 100, 
-                max_valence: positivityMax / 100, 
-
-                market: "US"
-            }, 
-            function(err, data) {
-                if (!err) {
-                    if (data.tracks.length == 0) {
-                        document.getElementById('geneatePlaylistBtn2').innerHTML = 'NO TRACKS FOUND!';
-                        setTimeout(function() {
-                            // Close the dialog box
-                            $('#dialog').dialog('close');
-                        }, 1000);
-                        return;
-                    }
-                    data.tracks.forEach(function(d) {
-                        // Make sure there can't be duplicate tracks
-                        if (d.uri && uriArr.indexOf(d.uri) == -1) {
-                            uriArr.push(d.uri);
-                            trackInfo.push(d.name + " - <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
-                        }
-                    });
-
-                    callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks); });
-                } else if (!second_pass) {
-                    callAPI(function() { createPlaylist(name, maxTracks, true) }, true, true);
-                }
-            });
-        } else {
-            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
-        }
-    }
 })();

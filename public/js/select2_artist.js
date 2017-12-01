@@ -1,3 +1,10 @@
+/*
+    File:
+            select2_artist.js
+    Purpose:
+            Select2 box for searching for an artist on Spotify.
+*/
+
 $("#search_artists").select2({
     placeholder: "Please click to search for an artist.", 
     ajax: {
