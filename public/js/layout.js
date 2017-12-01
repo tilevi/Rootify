@@ -717,10 +717,10 @@ var selectedTrackInfo = {};
             If this node is the root, and we have nodes in our tree, then turn off 
             switching modes after we enter the nodes.
         */
-        if (source == root && root.children && root.children.length > 0) {
+        if (source == root && (root.children != null) && root.children.length > 0) {
             setTimeout(function() {
                 switchingMode = false;
-            }, duration*2);
+            }, duration * 2);
         }
     }
 
@@ -1692,7 +1692,10 @@ var selectedTrackInfo = {};
         if (switchingMode || root.children == null) {
             return;
         }
-
+        
+        // In a sense, we are switching modes (but not quite).
+        switchingMode = true;
+        
         handleSelection(null, null);
 
         root.children.forEach(function(d) {
