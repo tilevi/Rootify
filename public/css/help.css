@@ -29,13 +29,14 @@ h1{
 }
 /*----------- Other ---------*/
 
+
 div {
 	margin-top: 5%;
-	width: 50%;
 	margin-bottom: 5%;
 }
 
 div p {
+    width: 50%;
     text-align: left;
     line-height: 1.3em;
 }
