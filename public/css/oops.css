@@ -1,8 +1,18 @@
+@font-face {
+    font-family: Source Sans Pro;
+    src: url(./assets/fonts/SourceSansPro-Regular.otf);
+}
+
+@font-face {
+    font-family: Avenir Next;
+    src: url(./assets/fonts/AvenirNext.ttc);
+}
+
 body {
     color: #fff;
     background-color: #273143;
     margin: 0;
-    font-family: Avenir Next;
+    font-family: "Avenir Next", sans-serif;
     font-size: 1em;
     line-height: 2em;
 }

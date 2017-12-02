@@ -37,8 +37,7 @@ var me = {
 */
 var selectedTrackInfo = {};
 
-(function () {
-
+(function(window, undefined){
     // Either "short" or "long" 
     // Indicates if we want to view short-term or long-term
     var mode = "short";
@@ -1751,4 +1750,4 @@ var selectedTrackInfo = {};
             }
         }
     });
-})();
+})(this);
