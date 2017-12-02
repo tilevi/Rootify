@@ -18,7 +18,7 @@ body {
 
 p {
 	color: #7B7B7B;
-	font-size: 1.3em;
+	font-size: 1em;
 	line-height: 1em;
 }
 
@@ -45,4 +45,44 @@ div p {
 
 a {
     color: white;
+}
+ul {
+    list-style-type: none;
+}
+
+#header {
+    
+    width: 100%;
+    height: 50px;
+    top: 0;
+    background-color:#273143;
+}
+
+li {
+    float: right;
+    display: inline-block;
+    padding-left: 2px;
+    font-size: 1.3em;
+    color: white;
+}
+
+#first {
+   padding-right: 20px; 
+}
+
+#second {
+   padding-right: 90px; 
+}
+
+li a {
+    color: white;
+    text-decoration: none;
+    font-weight: normal;
+    padding: 0px 10px;
+}
+
+li a:hover {
+    color: #4B9877;
+    transition-property: all;
+    transition-duration: .5s;
 }
