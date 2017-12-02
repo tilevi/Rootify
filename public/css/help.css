@@ -17,30 +17,96 @@ body {
 }
 
 p {
-	color: #7B7B7B;
-	font-size: 1.3em;
-	line-height: 1em;
-}
-
-h1 {
-    color: #fff;
-    font-size: 2em;
-    line-height: 1em;
-}
-
-h2 {
-    color: #fff;
-    font-size: 1.3em;
-    line-height: 1em;
+	color: #bdbdbd;
+	font-size: 1em;
+    padding: 10px;
 }
 
 div {
-	margin-top: 5%;
-	margin-bottom: 5%;
+    width: 700px;
+	margin-bottom: 2%;
 }
 
 div p {
-    width: 50%;
     text-align: left;
     line-height: 1.3em;
+}
+
+ul {
+    list-style-type: none;
+}
+
+#header {
+    
+    width: 100%;
+    height: 50px;
+    top: 0;
+    background-color:#273143;
+}
+
+li {
+    float: right;
+    display: inline-block;
+    padding-left: 2px;
+    font-size: 1.3em;
+    color: white;
+}
+
+#first {
+   padding-right: 20px; 
+}
+
+#second {
+   padding-right: 90px; 
+}
+
+li a {
+    color: white;
+    text-decoration: none;
+    font-weight: normal;
+    padding: 0px 10px;
+}
+
+li a:hover {
+    color: #4B9877;
+    transition-property: all;
+    transition-duration: .5s;
+}
+
+
+button.accordion {
+    font-size: 1.6em;
+    background-color: #212938;
+    border: .5px solid #1f2126;
+    color: #eee;
+    cursor:pointer;
+    padding 10px;
+    width: 100%;
+    text-align: left;
+    outline:none;
+    transition: 0.4s;
+}
+
+button.accordion.active, button.accordion:hover{
+    background-color: #01B482;
+}
+
+.panel {
+    width: 100%;
+    background-color:#1e2229;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease-out;
+}
+
+button.accordion:after {
+    font-size: 13px;
+    color: #fff;
+    float: right;
+    margin-left: 5px;
+}
+
+button.accordion.active:after {
+    color: #fff;
+    content: "\2796"; /* Unicode character for "minus" sign (-) */
 }
