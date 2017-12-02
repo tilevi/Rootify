@@ -32,9 +32,17 @@ div p {
     line-height: 1.3em;
 }
 
+#authors {
+    text-align: center;
+}
+
+a {
+    color: white;
+}
+
 /*----------- Other ---------*/
 
-div {
+#div {
 	margin-top: 5%;
 	width: 50%;
 	margin-bottom: 5%;
