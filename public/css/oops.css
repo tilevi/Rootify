@@ -8,23 +8,23 @@ body {
 }
 
 p {
-	font-size: 1.5em;
-	line-height: 1.3em;
-
+    font-size: 1.5em;
+    line-height: 1.3em;
 }
+
 /*----------- Other ---------*/
 
 div {
-	margin-top: 5%;
-	width: 80%;
+    margin-top: 5%;
+    width: 80%;
     min-width: 850px;
-	margin-bottom: 5%;
+    margin-bottom: 5%;
 }
 
 a {
     -moz-user-select: none;
-   -khtml-user-select: none;
-   -webkit-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
     cursor: pointer;
     color: #fff;
     border: 1px solid #B5BDC4;
@@ -35,7 +35,7 @@ a {
     font-family: "Source Sans Pro", sans-serif;
     font-weight: 100;
     font-size: .8em;
-     transition-property: all;
+    transition-property: all;
     transition-duration: .5s;
     transition-timing-function: ease-out;
 }
@@ -49,5 +49,5 @@ a:hover {
 }
 
 a:active{
-    color-background: #4B9877;
+    background-color: #4B9877;
 }

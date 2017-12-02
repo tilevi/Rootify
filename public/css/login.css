@@ -2,14 +2,15 @@
     font-family: Source Sans Pro;
     src: url(./assets/fonts/SourceSansPro-Regular.otf);
 }
+
 @font-face {
     font-family:Avenir Next;
     src: url(./assets/fonts/AvenirNext.ttc);
 }
 
 body {
-    background-color:#273143;
-     margin:0;
+    background-color: #273143;
+    margin: 0;
     font-family: "Source Sans Pro", sans-serif;
     font-size: 1em;
     line-height: 1em;
@@ -22,36 +23,15 @@ p {
 }
 
 h1 {
-    color:#fff;
+    color: #fff;
 }
 
 /*----------- Other ---------*/
 
-#div {
-	width: 50%;
-    margin-top: 5%;
-	margin-bottom: 5%;
-}
-#thediv {
-	width: 80%;
-	margin: 0 auto;
-}
-
-#thediv a{ 
-	margin-top: 30px;
-    color: #fff;
-    background-color:#00B685;
-    padding: 20px 70px;
-    text-decoration: none;
-    text-transform: uppercase;
-    font-family: "Source Sans Pro", sans-serif;
-    font-weight: 400;
-    text-align: center;
-}
-
 .logo {
     width: 400px;
 }
+
 
 @media screen and (max-width: 700px) {
     body {
@@ -63,7 +43,7 @@ h1 {
         padding: 20px 60px;
     }
     .logo {
-        width:60%;
+        width: 60%;
     }
 }
 
@@ -79,11 +59,11 @@ ul {
 }
 
 li {
-    float:right;
-    display:inline-block;
+    float: right;
+    display: inline-block;
     padding-left: 2px;
     font-size: 1.3em;
-    color:white;
+    color: white;
 }
 
 #first {
@@ -94,14 +74,14 @@ li {
    padding-right: 90px; 
 }
 
-li a{
-    color:white;
+li a {
+    color: white;
     text-decoration: none;
     font-weight: normal;
     padding: 0px 10px;
 }
 
-li a:hover{
+li a:hover {
     color: #4B9877;
     transition-property: all;
     transition-duration: .5s;
@@ -109,7 +89,30 @@ li a:hover{
 
 @media screen and (max-width: 600px) {
      body{
-        font-size:.6em;
+        font-size: .6em;
         text-align: left;
     }
+}
+
+#div {
+	width: 50%;
+    margin-top: 5%;
+	margin-bottom: 5%;
+}
+
+#thediv {
+	width: 80%;
+	margin: 0 auto;
+}
+
+#thediv a { 
+	margin-top: 30px;
+    color: #fff;
+    background-color: #00B685;
+    padding: 20px 70px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 400;
+    text-align: center;
 }
