@@ -371,40 +371,49 @@ var selectedTrackInfo = {};
             }
     }
     
+    var findNodeFromTree = function(id, typ) {
+        var notFound = true;
+        var node = null;
+
+        if (typ == "artist") {
+            svgGroup.selectAll("g.node").each(function(d) {
+                if (notFound && d.aid == id && lastSelected != this) {
+                    node = this;
+                    notFound = false;
+                }
+            });
+        } else {
+            svgGroup.selectAll("g.node").each(function(d) {
+                if (notFound && d.tid == id && lastSelected != this) {
+                    node = this;
+                    notFound = false;
+                }
+            });
+        }
+
+        return node;
+    }
+
     addToOrRemoveFromSelected = function(name, artistName, id, typ, node) {
         var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);        
         // If the selected artist is not in the selected artist array
         if (selectedArr.indexOf(id) == -1) {
             // If we exceed a maximum combination of 5 artists, tracks and genres, return.
             if (doesNotMeetCap()) { return; }
-
+            
+            var shapeTyp = (typ == "track") ? "rect" : "circle";
             var clicked = true;
 
-            if (!node) {
+            if (node == null) {
                 clicked = false;
-                var notFound = true;
-
-                if (typ == "artist") {
-                    svgGroup.selectAll("g.node").each(function(d) {
-                        if (notFound && d.aid == id && lastSelected != this) {
-                            node = this;
-                            d3.select(this).select("circle").style("stroke", "#4B9877");
-                            notFound = false;
-                        }
-                    });
-                } else {
-                    svgGroup.selectAll("g.node").each(function(d) {
-                        if (notFound && d.tid == id && lastSelected != this) {
-                            node = this;
-                            d3.select(this).select("rect").style("stroke", "#4B9877");
-                            notFound = false;
-                        }
-                    });
+                node = findNodeFromTree(id, typ);
+                if (node != null) {
+                     d3.select(this).select(shapeTyp).style("stroke", "#4B9877");
                 }
             }
 
             if (node) {
-                d3.select(node).select((typ == "track") ? "rect" : "circle").style("stroke", "#4B9877");
+                d3.select(node).select(shapeTyp).style("stroke", "#4B9877");
             }
 
             var selectType = typ == "artist" ? "#selectedArtists" : "#selectedTracks";
@@ -418,9 +427,9 @@ var selectedTrackInfo = {};
                     .attr("class", "trackBoxText")
                     .html(name + (artistName != null ? (" - <br/>" + artistName) : ""))
             trackBox.append('div').attr("id", "closeButton").html("&times").on("click", function() {
-                        if (node) {
-                            d3.select(node).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
-                            d3.select(node.parentNode).select((typ == "track") ? "rect" : "circle").style("stroke", "none");
+                        var findNode = findNodeFromTree(id, typ);
+                        if (findNode != null) {
+                            d3.select(findNode).select(shapeTyp).style("stroke", "none");
                         }
 
                         selectedArr.splice(selectedArr.indexOf(id), 1);
