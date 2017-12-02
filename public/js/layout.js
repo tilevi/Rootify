@@ -85,7 +85,7 @@ var selectedTrackInfo = {};
     /*
         This is a path generator that creates an elbow shape.
     */
-    function elbow(d, i) {
+    var elbow = function(d, i) {
         var targetY = -10;
         var circleRadiusOrRectHeight = d.target.newSize;
         if (d.target.aid) {
@@ -105,7 +105,7 @@ var selectedTrackInfo = {};
 
         In other words, the track or artist you listen to more are on the left.
     */
-    function sortTree() {
+    var sortTree = function() {
         tree.sort(function(a, b) {
 
             if (a.depth > 1 && a.popularity && b.popularity) {
@@ -118,7 +118,6 @@ var selectedTrackInfo = {};
 
     // Initially, sort the tree.
     sortTree();
-
 
     /*
         Artist, track, and genre upper-limit.
@@ -364,13 +363,13 @@ var selectedTrackInfo = {};
                     d3.select("#detailsGenres").style("display", "none");
                 }
             } else {
-                    // Hide the artist header image and associated genres.
-                    d3.select("#headerImage").style("display", "none");
-                    d3.select("#detailsGenres").style("display", "none");
-                }
+                // Hide the artist header image and associated genres.
+                d3.select("#headerImage").style("display", "none");
+                d3.select("#detailsGenres").style("display", "none");
             }
+        }
     }
-    
+
     var findNodeFromTree = function(id, typ) {
         var notFound = true;
         var node = null;
@@ -466,6 +465,7 @@ var selectedTrackInfo = {};
         }
     }
 
+    /* Handle selection when a node is clicked/selected. */
     var handleSelection = function(node, typ, id, name, artistName) {
          if (node != null) {
             if (generateTabIsActive) {
@@ -485,6 +485,7 @@ var selectedTrackInfo = {};
         }
     }
 
+    /* Loads the Spotify player widget(s) in the 'Details' tab. */
     var loadSpotifyTracks = function(trackArr) {
         var numberOfTracks = trackArr.length;
         var height = (numberOfTracks <= 1) ? 355 : 75;
@@ -521,6 +522,10 @@ var selectedTrackInfo = {};
         });
     }
 
+    /*
+        Populates a node's children array.
+        This method is given the tracks or artists to add to the source node.
+    */
     var populateChildrenArray = function(data, source, typ, audioFeatures) {
         // Array of tracks/artists that we already have in our tree.
         var blacklist = null;
@@ -627,7 +632,7 @@ var selectedTrackInfo = {};
 
         If we put the root at the top left, the translation is [0, 0].
     */
-    function zoom() {
+    var zoom = function() {
         var translate = d3.event.translate;
         var scale = d3.event.scale;
 
@@ -680,7 +685,7 @@ var selectedTrackInfo = {};
 
         Reference: https://stackoverflow.com/questions/18554224/getting-screen-positions-of-d3-nodes-after-transform/18561829
     */
-    function getScreenCoords(x, y, ctm) {
+    var getScreenCoords = function(x, y, ctm) {
         var xn = ctm.e + x*ctm.a + y*ctm.c;
         var yn = ctm.f + x*ctm.b + y*ctm.d;
         return { x: xn, y: yn };
@@ -694,7 +699,7 @@ var selectedTrackInfo = {};
         In the update() function, we do some checks for the newly entered nodes, 
         and then return shouldPan. We then call centerNode(...) with this return value as a parameter.
     */
-    function centerNode(source, first, shouldPan) {
+    var centerNode = function(source, first, shouldPan) {
         // Don't pan if you're not root or if you're on the screen.
         if (!first && !shouldPan) { return; }
 
@@ -736,7 +741,7 @@ var selectedTrackInfo = {};
     /*
         This function is used when clicking on an artist or track.
     */
-    function toggleChildren(d) {
+    var toggleChildren = function(d) {
         d.clicked = true;
 
         if (d._children) {
@@ -768,7 +773,7 @@ var selectedTrackInfo = {};
         When we click on a node, this fucntion is called.
         We don't allow toggling if a transition is occuring or we clicked on the root node.
     */
-    function click(d) {
+    var click = function(d) {
         if (d.root || d.clicked) {
             return;
         }
@@ -782,7 +787,7 @@ var selectedTrackInfo = {};
                             .y(function(d) { return d.y; })
                             .interpolate('linear');
     
-    function filterNode(d, element) {
+    var filterNode = function(d, element) {
         if (d.root || d.spacer) { return; }
         var pass = true;
 
@@ -817,7 +822,7 @@ var selectedTrackInfo = {};
     var sizeScale = d3.scale.linear()
                         .domain([0.10,0.95]).range([20, 50]).clamp(true);
 
-    function getNodeSize(d) {
+    var getNodeSize = function(d) {
         var num = 1;
         var features = false;
 
@@ -971,6 +976,7 @@ var selectedTrackInfo = {};
             .style("stroke", "#ccc");
     }
     
+    /* Text overflow solution by user2846569 on Stack Overflow*/
     var wrap = function(d3This, maxWidth) {
         var self = d3This,
             textLength = self.node().getComputedTextLength(),
@@ -982,29 +988,30 @@ var selectedTrackInfo = {};
         }
     } 
     
-    function twoWrap(text, width, track, artistName) {
+    /* Original code by Mike Bostock. */
+    var twoWrap = function(text, width, track, artistName) {
         text.each(function() {
 
             var breakChars = ['/', '&', '-'],
-              text = d3.select(this),
-              textContent = text.text(),
-              spanContent;
+            text = d3.select(this),
+            textContent = text.text(),
+            spanContent;
 
             breakChars.forEach(char => {
-              // Add a space after each break char for the function to use to determine line breaks
-              textContent = textContent.replace(char, char + ' ');
+                // Add a space after each break char for the function to use to determine line breaks
+                textContent = textContent.replace(char, char + ' ');
             });
-            
+
             var textColor = (track ? '#FFF' : '#00B685');
             var words = textContent.split(/\s+/).reverse(),
-              word,
-              line = [],
-              lineNumber = 0,
-              lineHeight = 1.1, // ems
-              x = text.attr('x'),
-              y = text.attr('y'),
-              dy = parseFloat(text.attr('dy') || 0),
-              tspan = text.text(null).append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', dy + 'em').style('fill', textColor);
+            word,
+            line = [],
+            lineNumber = 0,
+            lineHeight = 1.1, // ems
+            x = text.attr('x'),
+            y = text.attr('y'),
+            dy = parseFloat(text.attr('dy') || 0),
+            tspan = text.text(null).append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', dy + 'em').style('fill', textColor);
 
             while (word = words.pop()) {
                 if (lineNumber == 1) {
@@ -1013,24 +1020,23 @@ var selectedTrackInfo = {};
                     wrap(tspan, width);
                     break;
                 }
-                
+
                 line.push(word);
                 tspan.text(line.join(' '));
-                
-              
-              if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                spanContent = line.join(' ');
-                breakChars.forEach(char => {
-                  // Remove spaces trailing breakChars that were added above
-                  spanContent = spanContent.replace(char + ' ', char);
-                });
-                
-                tspan.text(spanContent);                
-                words.push(word);
-                
-                tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', textColor).text(null);
-              }
+
+                if (tspan.node().getComputedTextLength() > width) {
+                    line.pop();
+                    spanContent = line.join(' ');
+                    breakChars.forEach(char => {
+                    // Remove spaces trailing breakChars that were added above
+                    spanContent = spanContent.replace(char + ' ', char);
+                    });
+
+                    tspan.text(spanContent);                
+                    words.push(word);
+
+                    tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', textColor).text(null);
+                }
             }
             
             if (track) {
@@ -1596,7 +1602,7 @@ var selectedTrackInfo = {};
         This function loads our top tracks.
         After we loaded our top track information, we load our top artists.
     */
-    function loadTopTracks(second_pass) {
+    var loadTopTracks = function(second_pass) {
         // We need to make sure the root's children array is empty.
         root.children = [];
 
