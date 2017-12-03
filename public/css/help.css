@@ -14,22 +14,41 @@ body {
     font-family: "Source Sans Pro", sans-serif;
     font-size: 1em;
     line-height: 1em;
+    padding-top: 65px; 
 }
 
 p {
-	color: #bdbdbd;
-	font-size: 1em;
-    padding: 10px;
+    color: #7B7B7B;
+    font-size: 1em;
+    line-height: 1.2em;
+    padding: 5%;
 }
 
-div {
-    width: 700px;
-	margin-bottom: 2%;
+.logo {
+    width: 400px;
 }
 
-div p {
-    text-align: left;
-    line-height: 1.3em;
+
+
+/*----------- Other ---------*/
+
+.logo {
+    width: 400px;
+}
+
+
+@media screen and (max-width: 700px) {
+    body {
+        font-size: .8em;
+        text-align: left;
+    }
+    #thediv a {
+        font-size: 10pt;
+        padding: 20px 60px;
+    }
+    .logo {
+        width: 60%;
+    }
 }
 
 ul {
@@ -37,9 +56,10 @@ ul {
 }
 
 #header {
-    
+    position: fixed;
+    padding-top:10px;
     width: 100%;
-    height: 50px;
+    height: 40px;
     top: 0;
     background-color:#273143;
 }
@@ -73,14 +93,33 @@ li a:hover {
     transition-duration: .5s;
 }
 
+@media screen and (max-width: 600px) {
+     body{
+        font-size: .6em;
+        text-align: left;
+    }
+}
+div {
+    width: 700px;
+	margin-bottom: 2%;
+}
+
+div p {
+    text-align: left;
+    line-height: 1.3em;
+}
+
+div u {
+    color: #01B482;
+}
 
 button.accordion {
-    font-size: 1.6em;
+    font-size: 1.5em;
     background-color: #212938;
     border: .5px solid #1f2126;
     color: #eee;
     cursor:pointer;
-    padding 10px;
+    padding: 10px;
     width: 100%;
     text-align: left;
     outline:none;
@@ -110,3 +149,11 @@ button.accordion.active:after {
     color: #fff;
     content: "\2796"; /* Unicode character for "minus" sign (-) */
 }
+
+
+@media screen and (max-width: 700px) {
+div {
+    width: 80%;
+    margin-bottom: 2%;
+}
+    }
