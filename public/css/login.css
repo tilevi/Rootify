@@ -17,8 +17,9 @@ body {
 }
 
 p {
+    padding-top: 10px;
 	color: #7B7B7B;
-	font-size: 1.5em;
+	font-size: 1.3em;
 	line-height: 1.2em;
 }
 
