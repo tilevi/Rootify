@@ -517,11 +517,12 @@ a {
 }
 
 .trackBox {
+    font-size: .8em;
     position: relative;
     width: 90%;
     padding: 5%;
     background-color: #212938;
-    border: .5px solid #1f2126;
+    outline: .5px solid #1f2126;
     color: #959da0;
 }
 
@@ -559,6 +560,7 @@ a {
 
 .tablink {
   flex: 1;
+  font-size: .9em;
   margin-right: 4px;
   padding: 12px;
   color: #fff;
@@ -585,6 +587,7 @@ a {
 
 .tablink: hover {
   color: #212938;
+
 }
 
 .tablink.is-active {
@@ -634,6 +637,7 @@ a {
     letter-spacing: 0.86px;
     text-decoration: none;
     padding: 3px;
+    text-indent:2%;
     font-weight: normal;
 }
 

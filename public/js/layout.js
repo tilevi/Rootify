@@ -1249,7 +1249,9 @@ var selectedTrackInfo = {};
 
                 d3This.append('circle')
                     .attr("r", circleRadius)
+                    .attr("stroke-width", "2px")
                     .style("fill", "#282828");
+
 
                 d3This.append('image')
                     .attr('x', Math.floor(-imageWidth/2))
@@ -1282,7 +1284,7 @@ var selectedTrackInfo = {};
                 d3This.append('rect')
                     .attr("class", "node")
                     .attr("fill", "#282828")
-                    .attr("stroke-width", "1px")
+                    .attr("stroke-width", "2px")
                     .attr('x', Math.floor(-rectWidth/2))
                     .attr('y', Math.floor(-rectHeight/2))
                     .attr('width', rectWidth)
