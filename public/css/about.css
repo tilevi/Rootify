@@ -191,6 +191,9 @@ h2 {
 .floattoright a{
     margin-left: 30px;
 }
+.floattoright a:hover{
+    color:#273143;
+}
 
 .cards {
      display: flex;
