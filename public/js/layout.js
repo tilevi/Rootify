@@ -363,6 +363,8 @@ var selectedTrackInfo = {};
                     d3.select("#detailsGenres").style("display", "none");
                 }
             } else {
+                d3.select("#description").style("display", "none");
+                
                 // Hide the artist header image and associated genres.
                 d3.select("#headerImage").style("display", "none");
                 d3.select("#detailsGenres").style("display", "none");
