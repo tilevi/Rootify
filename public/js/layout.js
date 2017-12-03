@@ -409,7 +409,7 @@ var selectedTrackInfo = {};
                 clicked = false;
                 node = findNodeFromTree(id, typ);
                 if (node != null) {
-                     d3.select(this).select(shapeTyp).style("stroke", "#4B9877");
+                     d3.select(node).select(shapeTyp).style("stroke", "#4B9877");
                 }
             }
 
