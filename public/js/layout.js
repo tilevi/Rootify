@@ -339,6 +339,7 @@ var selectedTrackInfo = {};
             }
 
             if (typ == "artist") {
+                d3.select("#description").style("display", "none");
                 d3.select("#headerImage")
                         .style("display", "block")
                         .style("height", "200px")

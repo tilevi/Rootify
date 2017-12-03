@@ -722,11 +722,9 @@ a {
     transition-timing-function: ease-out;
 }
 
-.playlistbtn2:hover {
-    background-color: #212938;
-    transition-property: all;
-    transition-duration: .5s;
-    transition-timing-function: ease-out;
+.descript {
+    margin: 20px;
+    font-size: .9em;
 }
 
 /*----------- Other ---------*/
