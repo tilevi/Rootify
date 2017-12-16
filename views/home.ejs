@@ -80,6 +80,9 @@
                             <a class="littleleft" id="reset_tree">Reset Tree</a>
                         </li>
                         <li>
+                            <a id="center_tree">Center Tree</a>
+                        </li>
+                        <li>
                             <a class="helphide" target="_blank" href="/help">Help</a>
                         </li>
                         <li>
@@ -144,6 +147,11 @@
 
                 <div class="c-tab">
                     <div id="overflowss" class="tabcontent">
+                        
+                        <center>
+                            <div id="description2" class="descript"> Select up to 5 items: tracks, artists, or genres. </div>
+                        </center>
+                        
                         <h2> Selected </h2>
                         
                         <div id="selectedtab" class="selectedtabwow">
@@ -153,7 +161,7 @@
                         <div class="line-div"></div>
                         <h2> Select Genres </h2>
 
-                        <select id="first" data-placeholder="Select genres" class="chosen" style="font-family:Arial !important;" multiple=true tabindex="4">
+                        <select id="first" data-placeholder="Select genres" class="chosen select2-selection__placeholder" multiple=true tabindex="4">
                             <option value="acoustic">Acoustic</option>
                             <option value="afrobeat">Afrobeat</option>
                             <option value="alt-rock">Alt-rock</option>
@@ -335,21 +343,12 @@
                     width: "99%", 
                     max_selected_options: 5
                 });
-
+                
                 var spotifyApi = new SpotifyWebApi();
                 var access_token = "<%- access_token -%>";
-                //var access_token = "<%- access_token -%>";
-
-                var access_token = getCookie("myToken");
-                var refresh_token = getCookie("myRefreshToken");
-
+                var refresh_token = "<%- refresh_token -%>";
+                
                 spotifyApi.setAccessToken(access_token);
-
-                if (access_token == null || access_token == "") {
-                    window.location.replace('http://localhost:8888/');
-                } else {
-                    spotifyApi.setAccessToken(access_token);
-                }
             </script>
         </div>  
         <!-- End Tree Container !Do not Delete! div make sure the script is in the tree container -->
@@ -366,16 +365,16 @@
                         <span class="checkmark"></span>
                     </label>
                     
-                    <label class="container2">Energy
-                        <input type="checkbox" id="energyCheck"  onclick='handleClick(this);'>
-                        <span class="checkmark"></span>
-                    </label>
-                    
                     <label class="container2">Danceability
                         <input type="checkbox" id="danceCheck" onclick='handleClick(this);'>
                         <span class="checkmark"></span>
                     </label>
                     
+                    <label class="container2">Energy
+                        <input type="checkbox" id="energyCheck"  onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                                        
                     <label class="container2">Happiness
                         <input type="checkbox" id="posCheck"  onclick='handleClick(this);'>
                         <span class="checkmark"></span>

@@ -5,8 +5,11 @@
             Handles showing the dialog box and calling the methods needed to create a Spotify playlist.
 */
 
+var preventPlaylist = false;
+
 var addTracksToPlaylist = function(playlistID, uriArr, trackInfo, second_pass) {
     spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) {
+        console.log(err, data);
         if (!err) {
             var genPlaylistDiv = d3.select("#recommendedTracks");
             genPlaylistDiv.html("");
@@ -24,12 +27,17 @@ var addTracksToPlaylist = function(playlistID, uriArr, trackInfo, second_pass) {
             setTimeout(function() {
                 // Close the dialog box
                 $('#dialog').dialog('close');
-
+                
+                // Re-allow playlist creation
+                preventPlaylist = false;
+                
                 // Scroll down to the recommended playlist.
                 $('#generatedPlaylistTracks')[0].scrollIntoView( true );
             }, 750); 
         } else if (!second_pass) {
             callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, true); }, true);
+        } else {
+            preventPlaylist = false;
         }
     });
 }
@@ -46,6 +54,8 @@ var createRealPlaylist = function(name, uriArr, trackInfo, maxTracks, second_pas
             callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
         } else if (!second_pass) {
             callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks, true) }, true);
+        } else {
+            preventPlaylist = false;
         }
     });
 }
@@ -55,7 +65,14 @@ var createPlaylist = function(name, maxTracks, second_pass) {
     if ((selectedTrack.length + selectedArtist.length + selectedGenre) <= 0) {
         return;
     }
-
+    
+    if (preventPlaylist) {
+        return;
+    }
+    
+    // Prevent the user from generating a new playlist at this time.
+    preventPlaylist = true;
+    
     var uriArr = [];
     var trackInfo = [];
 
@@ -86,7 +103,7 @@ var createPlaylist = function(name, maxTracks, second_pass) {
         {
             // We want to include our selected tracks, so we need to find the remainder of songs
             // There should be a maximum total of 25 tracks.
-            limit: maxTracks - (selectedTrack.length),
+            limit: 100, //maxTracks - (selectedTrack.length),
 
             seed_tracks: selectedTrack, 
             seed_artists: selectedArtist, 
@@ -102,35 +119,49 @@ var createPlaylist = function(name, maxTracks, second_pass) {
             max_energy: energyMax / 100, 
 
             min_valence: positivityMin / 100, 
-            max_valence: positivityMax / 100, 
-
-            market: "US"
+            max_valence: positivityMax / 100
         }, 
         function(err, data) {
+            console.log(err, data);
             if (!err) {
+                
+                var trackEmpty = false;
+                
                 if (data.tracks.length == 0) {
-                    document.getElementById('geneatePlaylistBtn2').innerHTML = 'NO TRACKS FOUND!';
+                    trackEmptry = true;
+                }
+                
+                var numTracks = maxTracks - (selectedTrack.length);
+                var counter = 0;
+                
+                data.tracks.forEach(function(d) {
+                    // Make sure there can't be duplicate tracks
+                    if (d.uri && uriArr.indexOf(d.uri) == -1 && d.available_markets.indexOf("US") != -1 && counter < numTracks) {
+                        uriArr.push(d.uri);
+                        trackInfo.push(d.name + " - <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
+                        counter = counter + 1;
+                    }
+                });
+                
+                if (uriArr.length == 0 || trackEmpty) {
+                     document.getElementById('geneatePlaylistBtn2').innerHTML = 'NO TRACKS FOUND!';
                     setTimeout(function() {
                         // Close the dialog box
                         $('#dialog').dialog('close');
                     }, 1000);
+                    preventPlaylist = false;
                     return;
                 }
-                data.tracks.forEach(function(d) {
-                    // Make sure there can't be duplicate tracks
-                    if (d.uri && uriArr.indexOf(d.uri) == -1) {
-                        uriArr.push(d.uri);
-                        trackInfo.push(d.name + " - <br/>" + (d.artists.length > 0 ? d.artists[0].name : "N/A"));
-                    }
-                });
 
                 callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks); });
             } else if (!second_pass) {
                 callAPI(function() { createPlaylist(name, maxTracks, true) }, true, true);
+            } else {
+                preventPlaylist = false;
             }
         });
     } else {
-        callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
+        callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks); });
     }
 }
 
@@ -141,7 +172,7 @@ var finallyCreatePlaylist = function() {
     if (name == "") {
         name = "[Rootify] Playlist";
     }
-    var maxTracks = $("#max_tracks_slider").slider("value");                
+    var maxTracks = $("#max_tracks_slider").slider("value");
     createPlaylist(name, maxTracks);
 }
 

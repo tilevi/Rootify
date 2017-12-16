@@ -69,6 +69,13 @@ var selectedTrackInfo = {};
     /*
         All of these arrays are used to determine if a certain artist or track already exists in the tree. This is very important because if we have the same artist or track, it's redunant plus we can run into some huge visualization issues.
     */
+    
+    var root_shortChildren_TrackID = [];
+    var root_LongChildren_TrackID = [];
+    
+    var root_shortChildren_ArtistID = [];
+    var root_longChildren_ArtistID = [];
+    
     var artistID_short = [];
     var trackID_short = [];
 
@@ -86,12 +93,8 @@ var selectedTrackInfo = {};
     */
     var elbow = function(d, i) {
         var targetY = -10;
-        var circleRadiusOrRectHeight = d.target.newSize;
-        if (d.target.aid) {
-            // Taking the ceiling (instead of floor) for an artist looks better
-            targetY = d.target.y + Math.ceil(-circleRadiusOrRectHeight/2);
-        } else if (d.target.tid) {
-            targetY = d.target.y + Math.floor(-circleRadiusOrRectHeight/2);
+        if (d.target.tid || d.target.aid) {
+            targetY = d.target.y;
         }
 
         return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : verticalSpacing))
@@ -139,11 +142,11 @@ var selectedTrackInfo = {};
                 color = "#FF8C00";
             }
             var parNode = d3.select(lastSelected.parentNode);
-            var parCircle = parNode.select("circle"); 
+            var parCircle = parNode.select("circle.node"); 
             if (parCircle[0][0] != null) {
                 parCircle.style("stroke", color);
             } else {
-                parNode.select("rect").style("stroke", color);
+                parNode.select("rect.node").style("stroke", color);
             }
 
             var d = d3.select(lastSelected).datum();
@@ -229,7 +232,8 @@ var selectedTrackInfo = {};
     var getRelatedArtists = function(id, node, second_pass) {
         spotifyApi.getArtistRelatedArtists(id, function(err, data) {
             if (!err) {
-                populateChildrenArray(data.artists, node, "artist");
+                var shuffle = data.artists.sort(function() { return 0.5 - Math.random() });
+                populateChildrenArray(shuffle, node, "artist");
             } else if (!second_pass) {
                 callAPI(function() { getRelatedArtists(id, node, true); }, true);
             }
@@ -252,14 +256,14 @@ var selectedTrackInfo = {};
 
     var deselectLastFocused = function() {
         if (lastSelected != null) {
-            var color = (isNodeSelected(lastSelected)) ? "#4B9877" : "#282828";
+            var color = (isNodeSelected(lastSelected)) ? "#4B9877" : "none";
             var parNode = d3.select(lastSelected.parentNode);
-            var parCircle = parNode.select("circle"); 
+            var parCircle = parNode.select("circle.node"); 
 
             if (parCircle[0][0] != null) {
                 parCircle.style("stroke", color);
             } else {
-                parNode.select("rect").style("stroke", color);
+                parNode.select("rect.node").style("stroke", color);
             }
             lastSelected = null;
         }
@@ -273,6 +277,8 @@ var selectedTrackInfo = {};
         barManager.clearSelection();
 
         d3.select("#detailsGenres").style("display", "none");
+        
+        d3.select("#description").style("display", "block");
     }
 
     /*
@@ -282,7 +288,7 @@ var selectedTrackInfo = {};
         deselectLastFocused();
 
         if (node != null) {
-            d3.select(node.parentNode).select((typ == "track" ? "rect" : "circle"))
+            d3.select(node.parentNode).select((typ == "track" ? "rect.node" : "circle.node"))
                                         .style("stroke", "#FF8C00");
 
             lastSelected = node;
@@ -396,13 +402,16 @@ var selectedTrackInfo = {};
     }
 
     addToOrRemoveFromSelected = function(name, artistName, id, typ, node) {
+        // Hide the description
+        d3.select("#description2").style("display", "none");
+        
         var selectedArr = (typ == "artist" ? selectedArtist : selectedTrack);        
         // If the selected artist is not in the selected artist array
         if (selectedArr.indexOf(id) == -1) {
             // If we exceed a maximum combination of 5 artists, tracks and genres, return.
             if (doesNotMeetCap()) { return; }
             
-            var shapeTyp = (typ == "track") ? "rect" : "circle";
+            var shapeTyp = (typ == "track") ? "rect.node" : "circle.node";
             var clicked = true;
 
             if (node == null) {
@@ -430,6 +439,7 @@ var selectedTrackInfo = {};
             trackBox.append('div').attr("id", "closeButton").html("&times").on("click", function() {
                         var findNode = findNodeFromTree(id, typ);
                         if (findNode != null) {
+                            console.log("Not null");
                             d3.select(findNode).select(shapeTyp).style("stroke", "none");
                         }
 
@@ -458,11 +468,11 @@ var selectedTrackInfo = {};
             }
 
             var parNode = d3.select(node.parentNode);
-            var parCircle = parNode.select("circle"); 
+            var parCircle = parNode.select("circle.node"); 
             if (parCircle[0][0] != null) {
                 parCircle.style("stroke", "none");
             } else {
-                parNode.select("rect").style("stroke", "none");
+                parNode.select("rect.node").style("stroke", "none");
             }
         }
     }
@@ -682,6 +692,44 @@ var selectedTrackInfo = {};
                 .attr("cy", 0)
                 .attr("r", 31);
 
+    /* drop shadow under the node */
+    var defs = svg.append("defs");
+
+    // create filter with id #drop-shadow
+    var filter = defs.append("filter")
+        .attr("id", "drop-shadow")
+        .attr("height", "180%");
+
+    // SourceAlpha refers to opacity of graphic that this filter will be applied to
+    // convolve that with a Gaussian with standard deviation 3 and store result
+    // in blur
+    filter.append("feGaussianBlur")
+        .attr("in", "SourceAlpha")
+        .attr("stdDeviation", 1)
+        .attr("result", "blur");
+
+    // translate output of Gaussian blur to the right and downwards with 2px
+    // store result in offsetBlur
+    filter.append("feOffset")
+        .attr("in", "blur")
+        .attr("dx", 1)
+        .attr("dy", 2.5)
+        .attr("result", "offsetBlur");
+    // Control opacity of shadow filter
+    var feTransfer = filter.append("feComponentTransfer");
+
+    feTransfer.append("feFuncA")
+        .attr("type", "linear")
+        .attr("slope", 0.33)
+
+    // overlay original SourceGraphic over translated blurred opacity by using
+    // feMerge filter. Order of specifying inputs is important!
+    var feMerge = filter.append("feMerge");
+
+    feMerge.append("feMergeNode")
+    feMerge.append("feMergeNode")
+        .attr("in", "SourceGraphic");
+    
     /*
         This a helper function that converts an element's position in the SVG to its relative position to the SVG. Therefore, we can figure out if a node is visible.
 
@@ -736,7 +784,7 @@ var selectedTrackInfo = {};
         if (source == root && (root.children != null) && root.children.length > 0) {
             setTimeout(function() {
                 switchingMode = false;
-            }, duration * 2);
+            }, 400 + (duration * 2));
         }
     }
 
@@ -870,8 +918,7 @@ var selectedTrackInfo = {};
 
             var d3This = d3.select(this);
             
-
-            d.howTall = Math.floor(newSize/2);
+            d.howTall = newSize/2;
             d.newSize = newSize;
 
             // If the node represents an artist..
@@ -880,15 +927,18 @@ var selectedTrackInfo = {};
                 var imageWidth = (newSize-1);
                 var imageHeight = (newSize-1);
 
-                d3This.select("circle")
+                d3This.select("circle.node")
                         .attr("r", circleRadius);
-
+                
+                d3This.select("circle.circleShadow")
+                        .attr("r", circleRadius);
+                
                 d3This.select('image')
                         .attr("clip-path", "url(#clip-r-" + circleRadius + ")");
 
                 d3This.select('image')
-                        .attr('x', Math.floor(-imageWidth/2))
-                        .attr('y', Math.floor(-imageHeight/2))
+                        .attr('x', -imageWidth/2)
+                        .attr('y', -imageHeight/2)
                         .attr('width', imageWidth)
                         .attr('height', imageHeight);
             } else { // Otherwise, the node must represent a track..
@@ -898,15 +948,21 @@ var selectedTrackInfo = {};
                 var imageWidth = newSize - 2;
                 var imageHeight = newSize - 2;
 
-                d3This.select("rect")
-                        .attr('x', Math.floor(-rectWidth/2))
-                        .attr('y', Math.floor(-rectHeight/2))
+                d3This.select("rect.node")
+                        .attr('x', -rectWidth/2)
+                        .attr('y', -rectHeight/2)
                         .attr('width', rectWidth)
                         .attr('height', rectHeight);
-
+                
+                d3This.select("rect.rectShadow")
+                        .attr('x', -imageWidth/2)
+                        .attr('y', -imageHeight/2)
+                        .attr('width', imageWidth)
+                        .attr('height', imageHeight);
+                
                 d3This.select('image')
-                        .attr('x', Math.floor(-imageWidth/2))
-                        .attr('y', Math.floor(-imageHeight/2))
+                        .attr('x', -imageWidth/2)
+                        .attr('y', -imageHeight/2)
                         .attr('width', imageWidth)
                         .attr('height', imageHeight);
             }
@@ -963,7 +1019,7 @@ var selectedTrackInfo = {};
                 [
                     {
                         x: 0,
-                        y: (d.root ? 30 : (d.howTall ? d.howTall : 26)) 
+                        y: (d.root ? 32 : (d.howTall ? (d.howTall + 1) : 26)) 
                     }, 
                     {
                         x: 0, 
@@ -1013,38 +1069,47 @@ var selectedTrackInfo = {};
             x = text.attr('x'),
             y = text.attr('y'),
             dy = parseFloat(text.attr('dy') || 0),
-            tspan = text.text(null).append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', dy + 'em').style('fill', textColor);
-
+            tspan1 = text.text(null).append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', dy + 'em').style('fill', textColor);
+            
+            var tspan2 = null;
+            var tspan3 = null;    
+            
             while (word = words.pop()) {
                 if (lineNumber == 1) {
                     line = word + ' ' + words.reverse().join(' ');
-                    tspan.text(line);
-                    wrap(tspan, width);
+                    tspan2.text(line);
+                    wrap(tspan2, width);
+                    
+                    if (tspan1.text().trim() == "") {
+                        tspan1.remove();
+                        lineNumber--;
+                        tspan2.attr('dy', lineNumber * lineHeight + dy + 'em');
+                    }
                     break;
                 }
 
                 line.push(word);
-                tspan.text(line.join(' '));
+                tspan1.text(line.join(' '));
 
-                if (tspan.node().getComputedTextLength() > width) {
+                if (tspan1.node().getComputedTextLength() > width) {
                     line.pop();
                     spanContent = line.join(' ');
                     breakChars.forEach(char => {
-                    // Remove spaces trailing breakChars that were added above
-                    spanContent = spanContent.replace(char + ' ', char);
+                        // Remove spaces trailing breakChars that were added above
+                        spanContent = spanContent.replace(char + ' ', char);
                     });
 
-                    tspan.text(spanContent);                
+                    tspan1.text(spanContent);                
                     words.push(word);
 
-                    tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', textColor).text(null);
+                    tspan2 = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', textColor).text(null);
                 }
             }
             
             if (track) {
                 dy += 0.2;
-                tspan = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', '#00B685').text(artistName);
-                wrap(tspan, width);
+                tspan3 = text.append('tspan').attr("class", "tSpanText").attr('x', x).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').style('fill', '#00B685').text(artistName);
+                wrap(tspan3, width);
             }
         });
     }
@@ -1063,7 +1128,7 @@ var selectedTrackInfo = {};
         
         var textBox = d3This.append('g')
             .attr("class", "textboxLabel")
-            .attr("transform", function(d, i) { return "translate(" + Math.floor(-imageWidth/2) + "," + Math.floor(imageHeight/2 + 10) + ")"; });
+            .attr("transform", function(d, i) { return "translate(" + (-imageWidth/2) + "," + ((imageHeight/2) + 10) + ")"; });
 
         var textboxRect = textBox.append('rect')
             .attr('width', imageWidth)
@@ -1086,6 +1151,18 @@ var selectedTrackInfo = {};
         
         // Adjust the textbox height.
         textboxRect.attr('height', Math.round(nodeText.node().getBBox().height) + 2);
+    }
+    
+    
+    var createDownTriangle = function(d3This, d, newSize) {
+        d3This.append('path')
+                    .classed("triangleDown", true)
+                    .attr("d", d3.svg.symbol().type("triangle-down").size(50))
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.56) + ")"; })
+                    .style("fill", "white")
+                    .style("opacity", (d.children == null) ? 1 : 0)
+                    .style("pointer-events", (d.children == null) ? "auto" : "none")
+                    .on("click", click);
     }
     
     /*
@@ -1129,6 +1206,41 @@ var selectedTrackInfo = {};
             }
         });
 
+/*
+            Handle the ENTER links.
+        */
+        var link = svgGroup.selectAll("path.link")
+            .data(links, function(d) {
+                return d.target.aid ? ("link_" + d.target.aid) : ("link_" + d.target.tid);
+            });
+
+        // Transition links to their new position.
+        link.transition()
+                    .duration(duration)
+                    .style("opacity", function(d) {
+                        return (d.target.aid || d.target.tid) ? 1 : 0;
+                    })
+                    .attr("d", elbow);
+
+        // Enter any new nodes.
+        var linkEnter = link.enter().append('path')
+                            .classed("link", true)
+                            .style("opacity", 0);
+
+        linkEnter.transition()
+            .delay(duration * 0.3)
+            .duration(duration)
+            .style("opacity", function(d) {
+                if (d.target.spacer) {
+                    return 0;
+                }
+                return 1;
+            })
+            .attr("d", elbow);
+
+        // Transition exiting nodes to the parent's new position.
+        link.exit().remove();
+        
         // Grab the new set
         node = svgGroup.selectAll("g.node")
                             .data(nodes, function(d) {
@@ -1199,7 +1311,7 @@ var selectedTrackInfo = {};
         // We will return this variable at the end of this function.
         // If this is set to true, we should pan our view.
         var shouldPan = false;
-
+        
         nodeEnter.each(function(d, i) {
             // For each new node, we need to set its appearance and assets.
             var result = getNodeSize(d);
@@ -1209,7 +1321,7 @@ var selectedTrackInfo = {};
             var d3This = d3.select(this);
             var regNode = (d.aid || d.tid);
 
-            d.howTall = Math.floor(newSize/2);
+            d.howTall = newSize/2;
             d.newSize = newSize;
 
             if (d.children) {
@@ -1224,22 +1336,33 @@ var selectedTrackInfo = {};
                     createUpTriangle(d3This);
                 }
             } 
-
+                        
             /*
                 All regular (artist and track) nodes should have a down triangle.
                 If the node doesn't have children, show it. Otherwise, hide it.
             */
-            if (regNode) {
-                d3This.append('path')
-                    .classed("triangleDown", true)
-                    .attr("d", d3.svg.symbol().type("triangle-down").size(50))
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.55) + ")"; })
-                    .style("fill", "white")
-                    .style("opacity", d.children == null ? 1 : 0)
-                    .style("pointer-events", d.children == null ? "auto" : "none")
-                    .on("click", click);
+            if (d.aid) {
+                var circleRadius = Math.floor(newSize/2);
+                
+                d3This.append('circle')
+                    .attr("class", "circleShadow")
+                    .attr("r", circleRadius)
+                    .style("filter", "url(#drop-shadow)");
+            } else if (d.tid) {
+                var rectWidth = newSize;
+                var rectHeight = newSize;
+                
+                d3This.append('rect')
+                    .attr("class", "rectShadow")
+                    .attr('x', -rectWidth/2)
+                    .attr('y', -rectHeight/2)
+                    .attr('width', rectWidth)
+                    .attr('height', rectHeight)
+                    .style("filter", "url(#drop-shadow)")
+                    .attr("stroke", "orange")
+                    .attr("stroke-width", "0px");
             }
-
+            
             /*
                 This section deals with adding the node's DOM elements.
             */
@@ -1250,14 +1373,17 @@ var selectedTrackInfo = {};
                 var imageHeight = (newSize-1);
 
                 d3This.append('circle')
+                    .attr("class", "node")
                     .attr("r", circleRadius)
                     .attr("stroke-width", "2px")
                     .style("fill", "#282828");
-
-
+                
+                // Create the down triangle.
+                createDownTriangle(d3This, d, newSize);
+                
                 d3This.append('image')
-                    .attr('x', Math.floor(-imageWidth/2))
-                    .attr('y', Math.floor(-imageHeight/2))
+                    .attr('x', -imageWidth/2)
+                    .attr('y', -imageHeight/2)
                     .attr('width', imageWidth)
                     .attr('height', imageHeight)
                     .attr("xlink:href", function(d) {
@@ -1274,7 +1400,7 @@ var selectedTrackInfo = {};
                 createTextbox(d3This, 50);
                 
                 if (selectedArtist.indexOf(d.aid) != -1) {
-                    d3.select(this).select("circle").style("stroke", "#4B9877");
+                    d3.select(this).select("circle.node").style("stroke", "#4B9877");
                 }
             } else if (d.tid) { // Otherwise if the node represents a track, ..
                 var rectWidth = newSize;
@@ -1287,14 +1413,18 @@ var selectedTrackInfo = {};
                     .attr("class", "node")
                     .attr("fill", "#282828")
                     .attr("stroke-width", "2px")
-                    .attr('x', Math.floor(-rectWidth/2))
-                    .attr('y', Math.floor(-rectHeight/2))
+                    .attr('x', -rectWidth/2)
+                    .attr('y', -rectHeight/2)
                     .attr('width', rectWidth)
                     .attr('height', rectHeight);
-
+                
+                // Create the down triangle.
+                // We want to create it between the rectangle and image.
+                createDownTriangle(d3This, d, newSize);
+                
                 d3This.append('image')
-                    .attr('x', Math.floor(-imageWidth/2))
-                    .attr('y', Math.floor(-imageHeight/2))
+                    .attr('x', -imageWidth/2)
+                    .attr('y', -imageHeight/2)
                     .attr('width', imageWidth)
                     .attr('height', imageHeight)
                     .attr("xlink:href", function(d) {
@@ -1310,7 +1440,7 @@ var selectedTrackInfo = {};
                 createTextbox(d3This, 50);
 
                 if (selectedTrack.indexOf(d.tid) != -1) {
-                    d3.select(this).select("rect").style("stroke", "#4B9877");
+                    d3.select(this).select("rect.node").style("stroke", "#4B9877");
                 }
             } else if (d.root) { // And lastly, if the node is the root, then ...
                 d3This.style("cursor", "none").style("pointer-events", "none");
@@ -1332,7 +1462,7 @@ var selectedTrackInfo = {};
                     })
                    .attr("clip-path", "url(#clip-root)");
             }
-
+            
             // If shouldPan is true, a node was already detected outside of our view.
             if (!shouldPan) {
                 var circle = this;
@@ -1409,6 +1539,10 @@ var selectedTrackInfo = {};
                 d3This.selectAll("path").remove();
             }
             
+            // Remove the shadow circles and rectangles.
+            d3This.select(".circleShadow").remove();
+            d3This.select(".rectShadow").remove();
+            
             // Remove the text box labels immediately
             d3This.selectAll(".textboxLabel").remove();
             d3This.selectAll(".tSpanText").remove();
@@ -1438,44 +1572,10 @@ var selectedTrackInfo = {};
             }
 
             // Make the artist circles or track rectangles smaller.
-            exitVar.select("circle").attr("r", 0);
-            exitVar.select("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0);
+            exitVar.selectAll("circle").attr("r", 0);
+            exitVar.selectAll("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0);
         });
-
-        /*
-            Handle the ENTER links.
-        */
-        var link = svgGroup.selectAll("path.link")
-            .data(links, function(d) {
-                return d.target.aid ? ("link_" + d.target.aid) : ("link_" + d.target.tid);
-            });
-
-        // Transition links to their new position.
-        link.transition()
-                    .duration(duration)
-                    .style("opacity", function(d) {
-                        return (d.target.aid || d.target.tid) ? 1 : 0;
-                    })
-                    .attr("d", elbow);
-
-        // Enter any new nodes.
-        var linkEnter = link.enter().append('path')
-                            .classed("link", true)
-                            .style("opacity", 0);
-
-        linkEnter.transition()
-            .duration(duration)
-            .style("opacity", function(d) {
-                if (d.target.spacer) {
-                    return 0;
-                }
-                return 1;
-            })
-            .attr("d", elbow);
-
-        // Transition exiting nodes to the parent's new position.
-        link.exit().remove();
-
+        
         /*
             Stash the old positions for transition.
 
@@ -1550,7 +1650,34 @@ var selectedTrackInfo = {};
     var longTermEmpty = false;
 
     doneLoading = function() {
-
+        
+        var blacklistTrack = (mode == "short") ? trackID_short : trackID_long;
+        var blacklistArtist = (mode == "short") ? artistID_short : artistID_long;
+        
+        if (mode == "short") {
+            root_shortChildren_TrackID = [];
+            root_shortChildren_ArtistID = [];
+        } else {
+            root_longChildren_TrackID = [];
+            root_longChildren_ArtistID = [];
+        }
+        
+        blacklistTrack.forEach(function(id) {
+            if (mode == "short") {
+                root_shortChildren_TrackID.push(id);
+            } else {
+                root_longChildren_TrackID.push(id);
+            }
+        });
+        
+        blacklistArtist.forEach(function(id) {
+            if (mode == "short") {
+                root_shortChildren_ArtistID.push(id);
+            } else {
+                root_longChildren_ArtistID.push(id);
+            }
+        });
+        
         update(root);
         centerNode(root, true);
 
@@ -1571,7 +1698,7 @@ var selectedTrackInfo = {};
 
             if (shortTermEmpty && longTermEmpty) {
                 // Redirect the user to an error page.
-                window.location.replace('http://localhost:8888/oops');
+                window.location.replace('http://www.rootify.io/oops');
             } else if (shortTermEmpty) {
                 switchMode("long");
             } else {
@@ -1639,7 +1766,7 @@ var selectedTrackInfo = {};
             } else {
                 // If this is our second pass and we failed again, then just redirect to home.
                 if (second_pass) {
-                    window.location.replace('http://localhost:8888');
+                    window.location.replace('http://www.rootify.io/');
                 } else {
                     callAPI(loadMe, true);
                 }
@@ -1705,7 +1832,11 @@ var selectedTrackInfo = {};
     document.getElementById("short-term").addEventListener("click", function() {
         switchMode("short");
     });
-
+    
+    document.getElementById("center_tree").addEventListener("click", function() {
+        centerNode(root, true);
+    });
+    
     document.getElementById("reset_tree").addEventListener("click", function() {
         // Don't reset the tree if we're switching modes.
         if (switchingMode || root.children == null) {
@@ -1727,17 +1858,40 @@ var selectedTrackInfo = {};
         } else {
             shortChildren = root.children;
         }
-
+        
+        if (mode == "short") {
+            
+            trackID_short = [];
+            artistID_short = [];
+            
+            root_shortChildren_TrackID.forEach(function(id) {
+                trackID_short.push(id);
+            });
+            
+            root_shortChildren_ArtistID.forEach(function(id) {
+                artistID_short.push(id);
+            });
+        } else {
+            
+            trackID_long = [];
+            artistID_long = [];
+            
+            root_longChildren_TrackID.forEach(function(id) {
+                trackID_long.push(id);
+            });
+            
+            root_longChildren_ArtistID.forEach(function(id) {
+                artistID_long.push(id);
+            });
+        }
+        
         update(root);
         centerNode(root, true);
     });
     
     var registerLogout = function(id) {
         document.getElementById(id).addEventListener("click", function() {
-            deleteCookie('myToken');
-            deleteCookie('myRefreshToken');
-
-            window.location.href = "http://localhost:8888/logout";
+            window.location.href = "http://www.rootify.io/logout";
         });
     }
     registerLogout("logout-b1");

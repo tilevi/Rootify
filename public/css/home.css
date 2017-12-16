@@ -256,7 +256,7 @@ a {
     -webkit-user-select: none;
     cursor: pointer;
     color: #fff;
-    border: 1px solid #B5BDC4;
+    border: 1px solid #4B9877;
     float: left;
     padding: 10px 30px;
     text-decoration: none;
@@ -299,8 +299,9 @@ a {
     margin-left: 25px;
 }
 
+
 /* ------------- Top nav bar responsive  ------------ */
-@media screen and (min-width: 800px){
+@media screen and (min-width: 1000px){
     .menu-toggle, .helphide, .logouthide{
         display:none !important;
     }
@@ -326,7 +327,7 @@ a {
     border: 0;
 }
 
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 1000px) {
 
     .logouthide2 {
         display: none !important;
@@ -774,15 +775,11 @@ a {
 
 .node {
     cursor: pointer;
-    box-shadow: 10px 10px 5px #888888;
 }
 
 .overlay {
 }
 
-rect .node {
-    fill: grey;
-}
 
 .node circle, .node rect {
     box-shadow: 10px 10px 5px #888888;
@@ -808,7 +805,7 @@ rect .node {
 
 .range-slider {
     width: 150px;
-    height: 5px !important;
+    height: 2px !important;
 }
 
 .generate-range-slider {
