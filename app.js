@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser');
 var querystring = require('querystring');
 var url = require('url');
 const path = require('path');
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 80;
 
 var stateKey = 'spotify_auth_state';
 var app = express();
@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 // They should be kept private at all times.
 var client_id = '***REMOVED***';
 var client_secret = '***REMOVED***';
-var redirect_uri = 'http://localhost:5000/home'; // Your redirect uri
+var redirect_uri = 'http://www.rootify.io/home'; // Your redirect uri
 
 // Generates a random string
 var generateRandomString = function(length) {
