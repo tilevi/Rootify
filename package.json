@@ -1,0 +1,38 @@
+{
+  "name": "Rootify",
+  "version": "1.0.0",
+  "description": "Rootify visualizes your taste in music and allows you to branch out and discover new artists and tracks based on your Spotify listening history.",
+  "engines": {
+    "node": "8.9.1"
+  },
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "test": "node app.js"
+  },
+  "dependencies": {
+    "ejs": "^2.5.6",
+    "express": "^4.15.2",
+    "querystring": "^0.2.0",
+    "cookie-parser": "^1.4.3",
+    "url": "^0.11.0",
+    "request": "^2.83.0",
+    "path": "^0.12.7"
+  },
+  "devDependencies": {
+    "ejs": "^2.5.6",
+    "express": "^4.15.2",
+    "querystring": "^0.2.0",
+    "cookie-parser": "^1.4.3",
+    "url": "^0.11.0",
+    "tape": "^4.7.0",
+    "request": "^2.83.0",
+    "path": "^0.12.7"
+  },
+  "keywords": [
+    "node",
+    "heroku",
+    "express"
+  ],
+  "license": "MIT"
+}
