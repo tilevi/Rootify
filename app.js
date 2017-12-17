@@ -104,12 +104,12 @@ app.get('/home', function(req, res) {
     if (code == null || state == null || state != req.cookies['spotify_auth_state']) {
         res.redirect('/');
     } else {
-        if (req.cookies['myToken'] != null) {
+        /*if (req.cookies['myToken'] != null) {
             res.render('home', {
                 access_token: req.cookies['myToken'], 
                 refresh_token: req.cookies['myRefreshToken']
             });
-        } else {
+        } else {*/
             var authOptions = {
                 url: 'https://accounts.spotify.com/api/token',
                 form: {
@@ -150,7 +150,7 @@ app.get('/home', function(req, res) {
                     res.redirect('/');
                 }
             });
-        }
+        //}
     }
 });
 
