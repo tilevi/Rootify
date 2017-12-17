@@ -148,9 +148,7 @@ var selectedTrackInfo = {};
             } else {
                 parNode.select("rect.node").style("stroke", color);
             }
-
-            var d = d3.select(lastSelected).datum();
-
+            
             // We switched to the 'Details' tab, show the previous information.
             if (!isActive) {
                 barManager.showBars();
@@ -283,6 +281,42 @@ var selectedTrackInfo = {};
     }
 
     /*
+        Loads an artist's bio.
+    */
+    var loadArtistBio = function(name) {
+        d3.select("#artistAbout").style("display", "none");
+        
+        /* Fetch the artist's bio. */
+        $.ajax({
+            url: "http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=" + name + "&api_key=9f5228be9f2d49c1700e60d8d3e02eb3&format=json", 
+            success: function(result){
+                
+                if (lastSelected == null) {
+                    return;
+                } else {
+                    var d = d3.select(lastSelected).datum();
+                    if (d.name != name) {
+                        loadArtistBio(d.name);
+                        return;
+                    }
+                }
+                
+                if (result && result.artist && result.artist.bio && result.artist.bio.summary && result.artist.bio.summary.trim() != "") {
+                    var bio = result.artist.bio.summary;
+                    var editedBio = bio.slice(0, (bio.slice(0, bio.lastIndexOf("<a"))).lastIndexOf(".") + 1);
+                    if (editedBio.trim() != "") {
+                        d3.select("#artistAbout").style("display", "block").html("<b>Bio:</b><br/>" + editedBio);
+                    } else {
+                        d3.select("#artistAbout").style("display", "none");
+                    }
+                } else {
+                    d3.select("#artistAbout").style("display", "none");
+                }
+            }
+        });
+    }
+    
+    /*
         Sets/Loads track or artist details (for the 'Details' tab)
     */
     var loadDetailsTabForNode = function(node, typ, isGenerateTab) {
@@ -370,25 +404,7 @@ var selectedTrackInfo = {};
                     d3.select("#detailsGenres").style("display", "none");
                 }
                 
-                d3.select("#artistAbout").style("display", "none");
-                
-                /* Fetch the artist's bio. */
-                $.ajax({
-                    url: "http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=" + d.name + "&api_key=9f5228be9f2d49c1700e60d8d3e02eb3&format=json", 
-                    success: function(result){
-                        if (result && result.artist && result.artist.bio && result.artist.bio.summary && result.artist.bio.summary.trim() != "") {
-                            var bio = result.artist.bio.summary;
-                            var editedBio = bio.slice(0, (bio.slice(0, bio.lastIndexOf("<a"))).lastIndexOf(".") + 1);
-                            if (editedBio.trim() != "") {
-                                d3.select("#artistAbout").style("display", "block").html("<b>Bio:</b><br/>" + editedBio);
-                            } else {
-                                d3.select("#artistAbout").style("display", "none");
-                            }
-                        } else {
-                            d3.select("#artistAbout").style("display", "none");
-                        }
-                    }
-                });
+                loadArtistBio(d.name);
             } else {
                 d3.select("#description").style("display", "none");
                 
