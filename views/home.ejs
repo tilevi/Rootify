@@ -134,8 +134,11 @@
                         <div class="tabcontentinner" id="detailsTab">
                             <div id="description" class="descript"> Click on a track or artist to get more details. </div>
                             <div id="headerImage" width="100%"></div>
+                            
+                            <div id="artistAbout" width="100%"><p id="bio" style="color: #01B482; padding-left: 8px; padding-right: 8px;"></p></div>
+                            
                             <div id="spotifyTracks" width="100%"></div>
-
+                            
                             <div id="at-container">
                                 <svg id="detailsSVG"></svg>
                             </div>
@@ -346,9 +349,9 @@
                 
                 var spotifyApi = new SpotifyWebApi();
                 var access_token = "<%- access_token -%>";
-                var refresh_token = "<%- refresh_token -%>";
+                //var refresh_token = "<%- refresh_token -%>";
                 
-                spotifyApi.setAccessToken(access_token);
+                spotifyApi.setAccessToken(getCookie("myToken"));
             </script>
         </div>  
         <!-- End Tree Container !Do not Delete! div make sure the script is in the tree container -->

@@ -277,6 +277,7 @@ var selectedTrackInfo = {};
         barManager.clearSelection();
 
         d3.select("#detailsGenres").style("display", "none");
+        d3.select("#artistAbout").style("display", "none");
         
         d3.select("#description").style("display", "block");
     }
@@ -356,24 +357,45 @@ var selectedTrackInfo = {};
                         .style("padding", "6%")
                         .style("vertical-align", "middle;")
                         .text(d.name);
-
+                
                 d3.select("#headerImage")
                         .style("background-image", "linear-gradient(to bottom right,rgba(0,122,223, .8),rgba(0,236,188, .5)), url('" + d.url + "')")
                         .style("background-repeat", "no-repeat")
                         .style("background-size", "cover");
-
+                
                 // If there are genres for this artist, list them
                 if (d.genres.length > 0) {
                     d3.select("#detailsGenres").style("display", "block").html("<b>Associated Genres:</b><br/>" + d.genres.join(", "));
                 } else {
                     d3.select("#detailsGenres").style("display", "none");
                 }
+                
+                d3.select("#artistAbout").style("display", "none");
+                
+                /* Fetch the artist's bio. */
+                $.ajax({
+                    url: "http://ws.audioscrobbler.com/2.0/?method=artist.getinfo&artist=" + d.name + "&api_key=9f5228be9f2d49c1700e60d8d3e02eb3&format=json", 
+                    success: function(result){
+                        if (result && result.artist && result.artist.bio && result.artist.bio.summary && result.artist.bio.summary.trim() != "") {
+                            var bio = result.artist.bio.summary;
+                            var editedBio = bio.slice(0, (bio.slice(0, bio.lastIndexOf("<a"))).lastIndexOf(".") + 1);
+                            if (editedBio.trim() != "") {
+                                d3.select("#artistAbout").style("display", "block").html("<b>Bio:</b><br/>" + editedBio);
+                            } else {
+                                d3.select("#artistAbout").style("display", "none");
+                            }
+                        } else {
+                            d3.select("#artistAbout").style("display", "none");
+                        }
+                    }
+                });
             } else {
                 d3.select("#description").style("display", "none");
                 
                 // Hide the artist header image and associated genres.
                 d3.select("#headerImage").style("display", "none");
                 d3.select("#detailsGenres").style("display", "none");
+                d3.select("#artistAbout").style("display", "none");
             }
         }
     }

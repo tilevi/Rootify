@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser');
 var querystring = require('querystring');
 var url = require('url');
 const path = require('path');
-const PORT = process.env.PORT || 80;
+const PORT = process.env.PORT || 5000;
 
 var stateKey = 'spotify_auth_state';
 var app = express();
@@ -20,6 +20,12 @@ app.use(express.static(path.join(__dirname, 'public')))
     .set('views', path.join(__dirname, 'views'))
     .use(cookieParser());
 
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 // Our main visualization page
 // Please see: routes/home.js
 
@@ -27,7 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 // They should be kept private at all times.
 var client_id = '***REMOVED***';
 var client_secret = '***REMOVED***';
-var redirect_uri = 'http://www.rootify.io/home'; // Your redirect uri
+var redirect_uri = 'http://localhost:5000/home'; // Your redirect uri
 
 // Generates a random string
 var generateRandomString = function(length) {
@@ -42,9 +48,11 @@ var generateRandomString = function(length) {
 
 // Login route
 app.get('/login', function(req, res) {
-    // We need to clear our old tokens or else the tree may not load (tokens expired).
-    // res.clearCookie('myToken');
-    // res.clearCookie('myRefreshToken');
+    // Clear the state cookie.
+    res.clearCookie(stateKey);
+    
+    res.clearCookie("myToken");
+    res.clearCookie("myRefreshToken");
     
     // When logging in, we generate a random state for the Spotify login
     var state = generateRandomString(16);
@@ -70,7 +78,7 @@ app.get('/logout', function(req, res) {
     res.cookie(stateKey, state);
     
     // Logout and present a new login screen
-    res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D***REMOVED***%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Fwww.rootify.io%3A8888%252Fhome%26state%3D' + state + '%26show_dialog%3Dtrue');
+    res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D***REMOVED***%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Frootify.io%252Fhome%26state%3D' + state + '%26show_dialog%3Dtrue');
 });
 
 /*
@@ -91,59 +99,63 @@ app.get('/help', function(req, res) {
 // Callback route
 // After a Spotify user logs in, this route is called.
 app.get('/home', function(req, res) {
-    var state = req.query.state || null;
-    var code = req.query.code || null;
-
-    // Here, we are basically doing an extra check to make sure this 
-    // user actually logged in and didn't just guess our callback URI.
-
-    // More information: https://developer.spotify.com/web-api/authorization-guide/
-    var storedState = req.cookies ? req.cookies[stateKey] : null;
-
-    if (state === null || state !== storedState) {
-        res.redirect('/');
+    if (req.cookies['myToken'] != null) {
+        res.render('home', { access_token: req.cookies['myToken'], refresh_token: '' });
     } else {
-        // Clear the state cookie.
-        res.clearCookie(stateKey);
+        var state = req.query.state || null;
+        var code = req.query.code || null;
 
-        var authOptions = {
-            url: 'https://accounts.spotify.com/api/token',
-            form: {
-                code: code,
-                redirect_uri: redirect_uri,
-                grant_type: 'authorization_code'
-            },
-            headers: {
-                'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-            },
-            json: true
-        };
+        // Here, we are basically doing an extra check to make sure this 
+        // user actually logged in and didn't just guess our callback URI.
 
-        // Perform a POST request to the Spotify API
-        // This will grab our new access token.
-        request.post(authOptions, function(error, response, body) {
-            if (!error && response.statusCode === 200) {
-                var access_token = body.access_token,
-                refresh_token = body.refresh_token;
+        // More information: https://developer.spotify.com/web-api/authorization-guide/
+        var storedState = req.cookies ? req.cookies[stateKey] : null;
 
-                // Save our token and refresh token as cookies
-                // This allows the users to refresh the visualization page
-                res.cookie('myToken', access_token);
-                // res.cookie('myRefreshToken', refresh_token);
+        if (state === null || state !== storedState) {
+            res.redirect('/');
+        } else {
+            // Clear the state cookie.
+            res.clearCookie(stateKey);
 
-                var options = {
-                    url: 'https://api.spotify.com/v1/me',
-                    headers: { 'Authorization': 'Bearer ' + access_token },
-                    json: true
-                };
+            var authOptions = {
+                url: 'https://accounts.spotify.com/api/token',
+                form: {
+                    code: code,
+                    redirect_uri: redirect_uri,
+                    grant_type: 'authorization_code'
+                },
+                headers: {
+                    'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+                },
+                json: true
+            };
 
-                res.render('home', { access_token: access_token, refresh_token: refresh_token });
-            } else {
-                // If there is an error or the status is not 'OK' (200),
-                // Then we want to go back to the main login page.
-                res.redirect('/');
-            }
-        });
+            // Perform a POST request to the Spotify API
+            // This will grab our new access token.
+            request.post(authOptions, function(error, response, body) {
+                if (!error && response.statusCode === 200) {
+                    var access_token = body.access_token,
+                    refresh_token = body.refresh_token;
+
+                    // Save our token and refresh token as cookies
+                    // This allows the users to refresh the visualization page
+                    res.cookie('myToken', access_token);
+                    res.cookie('myRefreshToken', refresh_token);
+
+                    var options = {
+                        url: 'https://api.spotify.com/v1/me',
+                        headers: { 'Authorization': 'Bearer ' + access_token },
+                        json: true
+                    };
+
+                    res.render('home', { access_token: access_token, refresh_token: refresh_token });
+                } else {
+                    // If there is an error or the status is not 'OK' (200),
+                    // Then we want to go back to the main login page.
+                    res.redirect('/');
+                }
+            });
+        }
     }
 });
 
@@ -172,7 +184,8 @@ app.get('/refresh_token', function(req, res) {
     
 // If there is an unknown route, we will just re-route to our login page
 app.all('*', function(req, res) {
-  res.redirect("http://www.rootify.io/");
+    res.redirect("/");
+    //res.redirect("http://www.rootify.io/");
 });
 
 // Listen on the main port

@@ -5,14 +5,15 @@
             This code handles retrieving a new access token.
 */
 var refreshAccessToken = function(callback) {
+    console.log("Trying..");
     $.ajax({
         url: '/refresh_token',
         data: {
-            'refresh_token': refresh_token
+            'refresh_token': getCookie("myRefreshToken")
         }
     }).done(function(data) {
         spotifyApi.setAccessToken(data.access_token);
-        
+        console.log(data);
         if (callback) {
             callback(true);
         }
