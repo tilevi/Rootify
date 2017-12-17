@@ -5,7 +5,6 @@
             This code handles retrieving a new access token.
 */
 var refreshAccessToken = function(callback) {
-    console.log("Trying..");
     $.ajax({
         url: '/refresh_token',
         data: {
