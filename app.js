@@ -43,15 +43,16 @@ var generateRandomString = function(length) {
 
 var setAndGetState = function(res) {
     var ranStateKey = generateRandomString(20);
-    
-    // This state cookie is used to protect against attacks.
-    res.clearCookie('spotify_auth_state');
-    res.cookie('spotify_auth_state', ranStateKey, {
+    var options = {
         domain: 'rootify.io', 
         path: '/home', 
         maxAge: 3600000, 
         httpOnly: true
-    });
+    };
+    
+    // This state cookie is used to protect against attacks.
+    res.clearCookie('spotify_auth_state', options);
+    res.cookie('spotify_auth_state', ranStateKey, options);
     
     return ranStateKey;
 }
@@ -110,6 +111,13 @@ app.get('/home', function(req, res) {
                 refresh_token: req.cookies['myRefreshToken']
             });
         } else {*/
+            // Clear the state cookie
+            var options = {
+                domain: 'rootify.io', 
+                path: '/home'
+            };
+            res.clearCookie('spotify_auth_state', options);
+            
             var authOptions = {
                 url: 'https://accounts.spotify.com/api/token',
                 form: {
@@ -130,8 +138,8 @@ app.get('/home', function(req, res) {
                     var access_token = body.access_token, 
                         refresh_token = body.refresh_token;
                     
-                    res.cookie('myToken', access_token);
-                    res.cookie('myRefreshToken', refresh_token);
+                    // res.cookie('myToken', access_token);
+                    // res.cookie('myRefreshToken', refresh_token);
                     
                     var options = {
                         url: 'https://api.spotify.com/v1/me',
