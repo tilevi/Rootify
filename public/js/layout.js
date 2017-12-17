@@ -822,7 +822,7 @@ var selectedTrackInfo = {};
         if (source == root && (root.children != null) && root.children.length > 0) {
             setTimeout(function() {
                 switchingMode = false;
-            }, 400 + (duration * 2));
+            }, (250 + duration));
         }
     }
 
