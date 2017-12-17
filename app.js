@@ -48,9 +48,6 @@ var generateRandomString = function(length) {
 
 // Login route
 app.get('/login', function(req, res) {
-    // Clear the state cookie.
-    res.clearCookie(stateKey);
-    
     res.clearCookie("myToken");
     res.clearCookie("myRefreshToken");
     
@@ -99,9 +96,9 @@ app.get('/help', function(req, res) {
 // Callback route
 // After a Spotify user logs in, this route is called.
 app.get('/home', function(req, res) {
-    if (req.cookies['myToken'] != null) {
-        res.render('home', { access_token: req.cookies['myToken'], refresh_token: '' });
-    } else {
+    //if (req.cookies['myToken'] != null) {
+        //res.render('home', { access_token: req.cookies['myToken'], refresh_token: '' });
+    //} else {
         var state = req.query.state || null;
         var code = req.query.code || null;
 
@@ -156,7 +153,7 @@ app.get('/home', function(req, res) {
                 }
             });
         }
-    }
+    //}
 });
 
 app.get('/refresh_token', function(req, res) {

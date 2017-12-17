@@ -9,7 +9,7 @@ var refreshAccessToken = function(callback) {
     $.ajax({
         url: '/refresh_token',
         data: {
-            'refresh_token': getCookie("myRefreshToken")
+            'refresh_token': refresh_token
         }
     }).done(function(data) {
         spotifyApi.setAccessToken(data.access_token);
