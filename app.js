@@ -1,6 +1,7 @@
 // Require all of our node.js modules
 var express = require('express'); // Express web server framework
 var request = require('request'); // "Request" library
+var cookieParser = require('cookie-parser');
 var querystring = require('querystring');
 var url = require('url');
 const path = require('path');
@@ -15,6 +16,7 @@ app.set('view engine', 'ejs');
 // We need this following line to allow the use of public files
 // Put any external files (.css, .js) in the 'public' folder.
 app.use(express.static(path.join(__dirname, 'public')))
+    .use(cookieParser())
     .set('views', path.join(__dirname, 'views'));
 
 // Our main visualization page
@@ -39,14 +41,17 @@ var generateRandomString = function(length) {
 
 // Login route
 app.get('/login', function(req, res) {
+    // var ranStateKey = 'ABCDEF' + Math.floor(Math.random() * 1000000);
+    // res.cookie('state_key', ranStateKey);
+    
     // your application requests authorization
     var scope = 'user-top-read user-read-private playlist-modify-public playlist-modify-private';
-    res.redirect('https://accounts.spotify.com/authorize?' +
+    res.redirect('https://accounts.spotify.com/authorize?' + 
     querystring.stringify({
-        response_type: 'code',
-        client_id: client_id,
-        scope: scope,
-        redirect_uri: redirect_uri,
+        response_type: 'code', 
+        client_id: client_id, 
+        scope: scope, 
+        redirect_uri: redirect_uri, 
         show_dialog : true
     }));
 });
@@ -76,40 +81,48 @@ app.get('/help', function(req, res) {
 // After a Spotify user logs in, this route is called.
 app.get('/home', function(req, res) {
     var code = req.query.code || null;
-    var storedState = req.cookies ? req.cookies['spotify_auth_state'] : null;
+    /*var state = req.query.state || null;
     
-    var authOptions = {
-        url: 'https://accounts.spotify.com/api/token',
-        form: {
-            code: code,
-            redirect_uri: redirect_uri,
-            grant_type: 'authorization_code'
-        },
-        headers: {
-            'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-        },
-        json: true
-    };
-    
-    // Perform a POST request to the Spotify API
-    // This will grab our new access token.
-    request.post(authOptions, function(error, response, body) {
-        if (!error && response.statusCode === 200) {
-            var access_token = body.access_token, 
-                refresh_token = body.refresh_token;
-            
-            var options = {
-                url: 'https://api.spotify.com/v1/me',
-                headers: { 'Authorization': 'Bearer ' + access_token },
-                json: true
-            };
-            res.render('home', { access_token: access_token, refresh_token: refresh_token });
-        } else {
-            // If there is an error or the status is not 'OK' (200),
-            // Then we want to go back to the main login page.
-            res.redirect('/');
-        }
-    });
+    if (state == null || state != req.cookies['state_key']) {
+        console.log(req.cookies);
+        console.log(state);
+        
+        res.redirect('/');
+    } else {*/
+
+        var authOptions = {
+            url: 'https://accounts.spotify.com/api/token',
+            form: {
+                code: code,
+                redirect_uri: redirect_uri,
+                grant_type: 'authorization_code'
+            },
+            headers: {
+                'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+            },
+            json: true
+        };
+
+        // Perform a POST request to the Spotify API
+        // This will grab our new access token.
+        request.post(authOptions, function(error, response, body) {
+            if (!error && response.statusCode === 200) {
+                var access_token = body.access_token, 
+                    refresh_token = body.refresh_token;
+                
+                var options = {
+                    url: 'https://api.spotify.com/v1/me',
+                    headers: { 'Authorization': 'Bearer ' + access_token },
+                    json: true
+                };
+                res.render('home', { access_token: access_token, refresh_token: refresh_token });
+            } else {
+                // If there is an error or the status is not 'OK' (200),
+                // Then we want to go back to the main login page.
+                res.redirect('/');
+            }
+        });
+    //}
 });
 
 app.get('/refresh_token', function(req, res) {
@@ -133,6 +146,10 @@ app.get('/refresh_token', function(req, res) {
             });
         }
     });
+});
+
+app.get('/', function(req, res) {
+    //res.cookie('state_key', 'ABCD');
 });
 
 // If there is an unknown route, we will just re-route to our login page
