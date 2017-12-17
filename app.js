@@ -33,7 +33,7 @@ app.use(function(req, res, next) {
 // They should be kept private at all times.
 var client_id = '***REMOVED***';
 var client_secret = '***REMOVED***';
-var redirect_uri = 'http://localhost:5000/home'; // Your redirect uri
+var redirect_uri = 'http://rootify.io/home'; // Your redirect uri
 
 // Generates a random string
 var generateRandomString = function(length) {
