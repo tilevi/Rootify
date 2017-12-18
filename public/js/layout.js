@@ -1013,7 +1013,7 @@ var selectedTrackInfo = {};
             
             // Update the position of the down triangle (expand or collapse tree)
             d3This.select("path.triangleDown")
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.58) + ")"; });
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.58) + ") rotate(180)"; });
         });
 
         // Once all of the nodes have been resized, reposition the tree links.
