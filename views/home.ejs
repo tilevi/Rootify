@@ -351,7 +351,7 @@
                 var access_token = "<%- access_token -%>";
                 var refresh_token = "<%- refresh_token -%>";
                 
-                spotifyApi.setAccessToken(access_token);
+                spotifyApi.setAccessToken(getCookie('myToken'));
             </script>
         </div>  
         <!-- End Tree Container !Do not Delete! div make sure the script is in the tree container -->

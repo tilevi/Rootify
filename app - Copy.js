@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser');
 var querystring = require('querystring');
 var url = require('url');
 const path = require('path');
-const PORT = process.env.PORT || 8888;
+const PORT = process.env.PORT || 80;
 
 var app = express();
 
@@ -28,7 +28,7 @@ var client_id = '***REMOVED***';
 var client_secret = '***REMOVED***';
 
 //var redirect_uri = 'http://localhost:5000/home'; // Your redirect uri
-var redirect_uri = 'http://localhost:8888/home';
+var redirect_uri = 'http://rootify.io:80/home';
 
 // Generates a random string
 var generateRandomString = function(length) {
@@ -44,7 +44,7 @@ var generateRandomString = function(length) {
 var setAndGetState = function(res) {
     var ranStateKey = generateRandomString(20);
     var options = {
-        domain: 'localhost:8888', 
+        domain: 'rootify.io', 
         path: '/home', 
         maxAge: 3600000, 
         httpOnly: true
@@ -59,7 +59,7 @@ var setAndGetState = function(res) {
 
 // Login route
 app.get('/login', function(req, res) {
-    //var state = setAndGetState(res);
+    var state = setAndGetState(res);
     
     var scope = 'user-top-read user-read-private playlist-modify-public playlist-modify-private';
     res.redirect('https://accounts.spotify.com/authorize?' + 
@@ -67,6 +67,7 @@ app.get('/login', function(req, res) {
         response_type: 'code', 
         client_id: client_id, 
         scope: scope, 
+        state: state, 
         redirect_uri: redirect_uri, 
         show_dialog : true
     }));
@@ -101,22 +102,21 @@ app.get('/home', function(req, res) {
     var code = req.query.code || null;
     var state = req.query.state || null;
     
-    //if (code == null || state == null || state != req.cookies['spotify_auth_state']) {
-        //res.redirect('/');
-    //} else {
-        if (req.cookies['myToken'] != null) {
+    if (code == null || state == null || state != req.cookies['spotify_auth_state']) {
+        res.redirect('/');
+    } else {
+        /*if (req.cookies['myToken'] != null) {
             res.render('home', {
                 access_token: req.cookies['myToken'], 
                 refresh_token: req.cookies['myRefreshToken']
             });
-        } else {
+        } else {*/
             // Clear the state cookie
-            /*var options = {
-                domain: 'localhost:8888', 
+            var options = {
+                domain: 'rootify.io', 
                 path: '/home'
             };
             res.clearCookie('spotify_auth_state', options);
-            */
             
             var authOptions = {
                 url: 'https://accounts.spotify.com/api/token',
@@ -138,8 +138,8 @@ app.get('/home', function(req, res) {
                     var access_token = body.access_token, 
                         refresh_token = body.refresh_token;
                     
-                    res.cookie('myToken', access_token);
-                    res.cookie('myRefreshToken', refresh_token);
+                    // res.cookie('myToken', access_token);
+                    // res.cookie('myRefreshToken', refresh_token);
                     
                     var options = {
                         url: 'https://api.spotify.com/v1/me',
@@ -158,8 +158,8 @@ app.get('/home', function(req, res) {
                     res.redirect('/');
                 }
             });
-        }
-    //}
+        //}
+    }
 });
 
 app.get('/refresh_token', function(req, res) {
