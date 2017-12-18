@@ -278,6 +278,7 @@ a {
     transition-property: all;
     transition-duration: .5s;
     transition-timing-function: ease-out;
+    border-radius: 0;
 }
 
 .navbar a:hover {
@@ -505,7 +506,7 @@ a {
     width: 100%;
 }
 
-#detailsGenres, #artistAbout {
+#detailsGenres{
     font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 	font-size: 12px;
 	font-style: normal;
@@ -517,10 +518,18 @@ a {
     padding: 5px 10px 5px 10px;
 }
 
-#artistAbout {
+.artabout{
+    font-family: "Source Sans Pro", sans-serif;
+    color:#E5E4E5;
+    font-weight: normal;
+    font-size: .8em;
+    font-height: .8em;
     margin-top: 5px;
-    margin-bottom: 5px;
-    line-height: 1.6em;
+    margin-bottom: 10px;
+}
+
+.artabout h2{
+    font-size: 1.05em;
 }
 
 #generateFilters {
@@ -809,8 +818,8 @@ a {
 
 .link {
     fill: none;
-    stroke: #ccc;
-    stroke-width: 1px;
+    stroke: #979797;
+    stroke-width: .8px;
 }
 
 .line {

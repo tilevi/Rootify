@@ -134,8 +134,7 @@
                         <div class="tabcontentinner" id="detailsTab">
                             <div id="description" class="descript"> Click on a track or artist to get more details. </div>
                             <div id="headerImage" width="100%"></div>
-                            
-                            <div id="artistAbout" width="100%"><p id="bio" style="color: #01B482; padding-left: 8px; padding-right: 8px;"></p></div>
+                            <div id="artistAbout" class="artabout" width="100%"></p></div>
                             
                             <div id="spotifyTracks" width="100%"></div>
                             
@@ -429,19 +428,7 @@
         
         <!--  Graph Bar sidebar -->
         <script type="text/javascript" src="/js/resize_filter_sliders.js"></script>
-        
-        <!-- responsive menu -->
-        <script typ="text/javascript">
-            function myFunction() {
-                var x = document.getElementById("menu");
-                if (x.className === "navbar") {
-                    x.className += " responsive";
-                } else {
-                    x.className = "navbar";
-                }
-            }
-        </script>
-        
+    
         <!--  Generate Playlist -->
         <script type="text/javascript" src="/js/generate_playlist.js"></script>
         

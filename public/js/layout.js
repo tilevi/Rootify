@@ -254,7 +254,7 @@ var selectedTrackInfo = {};
 
     var deselectLastFocused = function() {
         if (lastSelected != null) {
-            var color = (isNodeSelected(lastSelected)) ? "#4B9877" : "none";
+            var color = (isNodeSelected(lastSelected)) ? "#4B9877" : "#2F394C";
             var parNode = d3.select(lastSelected.parentNode);
             var parCircle = parNode.select("circle.node"); 
 
@@ -305,7 +305,7 @@ var selectedTrackInfo = {};
                     var bio = result.artist.bio.summary;
                     var editedBio = bio.slice(0, (bio.slice(0, bio.lastIndexOf("<a"))).lastIndexOf(".") + 1);
                     if (editedBio.trim() != "") {
-                        d3.select("#artistAbout").style("display", "block").html("<b>Bio:</b><br/>" + editedBio);
+                        d3.select("#artistAbout").style("display", "block").html("<h2>About</h2>" + editedBio);
                     } else {
                         d3.select("#artistAbout").style("display", "none");
                     }
@@ -736,7 +736,8 @@ var selectedTrackInfo = {};
             .append('circle')
                 .attr("cx", 0)
                 .attr("cy", 0)
-                .attr("r", 31);
+                .attr("r", 31)
+                .style("filter", "url(#drop-shadow)");
 
     /* drop shadow under the node */
     var defs = svg.append("defs");
@@ -1045,7 +1046,7 @@ var selectedTrackInfo = {};
         
         d3This.append('path')
             .classed("triangleUp", true)
-            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (10 * 10) / 2; }))
+            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (5 * 10) / 2; }))
             .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
             .style("fill", "white")
             .style("stroke", "#2f394c")
@@ -1073,12 +1074,12 @@ var selectedTrackInfo = {};
                         y: (d.root ? 55 : (verticalSpacing - 2))
                     }
                 ]))
-            .style("stroke", "#ccc")
+            .style("stroke", "#979797")
             .style("stroke-width", 0)
             .transition()
             .duration(duration)
-            .style("stroke-width", 1)
-            .style("stroke", "#ccc");
+            .style("stroke-width", .8)
+            .style("stroke", "#979797");
     }
     
     /* Text overflow solution by user2846569 on Stack Overflow*/
@@ -1160,7 +1161,44 @@ var selectedTrackInfo = {};
             }
         });
     }
-    
+
+    /* drop shadow under the node */
+         var defs = svg.append("defs");
+
+        // create filter with id #drop-shadow
+        var filter = defs.append("filter")
+            .attr("id", "drop-shadow")
+            .attr("height", "180%");
+
+        // SourceAlpha refers to opacity of graphic that this filter will be applied to
+        // convolve that with a Gaussian with standard deviation 3 and store result
+        // in blur
+        filter.append("feGaussianBlur")
+            .attr("in", "SourceAlpha")
+            .attr("stdDeviation", 1)
+            .attr("result", "blur");
+
+        // translate output of Gaussian blur to the right and downwards with 2px
+        // store result in offsetBlur
+        filter.append("feOffset")
+            .attr("in", "blur")
+            .attr("dx", 1)
+            .attr("dy", 3)
+            .attr("result", "offsetBlur");
+        // Control opacity of shadow filter
+        var feTransfer = filter.append("feComponentTransfer");
+
+        feTransfer.append("feFuncA")
+            .attr("type", "linear")
+            .attr("slope", 0.33)
+
+        // overlay original SourceGraphic over translated blurred opacity by using
+        // feMerge filter. Order of specifying inputs is important!
+       var feMerge = filter.append("feMerge");
+
+        feMerge.append("feMergeNode")
+        feMerge.append("feMergeNode")
+            .attr("in", "SourceGraphic");   
     /*
         Creates the text box under a node.
     */
@@ -1188,7 +1226,7 @@ var selectedTrackInfo = {};
             .attr("dy", ".3em")
             .style("font-size", ".5em")
             .style("background-color", "#2f384d")
-            .style("font-family", "Arial, Helvetica, sans-serif")
+            .style("font-family", "Helvetica Neue, Helvetica, Arial, sans-serif")
             .style("line-height", "90%")
             .text(d.name)
             .style('text-anchor', 'middle');
@@ -1203,8 +1241,8 @@ var selectedTrackInfo = {};
     var createDownTriangle = function(d3This, d, newSize) {
         d3This.append('path')
                     .classed("triangleDown", true)
-                    .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (10 * 10) / 2; }))
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.58) + ") rotate(180)"; })
+                    .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (5 * 10) / 2; }))
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.6) + ") rotate(180)"; })
                     .style("fill", "white")
                     .style("opacity", (d.children == null) ? 1 : 0)
                     .style("pointer-events", (d.children == null) ? "auto" : "none")
@@ -1389,8 +1427,7 @@ var selectedTrackInfo = {};
                 
                 d3This.append('circle')
                     .attr("class", "circleShadow")
-                    .attr("r", circleRadius)
-                    .style("filter", "url(#drop-shadow)");
+                    .attr("r", circleRadius);
             } else if (d.tid) {
                 var rectWidth = newSize;
                 var rectHeight = newSize;
@@ -1401,7 +1438,7 @@ var selectedTrackInfo = {};
                     .attr('y', -rectHeight/2)
                     .attr('width', rectWidth)
                     .attr('height', rectHeight)
-                    .style("filter", "url(#drop-shadow)")
+                    
                     .attr("stroke", "orange")
                     .attr("stroke-width", "0px");
             }
@@ -1423,7 +1460,7 @@ var selectedTrackInfo = {};
                     .attr("r", circleRadius)
                     .attr("stroke-width", "2px")
                     .style("fill", "#282828");
-                
+            
                 d3This.append('image')
                     .attr('x', -imageWidth/2)
                     .attr('y', -imageHeight/2)
@@ -1492,7 +1529,7 @@ var selectedTrackInfo = {};
                     .attr('class', 'node')
                     .attr("r", 32)
                     .style("fill", function(d) {
-                        return "#282828";
+                        return "#2F394C";
                     });
 
                 d3This.append('image')
