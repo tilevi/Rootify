@@ -487,6 +487,10 @@ var selectedTrackInfo = {};
                             selectedTrackInfo[id] = null;
                         }
                         d3.select("#selected_" + id).remove();
+                        
+                        if ((selectedTrack.length + selectedArtist.length + selectedGenre.length) <= 0) {
+                            d3.select("#description2").style("display", "block");
+                        }
                     });
 
             selectedArr.push(id);
@@ -504,7 +508,11 @@ var selectedTrackInfo = {};
             if (typ == "track") {
                 selectedTrackInfo[id] = null;
             }
-
+            
+            if ((selectedTrack.length + selectedArtist.length + selectedGenre.length) <= 0) {
+                d3.select("#description2").style("display", "block");
+            }
+            
             var parNode = d3.select(node.parentNode);
             var parCircle = parNode.select("circle.node"); 
             if (parCircle[0][0] != null) {
@@ -1975,6 +1983,12 @@ var selectedTrackInfo = {};
             if (index != -1) {
                 selectedGenre.splice(index, 1);
             }
+        }
+        
+        if ((selectedTrack.length + selectedArtist.length + selectedGenre.length) <= 0) {
+            d3.select("#description2").style("display", "block");
+        } else {
+            d3.select("#description2").style("display", "none");
         }
     });
 })(this);
