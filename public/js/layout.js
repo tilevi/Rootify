@@ -1013,7 +1013,7 @@ var selectedTrackInfo = {};
             
             // Update the position of the down triangle (expand or collapse tree)
             d3This.select("path.triangleDown")
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.55) + ")"; });
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.58) + ")"; });
         });
 
         // Once all of the nodes have been resized, reposition the tree links.
@@ -1026,11 +1026,22 @@ var selectedTrackInfo = {};
     var createUpTriangle = function(d3This) {
         d3This.append('path')
             .classed("triangleUp", true)
-            .attr("d", d3.svg.symbol().type("triangle-up").size(50))
+            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (14 * 14) / 2; }))
+            .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
+            .style("fill", "#2f394c")
+            .style("opacity", 0)
+            .on("click", click)
+            .transition()
+            .duration(duration)
+            .style("opacity", 1);
+        
+        d3This.append('path')
+            .classed("triangleUp", true)
+            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (10 * 10) / 2; }))
             .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
             .style("fill", "white")
-            .attr("stroke", "#293345")
-            .attr("stroke-width", "1px")
+            .style("stroke", "#2f394c")
+            .style("stroke-width", "0px")
             .style("opacity", 0)
             .on("click", click)
             .transition()
@@ -1181,12 +1192,11 @@ var selectedTrackInfo = {};
         textboxRect.attr('height', Math.round(nodeText.node().getBBox().height) + 2);
     }
     
-    
     var createDownTriangle = function(d3This, d, newSize) {
         d3This.append('path')
                     .classed("triangleDown", true)
-                    .attr("d", d3.svg.symbol().type("triangle-down").size(50))
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.56) + ")"; })
+                    .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (10 * 10) / 2; }))
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.58) + ") rotate(180)"; })
                     .style("fill", "white")
                     .style("opacity", (d.children == null) ? 1 : 0)
                     .style("pointer-events", (d.children == null) ? "auto" : "none")
@@ -1307,11 +1317,8 @@ var selectedTrackInfo = {};
                 }
 
                 // If it has an up triangle, remove it and unhide its down triangle.
-                var triUp = d3This.select(".triangleUp");
-                if (triUp.length > 0 && triUp[0][0] != null) {
-                    triUp.remove();
-                }
-
+                d3This.selectAll(".triangleUp").remove();
+                
                 // Show the down triangle
                 var triDown = d3This.select(".triangleDown");
                 if (triDown.length > 0 && triDown[0][0] != null) {
@@ -1399,15 +1406,15 @@ var selectedTrackInfo = {};
                 var circleRadius = Math.floor(newSize/2);
                 var imageWidth = (newSize-1);
                 var imageHeight = (newSize-1);
-
+                
+                // Create the down triangle.
+                createDownTriangle(d3This, d, newSize);
+                
                 d3This.append('circle')
                     .attr("class", "node")
                     .attr("r", circleRadius)
                     .attr("stroke-width", "2px")
                     .style("fill", "#282828");
-                
-                // Create the down triangle.
-                createDownTriangle(d3This, d, newSize);
                 
                 d3This.append('image')
                     .attr('x', -imageWidth/2)
@@ -1436,7 +1443,11 @@ var selectedTrackInfo = {};
 
                 var imageWidth = newSize - 2;
                 var imageHeight = newSize - 2;
-
+                
+                // Create the down triangle.
+                // We want to create it between the rectangle and image.
+                createDownTriangle(d3This, d, newSize);
+                
                 d3This.append('rect')
                     .attr("class", "node")
                     .attr("fill", "#282828")
@@ -1445,10 +1456,6 @@ var selectedTrackInfo = {};
                     .attr('y', -rectHeight/2)
                     .attr('width', rectWidth)
                     .attr('height', rectHeight);
-                
-                // Create the down triangle.
-                // We want to create it between the rectangle and image.
-                createDownTriangle(d3This, d, newSize);
                 
                 d3This.append('image')
                     .attr('x', -imageWidth/2)
