@@ -807,23 +807,13 @@ var selectedTrackInfo = {};
             dur = 0;
         }
 
-         svgGroup
+        svgGroup
             .transition()
             .duration(dur)
             .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
 
         zoomListener.scale(scale);
         zoomListener.translate([x, y]);
-
-        /*
-            If this node is the root, and we have nodes in our tree, then turn off 
-            switching modes after we enter the nodes.
-        */
-        if (source == root && (root.children != null) && root.children.length > 0) {
-            setTimeout(function() {
-                switchingMode = false;
-            }, (250 + duration));
-        }
     }
 
     /*
@@ -1222,7 +1212,7 @@ var selectedTrackInfo = {};
             - source (the node we clicked on)
             - switchM (if specified, after node exit, we set the children and update)
     */
-    var update = function(source, switchM) {
+    var update = function(source) {
         tree = tree.nodeSize([64, 64]);
         // Compute the new tree layout.
         var nodes = tree.nodes(root).reverse(),
@@ -1627,7 +1617,7 @@ var selectedTrackInfo = {};
         /*
             If we switching modes, then we wait for the nodes to exit and then switch the root's children.
         */
-        if (switchM) {
+        /*if (switchM) {
             setTimeout(function() {
                 // After our nodes exit, we check if we should switch modes.
                 var childRef = null;
@@ -1651,7 +1641,7 @@ var selectedTrackInfo = {};
                     centerNode(root, true);
                 }
             }, (exitSetEmpty ? 0 : duration));
-        }
+        }*/
 
         // Should we pan our view?
         return shouldPan;
@@ -1669,16 +1659,16 @@ var selectedTrackInfo = {};
         We can store extra information in these nodes if we need to.
     */
     root = treeData;
-
+    
     root.x = 0, root.x0 = 0;
     root.y = 0, root.y0 = 0;
-
+    
     /*
         Booleans to indicate if we properly loaded our top artists and tracks.
     */
     var loadedArtists = false;
     var loadedTracks = false;
-
+    
     /*
         This function computes the new layout for our tree and then centers the root node at the middle top (1/2 from the left and right, 1/8 from the top and 7/8 from the bottom).
 
@@ -1686,9 +1676,8 @@ var selectedTrackInfo = {};
     */
     var shortTermEmpty = false;
     var longTermEmpty = false;
-
+    
     doneLoading = function() {
-        
         var blacklistTrack = (mode == "short") ? trackID_short : trackID_long;
         var blacklistArtist = (mode == "short") ? artistID_short : artistID_long;
         
@@ -1718,7 +1707,7 @@ var selectedTrackInfo = {};
         
         update(root);
         centerNode(root, true);
-
+        
         /*
             We need to make sure we don't display empty data.
             Otherwise, we need to either switch modes or redirect the user to an error page.
@@ -1726,8 +1715,6 @@ var selectedTrackInfo = {};
 
         // Note: update(root) removes the children array if it's empty
         if ((root.children == null) || (root.children.length <= 0)) {
-            switchingMode = false;
-
             if (mode == "short") {
                 shortTermEmpty = true;
             } else if (mode == "long") {
@@ -1738,10 +1725,15 @@ var selectedTrackInfo = {};
                 // Redirect the user to an error page.
                 window.location.replace('http://www.rootify.io/oops');
             } else if (shortTermEmpty) {
-                switchMode("long");
+                switchMode("long", true);
             } else {
-                switchMode("short");
+                switchMode("short", true);
             }
+        } else {
+            setTimeout(function() {
+                console.log("Set to false in doneLoading()");
+                switchingMode = false;
+            }, (duration * 2));
         }
     }
 
@@ -1819,23 +1811,25 @@ var selectedTrackInfo = {};
         This function switches the mode.
         The possible modes are 'short' or 'long'.
     */
-    var switchMode = function(m) {
+    var switchMode = function(m, force) {
         // Don't switch if we're in the same mode or currently switching modes
         if (mode == m || switchingMode) {
-            return;
+            if (!force) {
+                return;
+            }
         }
-
+        
         // There's no point to switching to a mode that doesn't have any data to load.
         if ((m == "short" && shortTermEmpty) || (m == "long" && longTermEmpty)) {
             return;
         }
-
+        
         // We are now switching modes.
         switchingMode = true;
-
+        
         // Deselect any nodes
         handleSelection(null, null);
-
+        
         if (m == "long") {
             d3.select("#long-term").style("background-color", "#4B9877");
             d3.select("#short-term").style("background-color", null);
@@ -1849,17 +1843,42 @@ var selectedTrackInfo = {};
             // Save the long-term information
             longChildren = root.children;
         }
-
+        
         // Switch the mode
         mode = m;
-
+        
+        // After our nodes exit, we check if we should switch modes.
+        var childRef = null;
+        if (m == "long") {
+            childRef = longChildren;
+        } else if (m == "short") {
+            childRef = shortChildren;
+        }
+        
+        // If we have no data, then load it.
+        if (childRef == null) {
+            loadTopTracks();
+        } else {
+            // Otherwise, set the root's children
+            root.children = childRef;
+            if ((root.children == null) || (root.children.length == 0)) {
+                root.children = [];
+            }
+            update(root);
+            centerNode(root, true);
+            
+            setTimeout(function() {
+                switchingMode = false; 
+            }, (2 * duration));
+        }
+        
         // Set the root children initially to nothing
-        root.children = [];
-
+        /*root.children = [];
+        
         // Re-layout the tree
-        update(root, m);
+        update(root, m);*/
     }
-
+    
     /*
         These are just event listeners when a Spotify user selects on a certain mode.
     */
@@ -1925,6 +1944,10 @@ var selectedTrackInfo = {};
         
         update(root);
         centerNode(root, true);
+        
+        setTimeout(function() {
+            switchingMode = false; 
+        }, (2 * duration));
     });
     
     var registerLogout = function(id) {

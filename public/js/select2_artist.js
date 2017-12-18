@@ -12,7 +12,7 @@ $("#search_artists").select2({
         dataType: 'json',
         delay: 250,
         headers: {
-            "Authorization": "Bearer " + getCookie('myToken'), 
+            "Authorization": "Bearer " + access_token, 
             "Content-Type": "application/json",
         }, 
         data: function (params) {
