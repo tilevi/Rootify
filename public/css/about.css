@@ -14,7 +14,7 @@ body {
     font-family: "Source Sans Pro", sans-serif;
     font-size: 1em;
     line-height: 1em;
-     padding-top: 65px; 
+    padding-top: 65px; 
 }
 
 p {
@@ -102,7 +102,7 @@ div p {
 }
 
 #div {
-	margin-top: 5%;
+	margin-top: 0%;
 	width: 50%;
 	margin-bottom: 5%;
 }
@@ -172,11 +172,6 @@ button.accordion:after {
     color: #fff;
     float: right;
     margin-left: 5px;
-}
-
-button.accordion.active:after {
-    color: #fff;
-    content: "\2796"; /* Unicode character for "minus" sign (-) */
 }
 
 h2 {
