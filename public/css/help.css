@@ -145,12 +145,6 @@ button.accordion:after {
     margin-left: 5px;
 }
 
-button.accordion.active:after {
-    color: #fff;
-    content: "\2796"; /* Unicode character for "minus" sign (-) */
-}
-
-
 @media screen and (max-width: 700px) {
 div {
     width: 80%;

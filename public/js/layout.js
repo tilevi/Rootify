@@ -1105,7 +1105,7 @@ var selectedTrackInfo = {};
     var createUpTriangle = function(d3This) {
         d3This.append('path')
             .classed("triangleUp", true)
-            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (14 * 14) / 2; }))
+            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (12 * 12) / 2; }))
             .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
             .style("fill", "#2f394c")
             .style("opacity", 0)
