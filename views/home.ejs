@@ -1,0 +1,438 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Rootify</title>
+        
+        <!-- jQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+        
+        <!-- jQuery UI -->
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        
+        <!-- Chosen library for select -->
+        <script src="/js/chosen.jquery.js"></script>
+        
+        <!-- Select2 library -->
+        <script src="/js/select2.js"></script>
+        
+        <!-- D3.js v3 -->
+        <script src="http://d3js.org/d3.v3.min.js"></script>
+        
+        <!-- Spotify Web API (JS client-side wrapper) -->
+        <script src="/js/spotify-web-api.js"></script>
+        
+        <!-- Refresh token code -->
+        <script src="/js/refresh_token.js"></script>
+        
+        <!-- Main CSS -->
+        <link rel="stylesheet" type="text/css" href="/css/home.css">
+        
+        <!-- jQuery CSS -->
+        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        
+        <!-- Chosen CSS -->
+        <link rel="stylesheet" type="text/css" href="/css/chosen.css">
+        
+        <!-- Select2 CSS -->
+        <link rel="stylesheet" type="text/css" href="/css/select2.css">
+
+        <!-- Font Awesome CSS -->
+        <link rel="stylesheet" type="text/css" href="/css/font-awesome.css">
+        <link rel="stylesheet" type="text/css" href="/css/font-awesome.min.css">
+        
+        <!-- Jasmine Testing Suite -->
+        <!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine.min.css">
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/jasmine-html.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/2.8.0/boot.min.js"></script>
+        -->
+    </head>
+    
+    <body oncontextmenu="return false;">
+        <!-- Header Nav Bar  -->
+        <div id="tophead">
+            <div class="navbar">
+                 
+                <a href="#main-menu" class="menu-toggle" role="button" id="main-menu-toggle" aria-expanded="false" aria-controls="main-menu" aria-label="Open main menu">
+                    <span class="sr-only">
+                        Open main menu
+                    </span>
+                    <span class="fa fa-bars" aria-hidden="true"></span>
+                </a>
+                
+                <nav id="main-menu" class="main-menu" role="navigation" aria-expanded="false" aria-label="Main menu">
+                    <a href="#main-menu-toggle" class="menu-close" role="button" id="main-menu-close" aria-expanded="false" aria-controls="main-menu" aria-label="Close main menu">
+                          <span class="sr-only">Close main menu</span>
+                          <span class="fa fa-close" aria-hidden="true"></span>
+                    </a>
+                    <ul>
+                        <li>
+                            <a class="logouthide2" id="logout-b1">Logout</a>
+                        </li>
+                        <li>
+                            <a class="littleleft" id="short-term">Short-Term</a>
+                        </li>
+                        <li>
+                            <a id="long-term">Long-Term</a>
+                        </li>
+                        <li>
+                            <a class="littleleft" id="reset_tree">Reset</a>
+                        </li>
+                        <li>
+                            <a id="center_tree">Center</a>
+                        </li>
+                        <li>
+                            <a class="helphide" target="_blank" href="/help">Help</a>
+                        </li>
+                        <li>
+                            <a class="logouthide" id="logout-b2">Logout</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+             <div class="floatright">
+                <div style="display:inline-block;vertical-align: middle;">
+                    <a class="logouthide2" href="/help" target="_blank">
+                        <i class="fa fa-question-circle-o" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <img width="80px" style="vertical-align:middle; margin-left: 70px"  src="/assets/rootify.png"/>
+            </div>
+            <a href="#main-menu-toggle" class="backdrop" tabindex="-1" aria-hidden="true" hidden></a>
+        </div>
+        
+        <!-- Sidebar -->
+        <!-- Generate Playlist -->
+        <div id="dialog" style="display: none;" title="Generate Playlist">
+            <font style="color: black;">Playlist name:</font><br/>
+            <input type="text" id="playlistName" name="playlistName" style="margin-top: 5px; width: 100%;"><br/>
+
+            <div id="max_tracks_slider_text" class="range-slider-text2">Max tracks: 25</div>
+            <div id="max_tracks_slider" class=".range-slider2"></div>
+
+            <button id="geneatePlaylistBtn2" class="playlistbtn2" onclick="finallyCreatePlaylist()">Generate Playlist</button>
+        </div>
+        
+        <!-- Sidebar Start -->
+        <div id="sidebar">
+            <!-- Tabs -->
+            <div id="tabs" class="c-tabs no-js">
+                <div class="tabnav">
+                    <a href="#" class="tablink tablinkside is-active">
+                        Details
+                    </a>
+                    <a href="#" class="tablink">
+                        Generate
+                    </a>
+                </div>
+                
+                <!-- Tabs Content  -->
+                <div class="c-tab is-active">
+                    <div id="overflowing" class="tabcontent">
+                        &nbsp;
+                        <div class="tabcontentinner" id="detailsTab">
+                            <div id="description" class="descript"> Click on a track or artist to get more details. </div>
+                            <div id="headerImage" width="100%"></div>
+                            
+                            <div id="artistAbout" width="100%"><p id="bio" style="color: #01B482; padding-left: 8px; padding-right: 8px;"></p></div>
+                            
+                            <div id="spotifyTracks" width="100%"></div>
+                            
+                            <div id="at-container">
+                                <svg id="detailsSVG"></svg>
+                            </div>
+                            
+                            <div id="detailsGenres" width="100%"><p style="padding-left: 8px; padding-right: 8px;"></p></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="c-tab">
+                    <div id="overflowss" class="tabcontent">
+                        <h2> Selected </h2>
+                        
+                        <div id="selectedtab" class="selectedtabwow">
+                            <div id="description2" class="descript"> Select up to 5 items: tracks, artists, or genres. </div>
+                            <div id="selectedTracks"></div>
+                            <div id="selectedArtists" class="space"></div>
+                        </div>
+                        <div class="line-div"></div>
+                        <h2> Select Genres </h2>
+
+                        <select id="first" data-placeholder="Select genres" class="chosen select2-selection__placeholder" multiple=true tabindex="4">
+                            <option value="acoustic">Acoustic</option>
+                            <option value="afrobeat">Afrobeat</option>
+                            <option value="alt-rock">Alt-rock</option>
+                            <option value="alternative">Alternative</option>
+                            <option value="ambient">Ambient</option>
+                            <option value="anime">Anime</option>
+                            <option value="black-metal">Black-metal</option>
+                            <option value="bluegrass">Bluegrass</option>
+                            <option value="blues">Blues</option>
+                            <option value="bossanova">Bossanova</option>
+                            <option value="brazil">Brazil</option>
+                            <option value="breakbeat">Breakbeat</option>
+                            <option value="british">British</option>
+                            <option value="cantopop">Cantopop</option>
+                            <option value="chicago-house">Chicago-house</option>
+                            <option value="children">Children</option>
+                            <option value="chill">Chill</option>
+                            <option value="classical">Classical</option>
+                            <option value="club">Club</option>
+                            <option value="comedy">Comedy</option>
+                            <option value="country">Country</option>
+                            <option value="dance">Dance</option>
+                            <option value="dancehall">Dancehall</option>
+                            <option value="death-metal">Death-metal</option>
+                            <option value="deep-house">Deep-house</option>
+                            <option value="detroit-techno">Detroit-techno</option>
+                            <option value="disco">Disco</option>
+                            <option value="disney">Disney</option>
+                            <option value="drum-and-bass">Drum-and-bass</option>
+                            <option value="dub">Dub</option>
+                            <option value="dubstep">Dubstep</option>
+                            <option value="edm">EDM</option>
+                            <option value="electro">Electro</option>
+                            <option value="electronic">Electronic</option>
+                            <option value="emo">Emo</option>
+                            <option value="folk">Folk</option>
+                            <option value="forro">Forro</option>
+                            <option value="french">French</option>
+                            <option value="funk">Funk</option>
+                            <option value="garage">Garage</option>
+                            <option value="german">German</option>
+                            <option value="gospel">Gospel</option>
+                            <option value="goth">Goth</option>
+                            <option value="grindcore">Grindcore</option>
+                            <option value="groove">Groove</option>
+                            <option value="grunge">Grunge</option>
+                            <option value="guitar">Guitar</option>
+                            <option value="happy">Happy</option>
+                            <option value="hard-rock">Hard-rock</option>
+                            <option value="hardcore">Hardcore</option>
+                            <option value="hardstyle">Hardstyle</option>
+                            <option value="heavy-metal">Heavy-metal</option>
+                            <option value="hip-hop">Hip-Hop</option>
+                            <option value="holidays">Holidays</option>
+                            <option value="honky-tonk">Honky-tonk</option>
+                            <option value="house">House</option>
+                            <option value="idm">IDM</option>
+                            <option value="indian">Indian</option>
+                            <option value="indie">Indie</option>
+                            <option value="indie-pop">Indie-pop</option>
+                            <option value="industrial">Industrial</option>
+                            <option value="iranian">Iranian</option>
+                            <option value="j-dance">J-dance</option>
+                            <option value="j-idol">J-idol</option>
+                            <option value="j-pop">J-pop</option>
+                            <option value="j-rock">J-rock</option>
+                            <option value="jazz">Jazz</option>
+                            <option value="k-pop">K-pop</option>
+                            <option value="kids">Kids</option>
+                            <option value="latin">Latin</option>
+                            <option value="latino">Latino</option>
+                            <option value="malay">Malay</option>
+                            <option value="mandopop">Mandopop</option>
+                            <option value="metal">Metal</option>
+                            <option value="metal-misc">Metal-misc</option>
+                            <option value="metalcore">Metalcore</option>
+                            <option value="minimal-techno">Minimal-techno</option>
+                            <option value="movies">Movies</option>
+                            <option value="mpb">Mpb</option>
+                            <option value="new-age">New-age</option>
+                            <option value="new-release">New-release</option>
+                            <option value="opera">Opera</option>
+                            <option value="pagode">Pagode</option>
+                            <option value="party">Party</option>
+                            <option value="philippines-opm">Philippines-opm</option>
+                            <option value="piano">Piano</option>
+                            <option value="pop">Pop</option>
+                            <option value="pop-film">Pop-film</option>
+                            <option value="post-dubstep">Post-dubstep</option>
+                            <option value="power-pop">Power-pop</option>
+                            <option value="progressive-house">Progressive-house</option>
+                            <option value="psych-rock">Psych-rock</option>
+                            <option value="punk">Punk</option>
+                            <option value="punk-rock">Punk-rock</option>
+                            <option value="r-n-b">R&B</option>
+                            <option value="rainy-day">Rainy-day</option>
+                            <option value="reggae">Reggae</option>
+                            <option value="reggaeton">Reggaeton</option>
+                            <option value="road-trip">Road-trip</option>
+                            <option value="rock">Rock</option>
+                            <option value="rock-n-roll">Rock-n-roll</option>
+                            <option value="rockabilly">Rockabilly</option>
+                            <option value="romance">Romance</option>
+                            <option value="sad">Sad</option>
+                            <option value="salsa">Salsa</option>
+                            <option value="samba">Samba</option>
+                            <option value="sertanejo">Sertanejo</option>
+                            <option value="show-tunes">Show-tunes</option>
+                            <option value="singer-songwriter">Singer-songwriter</option>
+                            <option value="ska">Ska</option>
+                            <option value="sleep">Sleep</option>
+                            <option value="songwriter">Songwriter</option>
+                            <option value="soul">Soul</option>
+                            <option value="soundtracks">Soundtracks</option>
+                            <option value="spanish">Spanish</option>
+                            <option value="study">Study</option>
+                            <option value="summer">Summer</option>
+                            <option value="swedish">Swedish</option>
+                            <option value="synth-pop">Synth-pop</option>
+                            <option value="tango">Tango</option>
+                            <option value="techno">Techno</option>
+                            <option value="trance">Trance</option>
+                            <option value="trip-hop">Trip-hop</option>
+                            <option value="turkish">Turkish</option>
+                            <option value="work-out">Work-out</option>
+                            <option value="world-music">World-music</option>
+                    </select>
+                        
+                        <div class="line-div"></div>
+                        <h2> Search Tracks </h2>
+                        <select id="search_tracks" style="width: 99%">
+                            <option></option>
+                        </select>
+
+                        <div class="line-div"></div>
+                        <h2> Search Artists </h2>
+                        <select id="search_artists" style="width: 99%"></select>
+
+                        <div class="line-div"></div>
+                        <h2> Filter Options </h2>
+
+                        <div id="generateFilters">
+                            <div id="filter_pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
+                            <div id="filter_pop_slider" class="generate-range-slider"></div>
+
+                            <div id="filter_dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
+                            <div id="filter_dance_slider" class="generate-range-slider"></div>
+
+                            <div id="filter_energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
+                            <div id="filter_energy_slider" class="generate-range-slider"></div>
+
+                            <div id="filter_valence_slider_text" class="range-slider-text">Happiness: 0 - 100</div>
+                            <div id="filter_valence_slider" class="generate-range-slider" style="margin-bottom: 20px;"></div>
+                        </div>
+
+                        <div id="generatedPlaylistTracks">
+                            <h2>Recommended Playlist</h2>
+                            <div id="recommendedTracks"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Button  -->
+                    <div id="geneatePlaylistBtn" class="playlistbtn" href="#">
+                        <span>
+                            Generate Playlist
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tree Container -->
+        <div id="tree-container">
+            <script type="text/javascript" src="/js/handle_cookies.js"></script>
+            <script type="text/javascript">    
+                // Search genres combination box.
+                $(".chosen").chosen({
+                    no_results_text: "No relevant genres found!",
+                    width: "99%", 
+                    max_selected_options: 5
+                });
+                
+                var spotifyApi = new SpotifyWebApi();
+                var access_token = "<%- access_token -%>";
+                var refresh_token = "<%- refresh_token -%>";
+                
+                spotifyApi.setAccessToken(access_token);
+            </script>
+        </div>  
+        <!-- End Tree Container !Do not Delete! div make sure the script is in the tree container -->
+
+        <!-- bottom pop out bar -->
+        <div id="bottom-bar">
+            <button type="button" id="bottombarbtn" class="button_slide">&#x25B2;</button>
+            <div id="slideout">
+                <div id="leftSide">
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.3em;">Resize Tracks & Artists</h1>
+                    
+                    <label class="container2">Popularity
+                        <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                    
+                    <label class="container2">Danceability
+                        <input type="checkbox" id="danceCheck" onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                    
+                    <label class="container2">Energy
+                        <input type="checkbox" id="energyCheck"  onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                                        
+                    <label class="container2">Happiness
+                        <input type="checkbox" id="posCheck"  onclick='handleClick(this);'>
+                        <span class="checkmark"></span>
+                    </label>
+                </div>
+                
+                <div id="rightSide">
+                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.3em;">Filter Tracks & Artists</h1>
+                    
+                    <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
+                    <div id="pop_slider" class="range-slider"></div>
+                    
+                    <div id="dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
+                    <div id="dance_slider" class="range-slider"></div>
+                    
+                    <div id="energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
+                    <div id="energy_slider" class="range-slider"></div>
+                    
+                    <div id="valence_slider_text" class="range-slider-text">Happiness: 0 - 100</div>
+                    <div id="valence_slider" class="range-slider"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- bottom pop up bar script -->
+        <script type="text/javascript" src="/js/bottom_bar.js"></script>
+        
+        <!-- Details tab -->
+        <script type="text/javascript" src="/js/details_tab.js"></script>
+        
+        <!-- Resize code for bars -->
+        <script type="text/javascript" src="/js/resize.js"></script>
+        
+        <!-- Select2 code for searching tracks and artists -->
+        <script type="text/javascript" src="/js/select2_track.js"></script>
+        <script type="text/javascript" src="/js/select2_artist.js"></script>
+        
+        <!-- Tree layout -->
+        <script type="text/javascript" src="/js/layout.js"></script>
+        
+        <!-- TAB JS -->
+        <script src="/js/tabs.js"></script>
+        <script>            
+            var myTabs = tabs({
+                el: '#tabs',
+                tabNavigationLinks: '.tablink',
+                tabContentContainers: '.c-tab'
+            });
+            myTabs.init();
+        </script>
+        
+        <!--  Graph Bar sidebar -->
+        <script type="text/javascript" src="/js/resize_filter_sliders.js"></script>
+    
+        <!--  Generate Playlist -->
+        <script type="text/javascript" src="/js/generate_playlist.js"></script>
+        
+        <!-- Unit testing with Jasmine
+        <script src="/js/unit_tests.js"></script>
+        -->
+    </body>
+</html>
