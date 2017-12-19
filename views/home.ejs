@@ -49,7 +49,7 @@
         -->
     </head>
     
-    <body>
+    <body oncontextmenu="return false;">
         <!-- Header Nav Bar  -->
         <div id="tophead">
             <div class="navbar">
@@ -134,7 +134,8 @@
                         <div class="tabcontentinner" id="detailsTab">
                             <div id="description" class="descript"> Click on a track or artist to get more details. </div>
                             <div id="headerImage" width="100%"></div>
-                            <div id="artistAbout" class="artabout" width="100%"></p></div>
+                            
+                            <div id="artistAbout" width="100%"><p id="bio" style="color: #01B482; padding-left: 8px; padding-right: 8px;"></p></div>
                             
                             <div id="spotifyTracks" width="100%"></div>
                             
@@ -152,9 +153,7 @@
                         <h2> Selected </h2>
                         
                         <div id="selectedtab" class="selectedtabwow">
-                            <center>
-                                <div id="description2" class="descript"> Select up to 5 items: tracks, artists, or genres. </div>
-                            </center>
+                            <div id="description2" class="descript"> Select up to 5 items: tracks, artists, or genres. </div>
                             <div id="selectedTracks"></div>
                             <div id="selectedArtists" class="space"></div>
                         </div>

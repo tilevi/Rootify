@@ -506,7 +506,7 @@ a {
     width: 100%;
 }
 
-#detailsGenres{
+#detailsGenres, #artistAbout {
     font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 	font-size: 12px;
 	font-style: normal;
@@ -518,18 +518,15 @@ a {
     padding: 5px 10px 5px 10px;
 }
 
-.artabout{
-    font-family: "Source Sans Pro", sans-serif;
-    color:#E5E4E5;
-    font-weight: normal;
-    font-size: .8em;
-    font-height: .8em;
-    margin-top: 5px;
-    margin-bottom: 10px;
+#artistAbout {
+    margin-top: 2px;
+    margin-bottom: 2px;
+    line-height: 1.6em;
 }
 
-.artabout h2{
-    font-size: 1.05em;
+#artistAbout h2 {
+    margin-top: 2px;
+    margin-bottom: 4px;
 }
 
 #generateFilters {
@@ -653,6 +650,12 @@ a {
     background-color: #232f3f;
     height: 65%;
     overflow-y: auto;
+}
+
+#description2 {
+    font-family: "Avenir Next", sans-serif;
+    text-decoration: none;
+    font-weight: normal; 
 }
 
 .tabcontent h2 {

@@ -254,7 +254,7 @@ var selectedTrackInfo = {};
 
     var deselectLastFocused = function() {
         if (lastSelected != null) {
-            var color = (isNodeSelected(lastSelected)) ? "#4B9877" : "#2F394C";
+            var color = (isNodeSelected(lastSelected)) ? "#4B9877" : "none"; //"#2F394C";
             var parNode = d3.select(lastSelected.parentNode);
             var parCircle = parNode.select("circle.node"); 
 
@@ -295,6 +295,9 @@ var selectedTrackInfo = {};
                     return;
                 } else {
                     var d = d3.select(lastSelected).datum();
+                    if (d.tid) {
+                        return;
+                    }
                     if (d.name != name) {
                         loadArtistBio(d.name);
                         return;
@@ -674,9 +677,12 @@ var selectedTrackInfo = {};
         if (nonRootNode) {
             var pan = update(source);
             centerNode(source, false, pan);
-
             source._children = null;
-            source.clicked = false;   
+            
+            // Wait for the transitions to finish before setting it to false.
+            setTimeout(function() {
+                source.clicked = false;
+            }, duration);
         } else if (typ == "track") {
             callAPI(loadTopArtists);
         } else {
@@ -830,15 +836,15 @@ var selectedTrackInfo = {};
     */
     var toggleChildren = function(d) {
         d.clicked = true;
-
+        
         if (d._children) {
             // Here, we store a collapsed node's children in _children if it was opened previously.
             d.children = d._children;
             d._children = null;
-
+            
             var pan = update(d);
             centerNode(d, false, pan);
-
+            
             d.clicked = false;
         } else if (d.aid && !d.children) {
             // Grab related artists based on the artist we just selected.
@@ -848,26 +854,87 @@ var selectedTrackInfo = {};
         } else if (d.children) {
             d._children = d.children;
             d.children = null;
-
+            
             var pan = update(d);
             centerNode(d, false, pan);
-
+            
             d.clicked = false;
         }
     }
-
+    
     /*
         When we click on a node, this fucntion is called.
         We don't allow toggling if a transition is occuring or we clicked on the root node.
     */
-    var click = function(d) {
+    var click = function(d, force) {
         if (d.root || d.clicked) {
             return;
         }
-
+        
         toggleChildren(d);
     }
+    
+    var recurID = function(d, ids, first) {
+        var childArray = (d.children ? d.children : (d._children ? d._children : null));
+        
+        if (childArray != null) {
+            childArray.forEach(function(e) {
+                recurID(e, ids);
+            });
+        }
+        
+        if (!first) {
+            ids.push(d.tid ? d.tid : d.aid);
+        }
+    }
+    
+    /*
+        Right-click
+    */
+    var rightclick = function(d, d3This) {
+        if (d.clicked) {
+            return;
+        }
+        
+        d.clicked = true;
+        
+        d3This.select(".triangleDown").style("fill", "#01B482");
+        d3This.select(".triangleUp2").style("fill", "#01B482")
+        
+        var typ = (d.tid ? "track" : "artist");
+        var blacklist = null;
+        
+        if (typ == "track") {
+            blacklist = (mode == "short") ? trackID_short : trackID_long;
+        } else {
+            blacklist = (mode == "short") ? artistID_short : artistID_long;
+        }
+        
+        var ids = [];
+        recurID(d, ids, true);
+        
+        if (ids.length > 0) {
+            for(var i = 0; i < blacklist.length; i++) {
+                var obj = blacklist[i];
 
+                if(ids.indexOf(obj) !== -1) {
+                    blacklist.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+        
+        d.children = null;
+        d._children = null;
+        
+        // Turn off the green glow after a short duration.
+        setTimeout(function() {
+            d3This.select(".triangleDown").style("fill", "#fff");
+            d3This.select(".triangleUp2").style("fill", "#fff");
+            toggleChildren(d);
+        }, 150);
+    }
+    
     //This is the accessor function we talked about above
     var lineFunction = d3.svg.line()
                             .x(function(d) { return d.x; })
@@ -1022,7 +1089,7 @@ var selectedTrackInfo = {};
             
             // Update the position of the down triangle (expand or collapse tree)
             d3This.select("path.triangleDown")
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.58) + ") rotate(180)"; });
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (d.howTall + 5) + ") rotate(180)"; });
         });
 
         // Once all of the nodes have been resized, reposition the tree links.
@@ -1040,12 +1107,13 @@ var selectedTrackInfo = {};
             .style("fill", "#2f394c")
             .style("opacity", 0)
             .on("click", click)
+            .on('contextmenu', function(d) { rightclick(d, d3This); })
             .transition()
             .duration(duration)
             .style("opacity", 1);
         
         d3This.append('path')
-            .classed("triangleUp", true)
+            .classed("triangleUp2", true)
             .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (5 * 10) / 2; }))
             .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
             .style("fill", "white")
@@ -1053,6 +1121,7 @@ var selectedTrackInfo = {};
             .style("stroke-width", "0px")
             .style("opacity", 0)
             .on("click", click)
+            .on('contextmenu', function(d) { rightclick(d, d3This); })
             .transition()
             .duration(duration)
             .style("opacity", 1);
@@ -1067,7 +1136,7 @@ var selectedTrackInfo = {};
                 [
                     {
                         x: 0,
-                        y: (d.root ? 32 : (d.howTall ? (d.howTall + 1) : 26)) 
+                        y: (d.root ? 32 : (d.howTall ? (d.howTall + 2) : 26))
                     }, 
                     {
                         x: 0, 
@@ -1242,11 +1311,12 @@ var selectedTrackInfo = {};
         d3This.append('path')
                     .classed("triangleDown", true)
                     .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (5 * 10) / 2; }))
-                    .attr("transform", function(d) { return "translate(" + 0 + "," + (newSize*0.6) + ") rotate(180)"; })
+                    .attr("transform", function(d) { return "translate(" + 0 + "," + (d.howTall + 5) + ") rotate(180)"; })
                     .style("fill", "white")
                     .style("opacity", (d.children == null) ? 1 : 0)
                     .style("pointer-events", (d.children == null) ? "auto" : "none")
-                    .on("click", click);
+                    .on("click", click)
+                    .on('contextmenu', function(d) { rightclick(d, d3This); })
     }
     
     /*
@@ -1363,7 +1433,8 @@ var selectedTrackInfo = {};
                 }
 
                 // If it has an up triangle, remove it and unhide its down triangle.
-                d3This.selectAll(".triangleUp").remove();
+                d3This.select(".triangleUp").remove();
+                d3This.select(".triangleUp2").remove();
                 
                 // Show the down triangle
                 var triDown = d3This.select(".triangleDown");
@@ -1955,6 +2026,7 @@ var selectedTrackInfo = {};
         // In a sense, we are switching modes (but not quite).
         switchingMode = true;
         
+        // Clear the selection
         handleSelection(null, null);
 
         root.children.forEach(function(d) {
