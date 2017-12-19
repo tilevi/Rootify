@@ -874,6 +874,9 @@ var selectedTrackInfo = {};
         toggleChildren(d);
     }
     
+    /*
+        This function collects the IDs of all nodes in a sub-tree.
+    */
     var recurID = function(d, ids, first) {
         var childArray = (d.children ? d.children : (d._children ? d._children : null));
         
