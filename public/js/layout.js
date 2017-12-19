@@ -1234,8 +1234,8 @@ var selectedTrackInfo = {};
         });
     }
 
-    /* drop shadow under the node */
-         var defs = svg.append("defs");
+        /* drop shadow under the node */
+        var defs = svg.append("defs");
 
         // create filter with id #drop-shadow
         var filter = defs.append("filter")
@@ -1322,6 +1322,37 @@ var selectedTrackInfo = {};
                     .on('contextmenu', function(d) { rightclick(d, d3This); })
     }
     
+    var checkPan = function(source, d, This) {
+        var circle = This;
+        
+        var cx = +circle.getAttribute('cx');
+        var cy = +circle.getAttribute('cy');
+        
+        var ctm = circle.getCTM();
+        var coords = getScreenCoords(cx, cy, ctm);
+        
+        // Here, we have found the node's relative position to the SVG.
+        // We have to add the difference of where the node will be.
+        var xDiff = (d.x - source.x0);
+        var yDiff = (d.y - source.y0);
+        
+        var scale = zoomListener.scale();
+        coords.x = coords.x + scale * xDiff;
+        coords.y = coords.y + scale * yDiff;
+
+        /*
+            If the node is too far to the left or right, or too above or below, we should pan the view. I don't think the node could be too above but let's just keep that to be complete.
+        */
+        var padding = 80;
+        
+        if (((coords.x - padding) < 0 || (coords.x + padding) > viewerWidth)
+            || ((coords.y - padding) < 0 || (coords.y + padding) > viewerHeight)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
     /*
         This function is important.
         We call this function after we update the children of certain nodes.
@@ -1363,7 +1394,7 @@ var selectedTrackInfo = {};
             }
         });
 
-/*
+        /*
             Handle the ENTER links.
         */
         var link = svgGroup.selectAll("path.link")
@@ -1455,14 +1486,14 @@ var selectedTrackInfo = {};
                 .attr("transform", function(d) {
                     return "translate(" + d.x + "," + d.y + ")";
                 });
-
+        
         // Enter any new nodes at the parent's previous position.
         var nodeEnter = node.enter().append('g')
                             .attr("class", "node")
                             .attr("transform", function(d) {
                                 return "translate(" + source.x0 + "," + source.y0 + ")";
                             });
-
+        
         // We will return this variable at the end of this function.
         // If this is set to true, we should pan our view.
         var shouldPan = false;
@@ -1619,35 +1650,11 @@ var selectedTrackInfo = {};
             
             // If shouldPan is true, a node was already detected outside of our view.
             if (!shouldPan) {
-                var circle = this;
-
-                var cx = +circle.getAttribute('cx');
-                var cy = +circle.getAttribute('cy');
-
-                var ctm = circle.getCTM();
-                var coords = getScreenCoords(cx, cy, ctm);
-
-                // Here, we have found the node's relative position to the SVG.
-                // We have to add the difference of where the node will be.
-
-                var xDiff = (d.x - source.x0);
-                var yDiff = (d.y - source.y0);
-
-                var scale = zoomListener.scale();
-                coords.x = coords.x + scale * xDiff;
-                coords.y = coords.y + scale * yDiff;
-
-                /*
-                    If the node is too far to the left or right, or too above or below, we should pan the view. I don't think the node could be too above but let's just keep that to be complete.
-                */
-                var padding = 80;
-
-                if (((coords.x - padding) < 0 || (coords.x + padding) > viewerWidth)
-                    || ((coords.y - padding) < 0 || (coords.y + padding) > viewerHeight)) {
+                if (checkPan(source, d, this)) {
                     shouldPan = true;
                 }
             }
-
+            
             /*
                 Transition the new nodes to their correct positions, starting at their parent's old position.
             */
@@ -1724,7 +1731,7 @@ var selectedTrackInfo = {};
                         .attr("width", 0)
                         .attr("height", 0);
             }
-
+            
             // Make the artist circles or track rectangles smaller.
             exitVar.selectAll("circle").attr("r", 0);
             exitVar.selectAll("rect").attr("x", 0).attr("y", 0).attr("width", 0).attr("height", 0);
@@ -1735,48 +1742,23 @@ var selectedTrackInfo = {};
 
             This is very subtle but notice that x0 and y0 contain the current parent position after this function is called.
         */
-        nodes.forEach(function(d) {
+        d3.selectAll(".node").each(function(d, i) {
+            if (d == source) {
+                if (checkPan(source, d, this)) {
+                    shouldPan = true;
+                }
+            }
             d.x0 = d.x;
             d.y0 = d.y;
         });
-
-        /*
-            If we switching modes, then we wait for the nodes to exit and then switch the root's children.
-        */
-        /*if (switchM) {
-            setTimeout(function() {
-                // After our nodes exit, we check if we should switch modes.
-                var childRef = null;
-                if (switchM == "long") {
-                    childRef = longChildren;
-                } else if (switchM == "short") {
-                    childRef = shortChildren;
-                }
-
-                // If we have no data, then load it.
-                if (childRef == null) {
-                    switchingMode = true;
-                    loadTopTracks();
-                } else {
-                    // Otherwise, set the root's children
-                    root.children = childRef;
-                    if ((root.children == null) || (root.children.length == 0)) {
-                        root.children = [];
-                    }
-                    update(root);
-                    centerNode(root, true);
-                }
-            }, (exitSetEmpty ? 0 : duration));
-        }*/
-
+        
         // Should we pan our view?
         return shouldPan;
     }
-
-
+    
     // Append a group which holds all nodes and which the zoom Listener can act upon.
     var svgGroup = baseSvg.append('g');
-
+    
     /*
         Define the root by setting its initial data.
 
@@ -1857,7 +1839,6 @@ var selectedTrackInfo = {};
             }
         } else {
             setTimeout(function() {
-                console.log("Set to false in doneLoading()");
                 switchingMode = false;
             }, (duration * 2));
         }
