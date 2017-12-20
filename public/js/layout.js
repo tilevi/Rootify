@@ -24,6 +24,11 @@ var selectedTrack = [];
 var selectedGenre = [];
 
 /*
+    When right-clicking, we collect the IDs to remove from the blacklist.
+*/
+var rightClickIDs = [];
+
+/*
     Define the Spotify user.
 */
 var me = {
@@ -50,9 +55,6 @@ var selectedTrackInfo = {};
                         children: [] 
                     };
     
-    // Used for assigning IDs to our nodes
-    var i = 0;
-
     // Duration of our transitions
     var duration = 700;
 
@@ -62,10 +64,10 @@ var selectedTrackInfo = {};
     // These will be arrays that hold the root's children for each mode.
     var longChildren = null;
     var shortChildren = null;
-
+    
     // Root initially doesn't exist.
     var root = null;
-
+    
     /*
         All of these arrays are used to determine if a certain artist or track already exists in the tree. This is very important because if we have the same artist or track, it's redunant plus we can run into some huge visualization issues.
     */
@@ -480,7 +482,6 @@ var selectedTrackInfo = {};
             trackBox.append('div').attr("id", "closeButton").html("&times").on("click", function() {
                         var findNode = findNodeFromTree(id, typ);
                         if (findNode != null) {
-                            console.log("Not null");
                             d3.select(findNode).select(shapeTyp).style("stroke", "none");
                         }
 
@@ -659,14 +660,14 @@ var selectedTrackInfo = {};
                         source.children.push(trackObj);
                     }
                 } else {
-                   source.children.push({
+                    source.children.push({
                        index: baseIndex + i, 
                        name: obj.name, 
                        aid: obj.id, 
                        url: obj.images.length > 2 ? obj.images[2].url : "../assets/unknown.png", 
                        popularity: obj.popularity / 100, 
                        genres: obj.genres
-                   }); 
+                    }); 
                 }
                 blacklist.push(obj.id);
                 count++;
@@ -854,7 +855,6 @@ var selectedTrackInfo = {};
         } else if (d.children) {
             d._children = d.children;
             d.children = null;
-            
             var pan = update(d);
             centerNode(d, false, pan);
             
@@ -902,30 +902,10 @@ var selectedTrackInfo = {};
         d.clicked = true;
         
         d3This.select(".triangleDown").style("fill", "#01B482");
-        d3This.select(".triangleUp2").style("fill", "#01B482")
+        d3This.select(".triangleUp").style("fill", "#01B482")
         
-        var typ = (d.tid ? "track" : "artist");
-        var blacklist = null;
-        
-        if (typ == "track") {
-            blacklist = (mode == "short") ? trackID_short : trackID_long;
-        } else {
-            blacklist = (mode == "short") ? artistID_short : artistID_long;
-        }
-        
-        var ids = [];
-        recurID(d, ids, true);
-        
-        if (ids.length > 0) {
-            for(var i = 0; i < blacklist.length; i++) {
-                var obj = blacklist[i];
-
-                if(ids.indexOf(obj) !== -1) {
-                    blacklist.splice(i, 1);
-                    i--;
-                }
-            }
-        }
+        rightClickIDs = [];
+        recurID(d, rightClickIDs, true);
         
         d.children = null;
         d._children = null;
@@ -933,7 +913,8 @@ var selectedTrackInfo = {};
         // Turn off the green glow after a short duration.
         setTimeout(function() {
             d3This.select(".triangleDown").style("fill", "#fff");
-            d3This.select(".triangleUp2").style("fill", "#fff");
+            d3This.select(".triangleUp").style("fill", "#fff");
+            
             toggleChildren(d);
         }, 150);
     }
@@ -1080,11 +1061,11 @@ var selectedTrackInfo = {};
                         [
                             {
                                 x: 0, 
-                                y: (d.howTall ? d.howTall : 26)
+                                y: (d.howTall + 1)
                             }, 
                             {
                                 x: 0, 
-                                y: (verticalSpacing - 2)
+                                y: (verticalSpacing - 8)
                             }
                         ]));
             
@@ -1101,27 +1082,15 @@ var selectedTrackInfo = {};
         // Transition links to their new positions.
         link.attr("d", elbow);
     }
-
+    
     var createUpTriangle = function(d3This) {
         d3This.append('path')
             .classed("triangleUp", true)
-            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (12 * 12) / 2; }))
-            .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
-            .style("fill", "#2f394c")
-            .style("opacity", 0)
-            .on("click", click)
-            .on('contextmenu', function(d) { rightclick(d, d3This); })
-            .transition()
-            .duration(duration)
-            .style("opacity", 1);
-        
-        d3This.append('path')
-            .classed("triangleUp2", true)
-            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (5 * 10) / 2; }))
+            .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (8 * 10) / 2; }))
             .attr("transform", function(d) { return "translate(" + 0 + "," + (verticalSpacing - 6) + ")"; })
             .style("fill", "white")
             .style("stroke", "#2f394c")
-            .style("stroke-width", "0px")
+            .style("stroke-width", "1px")
             .style("opacity", 0)
             .on("click", click)
             .on('contextmenu', function(d) { rightclick(d, d3This); })
@@ -1143,7 +1112,7 @@ var selectedTrackInfo = {};
                     }, 
                     {
                         x: 0, 
-                        y: (d.root ? 55 : (verticalSpacing - 2))
+                        y: (d.root ? 55 : (verticalSpacing - 8))
                     }
                 ]))
             .style("stroke", "#979797")
@@ -1233,44 +1202,46 @@ var selectedTrackInfo = {};
             }
         });
     }
-
-        /* drop shadow under the node */
-        var defs = svg.append("defs");
-
-        // create filter with id #drop-shadow
-        var filter = defs.append("filter")
-            .attr("id", "drop-shadow")
-            .attr("height", "180%");
-
-        // SourceAlpha refers to opacity of graphic that this filter will be applied to
-        // convolve that with a Gaussian with standard deviation 3 and store result
-        // in blur
-        filter.append("feGaussianBlur")
-            .attr("in", "SourceAlpha")
-            .attr("stdDeviation", 1)
-            .attr("result", "blur");
-
-        // translate output of Gaussian blur to the right and downwards with 2px
-        // store result in offsetBlur
-        filter.append("feOffset")
-            .attr("in", "blur")
-            .attr("dx", 1)
-            .attr("dy", 3)
-            .attr("result", "offsetBlur");
-        // Control opacity of shadow filter
-        var feTransfer = filter.append("feComponentTransfer");
-
-        feTransfer.append("feFuncA")
-            .attr("type", "linear")
-            .attr("slope", 0.33)
-
-        // overlay original SourceGraphic over translated blurred opacity by using
-        // feMerge filter. Order of specifying inputs is important!
-       var feMerge = filter.append("feMerge");
-
-        feMerge.append("feMergeNode")
-        feMerge.append("feMergeNode")
-            .attr("in", "SourceGraphic");   
+    
+    /* Drop shadow under the node */
+    var defs = svg.append("defs");
+    
+    // Create filter with id #drop-shadow
+    var filter = defs.append("filter")
+        .attr("id", "drop-shadow")
+        .attr("height", "180%");
+    
+    // SourceAlpha refers to opacity of graphic that this filter will be applied to
+    // convolve that with a Gaussian with standard deviation 3 and store result
+    // in blur
+    filter.append("feGaussianBlur")
+        .attr("in", "SourceAlpha")
+        .attr("stdDeviation", 1)
+        .attr("result", "blur");
+    
+    // Translate output of Gaussian blur to the right and downwards with 2px
+    // Store result in offsetBlur
+    filter.append("feOffset")
+        .attr("in", "blur")
+        .attr("dx", 1)
+        .attr("dy", 3)
+        .attr("result", "offsetBlur");
+    
+    // Control opacity of shadow filter
+    var feTransfer = filter.append("feComponentTransfer");
+    
+    feTransfer.append("feFuncA")
+        .attr("type", "linear")
+        .attr("slope", 0.33)
+    
+    // Overlay original SourceGraphic over translated blurred opacity by using
+    // feMerge filter. Order of specifying inputs is important!
+    var feMerge = filter.append("feMerge");
+    
+    feMerge.append("feMergeNode")
+    feMerge.append("feMergeNode")
+        .attr("in", "SourceGraphic");
+    
     /*
         Creates the text box under a node.
     */
@@ -1313,9 +1284,11 @@ var selectedTrackInfo = {};
     var createDownTriangle = function(d3This, d, newSize) {
         d3This.append('path')
                     .classed("triangleDown", true)
-                    .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (5 * 10) / 2; }))
+                    .attr("d", d3.svg.symbol().type("triangle-up").size(function(d) { return (8 * 10) / 2; }))
                     .attr("transform", function(d) { return "translate(" + 0 + "," + (d.howTall + 5) + ") rotate(180)"; })
                     .style("fill", "white")
+                    .style("stroke", "#2f394c")
+                    .style("stroke-width", "1px")
                     .style("opacity", (d.children == null) ? 1 : 0)
                     .style("pointer-events", (d.children == null) ? "auto" : "none")
                     .on("click", click)
@@ -1370,16 +1343,16 @@ var selectedTrackInfo = {};
 
         Arguments:
             - source (the node we clicked on)
-            - switchM (if specified, after node exit, we set the children and update)
     */
     var update = function(source) {
         tree = tree.nodeSize([64, 64]);
+        
         // Compute the new tree layout.
         var nodes = tree.nodes(root).reverse(),
             links = tree.links(nodes);
-
+        
         sortTree();
-
+        
         // Set widths between levels
         nodes.forEach(function(d) {
             // For the root, we have depth 0
@@ -1393,7 +1366,7 @@ var selectedTrackInfo = {};
                 d.y = 100 + ((d.depth-1) * 110);
             }
         });
-
+        
         /*
             Handle the ENTER links.
         */
@@ -1401,7 +1374,7 @@ var selectedTrackInfo = {};
             .data(links, function(d) {
                 return d.target.aid ? ("link_" + d.target.aid) : ("link_" + d.target.tid);
             });
-
+        
         // Transition links to their new position.
         link.transition()
                     .duration(duration)
@@ -1425,24 +1398,39 @@ var selectedTrackInfo = {};
                 return 1;
             })
             .attr("d", elbow);
-
+        
         // Transition exiting nodes to the parent's new position.
         link.exit().remove();
         
         // Grab the new set
         node = svgGroup.selectAll("g.node")
                             .data(nodes, function(d) {
-                                if (!d.id) {
-                                    d.id = ++i;
+                                if (d.aid) {
+                                    return ("a_" + d.aid);
+                                } else if (d.tid) {
+                                    return ("t_" + d.tid);
+                                } else if (d.root) {
+                                    return "ROOT";
                                 }
-                                return d.id;
+                                return "SPACER";
                             });
-
+        
         // For each node in the set..
         node.each(function(d) {
             var d3This = d3.select(this);
             var line = d3This.select("path.line");
-
+            
+            /*
+                We need to update the buttons or collapse won't work.
+            */
+            d3This.select(".triangleUp")
+                    .on("click", click)
+                    .on('contextmenu', function(d) { rightclick(d, d3This); });
+            
+            /*d3This.select(".triangleUp2")
+                    .on("click", click)
+                    .on('contextmenu', function(d) { rightclick(d, d3This); });*/
+            
             // If a node has children but not a vertical line, we need to create one.
             if (d.children) {
                 if (line.length > 0 && line[0][0] == null) {
@@ -1468,7 +1456,7 @@ var selectedTrackInfo = {};
 
                 // If it has an up triangle, remove it and unhide its down triangle.
                 d3This.select(".triangleUp").remove();
-                d3This.select(".triangleUp2").remove();
+                // d3This.select(".triangleUp2").remove();
                 
                 // Show the down triangle
                 var triDown = d3This.select(".triangleDown");
@@ -1634,9 +1622,9 @@ var selectedTrackInfo = {};
                     .attr('class', 'node')
                     .attr("r", 32)
                     .style("fill", function(d) {
-                        return "#2F394C";
+                        return "#282828";
                     });
-
+                
                 d3This.append('image')
                     .attr('x', -32)
                     .attr('y', -32)
@@ -1751,6 +1739,39 @@ var selectedTrackInfo = {};
             d.x0 = d.x;
             d.y0 = d.y;
         });
+        
+        var typ = (source.tid ? "track" : "artist");
+        var blacklist = null;
+        
+        if (typ == "track") {
+            blacklist = (mode == "short") ? trackID_short : trackID_long;
+        } else {
+            blacklist = (mode == "short") ? artistID_short : artistID_long;
+        }
+        
+        /*
+            We don't want to remove the source's childrens' IDs.
+            If we do this, then there will be duplication problems.
+        */
+        var childrenIDs = source.children;
+        var cIDs = [];
+        
+        if (childrenIDs != null) {
+            childrenIDs.forEach(function(child) {
+                cIDs.push(child.tid ? child.tid : child.aid);
+            });
+            
+            if (rightClickIDs.length > 0) {
+                for(var i = 0; i < blacklist.length; i++) {
+                    var obj = blacklist[i];
+                    
+                    if(rightClickIDs.indexOf(obj) !== -1 && cIDs.indexOf(obj) == -1) {
+                        blacklist.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+        }
         
         // Should we pan our view?
         return shouldPan;
@@ -1971,6 +1992,7 @@ var selectedTrackInfo = {};
             if ((root.children == null) || (root.children.length == 0)) {
                 root.children = [];
             }
+            
             update(root);
             centerNode(root, true);
             
@@ -1978,12 +2000,6 @@ var selectedTrackInfo = {};
                 switchingMode = false; 
             }, (2 * duration));
         }
-        
-        // Set the root children initially to nothing
-        /*root.children = [];
-        
-        // Re-layout the tree
-        update(root, m);*/
     }
     
     /*
