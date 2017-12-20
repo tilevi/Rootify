@@ -1409,15 +1409,15 @@ var selectedTrackInfo = {};
                         return (d.target.aid || d.target.tid) ? 1 : 0;
                     })
                     .attr("d", elbow);
-
+        
         // Enter any new nodes.
         var linkEnter = link.enter().append('path')
                             .classed("link", true)
                             .style("opacity", 0);
-
+        
         linkEnter.transition()
             .delay(duration * 0.3)
-            .duration(duration)
+            .duration(duration - (duration * 0.3))
             .style("opacity", function(d) {
                 if (d.target.spacer) {
                     return 0;
