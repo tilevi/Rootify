@@ -271,8 +271,9 @@ var selectedTrackInfo = {};
 
     var clearDetailsTab = function() {
         d3.select("#headerImage").style("display", "none");
-        d3.select("#spotifyTracks").html("");
-
+        d3.select("#spotifyTracks").style("display", "none");
+        d3.select("#spotifyTracks2").style("display", "none");
+        
         d3.select("#at-container").style("display", "none");
         barManager.clearSelection();
 
@@ -336,10 +337,10 @@ var selectedTrackInfo = {};
 
             if (d.aid) {
                 if (d.tracks) {
-                    loadSpotifyTracks(d.tracks);
+                    loadSpotifyTracks(d.tracks, false);
                 } 
                 else {
-                    callAPI(function() { getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks); }); });
+                    callAPI(function() { getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks, false); }); });
                 }
 
                 if (barManager.artistNotLoaded(d.aid)) {                        
@@ -360,7 +361,7 @@ var selectedTrackInfo = {};
                     }
                 }
             } else {
-                loadSpotifyTracks([d.tid]);
+                loadSpotifyTracks([d.tid], true);
 
                 if (barManager.trackNotLoaded(d.tid)) {                    
                     var trackInfo = {
@@ -548,18 +549,27 @@ var selectedTrackInfo = {};
     }
 
     /* Loads the Spotify player widget(s) in the 'Details' tab. */
-    var loadSpotifyTracks = function(trackArr) {
+    var loadSpotifyTracks = function(trackArr, trackOnly) {
         var numberOfTracks = trackArr.length;
         var height = (numberOfTracks <= 1) ? 355 : 75;
-        var html = "";
-
+        var html = trackOnly ? "" : "<h2>Top Tracks</h2>";
+        
         // Loop through each track and display its Spotify widget
         for (var i = 0; i < numberOfTracks; i++) {
             var trackID = trackArr[i];
-            html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "' frameborder='0' allowtransparency='true'></iframe><br/>";
+            html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe><br/>";
         }
-
-        d3.select("#spotifyTracks").html(html);
+        
+        var elementID = trackOnly ? "#spotifyTracks2" : "#spotifyTracks";
+        
+        if (trackOnly) {
+            d3.select("#spotifyTracks").style("display", "none");
+        } else {
+            d3.select("#spotifyTracks2").style("display", "none");
+        }
+        
+        d3.select(elementID).style("display", "block");
+        d3.select(elementID).html(html);
     }
 
     var getArtistTopTracks = function(source, callback, second_pass) {
@@ -568,8 +578,8 @@ var selectedTrackInfo = {};
                 var j = 0;
                 var count = 0;
                 source.tracks = [];
-
-                while (j < data.tracks.length && count < 3) {
+                
+                while (j < data.tracks.length && count < 2) {
                     var item = data.tracks[j];
                     if (item != null) {
                         source.tracks.push(item.id);
@@ -577,9 +587,10 @@ var selectedTrackInfo = {};
                     }
                     j++;
                 }
+                //console.log(source.tracks);
                 callback();
             } else if (!second_pass) {
-                callAPI(function() { getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks); }, true); }, true);
+                callAPI(function() { getArtistTopTracks(d, function() { loadSpotifyTracks(d.tracks, false); }, true); }, true);
             }
         });
     }
@@ -1054,18 +1065,18 @@ var selectedTrackInfo = {};
                         .attr('width', imageWidth)
                         .attr('height', imageHeight);
             }
-
+            
             // Update the position of the vertical line (below the node)
             d3This.select("path.line")
                     .attr("d", lineFunction(
                         [
                             {
-                                x: 0, 
-                                y: (d.howTall + 1)
+                                x: 0,
+                                y: (d.root ? 32 : (d.howTall ? (d.howTall + 2) : 26))
                             }, 
                             {
                                 x: 0, 
-                                y: (verticalSpacing - 8)
+                                y: (d.root ? 55 : (verticalSpacing - 10))
                             }
                         ]));
             
@@ -1075,10 +1086,10 @@ var selectedTrackInfo = {};
             d3This.select("path.triangleDown")
                     .attr("transform", function(d) { return "translate(" + 0 + "," + (d.howTall + 5) + ") rotate(180)"; });
         });
-
+        
         // Once all of the nodes have been resized, reposition the tree links.
         var link = svgGroup.selectAll("path.link");
-
+        
         // Transition links to their new positions.
         link.attr("d", elbow);
     }
@@ -1112,7 +1123,7 @@ var selectedTrackInfo = {};
                     }, 
                     {
                         x: 0, 
-                        y: (d.root ? 55 : (verticalSpacing - 8))
+                        y: (d.root ? 55 : (verticalSpacing - 10))
                     }
                 ]))
             .style("stroke", "#979797")
