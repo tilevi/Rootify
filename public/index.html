@@ -4,6 +4,19 @@
         <link rel="shortcut icon" href="/favicon.ico">
         <title>Rootify</title>
         <link rel="stylesheet" type="text/css" href="/css/login.css">
+        
+        <script type="text/javascript">
+            var getCookie = function(name) {
+                var re = new RegExp(name + "=([^;]+)");
+                var value = re.exec(document.cookie);
+                return (value != null) ? unescape(value[1]) : null;
+            }
+            
+            var token = getCookie('myToken')
+            if (token != null && token.trim() != '') {
+                window.location.replace('http://rootify.io/home');
+            }
+        </script>
     </head>
 	<body>
 		<center>

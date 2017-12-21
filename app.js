@@ -41,6 +41,17 @@ var generateRandomString = function(length) {
     return text;
 };
 
+var clearTokens = function(res) {
+    var options = {
+        domain: 'rootify.io', 
+        path: '/', 
+        maxAge: 3600000 * 24 * 30,
+    };
+    
+    res.clearCookie('myToken', options);
+    res.clearCookie('myRefreshToken', options);
+}
+
 var setAndGetState = function(res) {
     var ranStateKey = generateRandomString(20);
     var options = {
@@ -55,6 +66,15 @@ var setAndGetState = function(res) {
     res.cookie('spotify_auth_state', ranStateKey, options);
     
     return ranStateKey;
+}
+
+var clearState = function(res) {
+    // Clear the state cookie
+    var options = {
+        domain: 'rootify.io', 
+        path: '/home'
+    };
+    res.clearCookie('spotify_auth_state', options);
 }
 
 // Login route
@@ -75,8 +95,7 @@ app.get('/login', function(req, res) {
 
 // Logout
 app.get('/logout', function(req, res) {
-    res.clearCookie('myToken');
-    res.clearCookie('myRefreshToken');
+    clearTokens(res);
     
     var state = setAndGetState(res);
     
@@ -88,6 +107,8 @@ app.get('/logout', function(req, res) {
     Error, About, and Help pages
 */
 app.get('/oops', function(req, res) {
+    
+    clearTokens(res);
     res.render('oops');
 });
 
@@ -98,15 +119,6 @@ app.get('/about', function(req, res) {
 app.get('/help', function(req, res) {
     res.render('help');
 });
-
-var clearState = function(res) {
-    // Clear the state cookie
-    var options = {
-        domain: 'rootify.io', 
-        path: '/home'
-    };
-    res.clearCookie('spotify_auth_state', options);
-}
 
 // Callback route
 // After a Spotify user logs in, this route is called.
@@ -155,12 +167,11 @@ app.get('/home', function(req, res) {
                     var options = {
                         domain: 'rootify.io', 
                         path: '/', 
-                        maxAge: 3600000, 
-                        httpOnly: true
+                        maxAge: 3600000 * 24 * 30,
                     };
                     
-                    res.cookie('myToken', access_token);
-                    res.cookie('myRefreshToken', refresh_token);
+                    res.cookie('myToken', access_token, options);
+                    res.cookie('myRefreshToken', refresh_token, options);
                     
                     var options = {
                         url: 'https://api.spotify.com/v1/me',
