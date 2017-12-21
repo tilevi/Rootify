@@ -557,7 +557,10 @@ var selectedTrackInfo = {};
         // Loop through each track and display its Spotify widget
         for (var i = 0; i < numberOfTracks; i++) {
             var trackID = trackArr[i];
-            html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe><br/>";
+            html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe>";
+            if ((i + 1) != numberOfTracks) {
+                html = html + "<br/>";
+            }
         }
         
         var elementID = trackOnly ? "#spotifyTracks2" : "#spotifyTracks";
@@ -2087,6 +2090,8 @@ var selectedTrackInfo = {};
     
     var registerLogout = function(id) {
         document.getElementById(id).addEventListener("click", function() {
+            deleteCookie('myToken');
+            deleteCookie('myRefreshToken');
             window.location.href = "http://www.rootify.io/logout";
         });
     }

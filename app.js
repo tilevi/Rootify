@@ -75,6 +75,9 @@ app.get('/login', function(req, res) {
 
 // Logout
 app.get('/logout', function(req, res) {
+    res.clearCookie('myToken');
+    res.clearCookie('myRefreshToken');
+    
     var state = setAndGetState(res);
     
     // Logout and present a new login screen
@@ -96,27 +99,38 @@ app.get('/help', function(req, res) {
     res.render('help');
 });
 
+var clearState = function(res) {
+    // Clear the state cookie
+    var options = {
+        domain: 'rootify.io', 
+        path: '/home'
+    };
+    res.clearCookie('spotify_auth_state', options);
+}
+
 // Callback route
 // After a Spotify user logs in, this route is called.
 app.get('/home', function(req, res) {
     var code = req.query.code || null;
     var state = req.query.state || null;
     
-    if (code == null || state == null || state != req.cookies['spotify_auth_state']) {
-        res.redirect('/');
+    if (req.cookies['spotify_auth_state'] == null && req.cookies['myToken'] != null) {
+        res.render('home', {
+            access_token: req.cookies['myToken'], 
+            refresh_token: req.cookies['myRefreshToken']
+        });
     } else {
-        /*if (req.cookies['myToken'] != null) {
-            res.render('home', {
-                access_token: req.cookies['myToken'], 
-                refresh_token: req.cookies['myRefreshToken']
-            });
-        } else {*/
-            // Clear the state cookie
-            var options = {
-                domain: 'rootify.io', 
-                path: '/home'
-            };
-            res.clearCookie('spotify_auth_state', options);
+    
+        if (code == null || state == null || state != req.cookies['spotify_auth_state']) {
+            res.redirect('/');
+        } else {
+            /*if (req.cookies['myToken'] != null) {
+                res.render('home', {
+                    access_token: req.cookies['myToken'], 
+                    refresh_token: req.cookies['myRefreshToken']
+                });
+            } else {*/
+            clearState(res);
             
             var authOptions = {
                 url: 'https://accounts.spotify.com/api/token',
@@ -138,8 +152,15 @@ app.get('/home', function(req, res) {
                     var access_token = body.access_token, 
                         refresh_token = body.refresh_token;
                     
-                    //res.cookie('myToken', access_token);
-                    //res.cookie('myRefreshToken', refresh_token);
+                    var options = {
+                        domain: 'rootify.io', 
+                        path: '/', 
+                        maxAge: 3600000, 
+                        httpOnly: true
+                    };
+                    
+                    res.cookie('myToken', access_token);
+                    res.cookie('myRefreshToken', refresh_token);
                     
                     var options = {
                         url: 'https://api.spotify.com/v1/me',
@@ -158,7 +179,7 @@ app.get('/home', function(req, res) {
                     res.redirect('/');
                 }
             });
-        //}
+        }
     }
 });
 

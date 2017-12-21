@@ -541,7 +541,7 @@ a {
 
 #spotifyTracks {
     display: none;
-    padding: 5px 0px 5px 10px;
+    padding: 5px 0px 0px 10px;
     margin-top: 0px;
     margin-bottom: 2px;
     background-color: rgba(40, 40, 40, 0.5);
