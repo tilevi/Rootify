@@ -95,8 +95,10 @@ app.get('/login', function(req, res) {
 
 // Logout
 app.get('/logout', function(req, res) {
+    // Clear the access token and refresh token.
     clearTokens(res);
     
+    // Fetch a new state.
     var state = setAndGetState(res);
     
     // Logout and present a new login screen

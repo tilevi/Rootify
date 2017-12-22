@@ -2090,11 +2090,20 @@ var selectedTrackInfo = {};
     
     var registerLogout = function(id) {
         document.getElementById(id).addEventListener("click", function() {
-            deleteCookie('myToken');
-            deleteCookie('myRefreshToken');
-            window.location.href = "http://www.rootify.io/logout";
+            document.location.replace("http://rootify.io/logout");
+            
+            // We open the logout page in a separate tab and then close it.
+            // To the extent of my knowledge, there is no way to add an 'onload' event listener.
+            // As a workaround, we just assume the 
+            /*var windowRef = window.open("http://www.rootify.io/logout");
+            
+            setTimeout(function() {
+                windowRef.close();
+                document.location.replace("http://rootify.io");
+            }, 1000);*/
         });
     }
+    
     registerLogout("logout-b1");
     registerLogout("logout-b2");
     
