@@ -21,6 +21,31 @@
         <!-- Spotify Web API (JS client-side wrapper) -->
         <script src="/js/spotify-web-api.js"></script>
         
+        <!-- Global methods for retrieving a new access token. -->
+        <script type="text/javascript">
+            var refreshAccessToken = function() {}
+            var tokenSanityCheck = function() {}
+            var redraw = function() {}
+            
+            var d3PlaylistToggle = function(name) {
+                if (name == "myDropdown") {
+                    document.getElementById(name).classList.toggle("show");
+                } else {
+                    var drop = d3.select("#" + name);
+                    if (drop.style("display") == "none") {
+                        drop.style("display", "block");
+                    } else {
+                        drop.style("display", "none");
+                    }
+                }
+            }
+            
+            var originalID = -1;
+            var newPlaylistTrackID = "";
+            
+            var savedIDObj = {};
+        </script>
+        
         <!-- Refresh token code -->
         <script src="/js/refresh_token.js"></script>
         
@@ -50,6 +75,7 @@
     </head>
     
     <body oncontextmenu="return false;">
+        
         <!-- Header Nav Bar  -->
         <div id="tophead">
             <div class="navbar">
@@ -106,7 +132,7 @@
         <!-- Generate Playlist -->
         <div id="dialog" style="display: none;" title="Generate Playlist">
             <font style="color: black;">Playlist name:</font><br/>
-            <input type="text" id="playlistName" name="playlistName" style="margin-top: 5px; width: 100%;"><br/>
+            <input type="text" id="playlistName" name="playlistName" style="margin-top: 5px; width: 100%;" onkeydown="if (event.keyCode == 13) { finallyCreatePlaylist(); }"><br/>
 
             <div id="max_tracks_slider_text" class="range-slider-text2">Max tracks: 25</div>
             <div id="max_tracks_slider" class=".range-slider2"></div>
@@ -114,15 +140,24 @@
             <button id="geneatePlaylistBtn2" class="playlistbtn2" onclick="finallyCreatePlaylist()">Generate Playlist</button>
         </div>
         
+        <!-- New Playlist -->
+        <div id="dialog2" style="display: none;" title="New Playlist">
+            <font style="color: black;">Playlist name:</font><br/>
+            <input type="text" id="playlistName2" name="playlistName2" style="margin-top: 5px; width: 100%;"  onkeydown="if (event.keyCode == 13) { createNewPlaylist(); }"><br/>
+            
+            <button id="geneatePlaylistBtn3" class="playlistbtn2" onclick="createNewPlaylist()">Create Playlist</button>
+        </div>
+        
+        
         <!-- Sidebar Start -->
         <div id="sidebar">
             <!-- Tabs -->
             <div id="tabs" class="c-tabs no-js">
                 <div class="tabnav">
-                    <a href="#" class="tablink tablinkside is-active">
+                    <a href="#" class="tablink tablinkside is-active noSelect">
                         Details
                     </a>
-                    <a href="#" class="tablink">
+                    <a href="#" class="tablink noSelect">
                         Generate
                     </a>
                 </div>
@@ -132,16 +167,27 @@
                     <div id="overflowing" class="tabcontent">
                         &nbsp;
                         <div class="tabcontentinner" id="detailsTab">
-                            <div id="description" class="descript"> Click on a track or artist to get more details. <br/><br/> Click on a track's or artist's arrow to fetch or collapse related tracks or artists. <br/><br/> Right-click on an arrow to fetch a new set of related tracks or artists. </div>
+                            <div id="description" class="descript noSelect"> Click on a track or artist to get more details. <br/><br/> Click on a track's or artist's arrow to fetch or collapse related tracks or artists. <br/><br/> Right-click on an arrow to fetch a new set of related tracks or artists. </div>
+                            
+                            <div id="place" class="noSelect" width="100%"></div>
+                            
                             <div id="headerImage" width="100%"></div>
                             
                             <div id="artistAbout" width="100%"><p id="bio" style="color: #01B482; padding-left: 8px; padding-right: 8px;"></p></div>
                             
                             <div id="spotifyTracks" width="100%"></div>
-                            <div id="spotifyTracks2" width="100%"></div>
+                            <div id="spotifyTracks2" width="100%">
+                                <div id="iframeTrack"></div>
+                                <div id="iframeOverlay" style="display: none;"></div>
+                            </div>
                             
                             <div id="at-container">
                                 <svg id="detailsSVG"></svg>
+                            </div>
+                            
+                            <div id="dropdown-container" style="display: none;">
+                                <button id="addToPlaylistBtn" class="dropbtn" onclick="if (lastSelected != null) { originalID = d3.select(lastSelected).datum().tid; d3.select('#myDropdown').html(''); d3.select('#myDropdown').append('a').attr('class', 'noSelect').html('New Playlist').on('click', function() { newPlaylistTrackID = originalID; $('#playlistName2').val(''); $('#dialog2').dialog('open'); }); d3.select('#myDropdown').append('hr').style('margin', '1px 0px 1px 0px'); fetchPlaylists(0, 'myDropdown', true); }">Add to Playlist</button>
+                                <div id="myDropdown" class="dropdown-content"></div>
                             </div>
                             
                             <div id="detailsGenres" width="100%"><p style="padding-left: 8px; padding-right: 8px;"></p></div>
@@ -151,17 +197,17 @@
 
                 <div class="c-tab">
                     <div id="overflowss" class="tabcontent">
-                        <h2> Selected </h2>
+                        <h2 class="noSelect"> Selected </h2>
                         
                         <div id="selectedtab" class="selectedtabwow">
-                            <div id="description2" class="descript"> Select up to 5 items: tracks, artists, or genres. </div>
+                            <div id="description2" class="descript noSelect"> Select up to 5 items: tracks, artists, or genres. </div>
                             <div id="selectedTracks"></div>
                             <div id="selectedArtists" class="space"></div>
                         </div>
                         <div class="line-div"></div>
-                        <h2> Select Genres </h2>
+                        <h2 class="noSelect"> Select Genres </h2>
 
-                        <select id="first" data-placeholder="Select genres" class="chosen select2-selection__placeholder" multiple=true tabindex="4">
+                        <select id="first" data-placeholder="Select genres" class="chosen select2-selection__placeholder noSelect" multiple=true tabindex="4">
                             <option value="acoustic">Acoustic</option>
                             <option value="afrobeat">Afrobeat</option>
                             <option value="alt-rock">Alt-rock</option>
@@ -291,17 +337,17 @@
                     </select>
                         
                         <div class="line-div"></div>
-                        <h2> Search Tracks </h2>
+                        <h2 class="noSelect"> Search Tracks </h2>
                         <select id="search_tracks" style="width: 99%">
                             <option></option>
                         </select>
 
                         <div class="line-div"></div>
-                        <h2> Search Artists </h2>
+                        <h2 class="noSelect"> Search Artists </h2>
                         <select id="search_artists" style="width: 99%"></select>
 
                         <div class="line-div"></div>
-                        <h2> Filter Options </h2>
+                        <h2 class="noSelect"> Filter Options </h2>
 
                         <div id="generateFilters">
                             <div id="filter_pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
@@ -355,54 +401,81 @@
             </script>
         </div>  
         <!-- End Tree Container !Do not Delete! div make sure the script is in the tree container -->
-
+        
         <!-- bottom pop out bar -->
         <div id="bottom-bar">
             <button type="button" id="bottombarbtn" class="button_slide">&#x25B2;</button>
             <div id="slideout">
-                <div id="leftSide">
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.3em;">Resize Tracks & Artists</h1>
-                    
-                    <label class="container2">Popularity
-                        <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
-                        <span class="checkmark"></span>
-                    </label>
-                    
-                    <label class="container2">Danceability
-                        <input type="checkbox" id="danceCheck" onclick='handleClick(this);'>
-                        <span class="checkmark"></span>
-                    </label>
-                    
-                    <label class="container2">Energy
-                        <input type="checkbox" id="energyCheck"  onclick='handleClick(this);'>
-                        <span class="checkmark"></span>
-                    </label>
-                                        
-                    <label class="container2">Happiness
-                        <input type="checkbox" id="posCheck"  onclick='handleClick(this);'>
-                        <span class="checkmark"></span>
-                    </label>
-                </div>
                 
-                <div id="rightSide">
-                    <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.3em;">Filter Tracks & Artists</h1>
-                    
-                    <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
-                    <div id="pop_slider" class="range-slider"></div>
-                    
-                    <div id="dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
-                    <div id="dance_slider" class="range-slider"></div>
-                    
-                    <div id="energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
-                    <div id="energy_slider" class="range-slider"></div>
-                    
-                    <div id="valence_slider_text" class="range-slider-text">Happiness: 0 - 100</div>
-                    <div id="valence_slider" class="range-slider"></div>
+                <div id="outer1">
+
+                    <div id="leftSide">
+                        <div id="inside1">
+                            <h1 style="color: white; margin-top: 15px; margin-bottom: 10px; font-size: 1.3em;">Resize Tracks & Artists</h1>
+
+                            <label class="container2">Popularity
+                                <input type="checkbox" id="popCheck"  onclick='handleClick(this);'>
+                                <span class="checkmark"></span>
+                            </label>
+
+                            <label class="container2">Danceability
+                                <input type="checkbox" id="danceCheck" onclick='handleClick(this);'>
+                                <span class="checkmark"></span>
+                            </label>
+
+                            <label class="container2">Energy
+                                <input type="checkbox" id="energyCheck"  onclick='handleClick(this);'>
+                                <span class="checkmark"></span>
+                            </label>
+
+                            <label class="container2">Happiness
+                                <input type="checkbox" id="posCheck"  onclick='handleClick(this);'>
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="middleSide">
+                        <div id="inside2">
+                            <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.3em;">Filter Tracks & Artists</h1>
+
+                            <div id="pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
+                            <div id="pop_slider" class="range-slider"></div>
+
+                            <div id="dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
+                            <div id="dance_slider" class="range-slider"></div>
+
+                            <div id="energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
+                            <div id="energy_slider" class="range-slider"></div>
+
+                            <div id="valence_slider_text" class="range-slider-text">Happiness: 0 - 100</div>
+                            <div id="valence_slider" class="range-slider"></div>
+                        </div>
+                    </div>
+
+                    <div id="rightSide">
+
+                        <div id="inside3">
+                            <h1 style="color: white; margin-top: 15px; margin-bottom: 10px;font-size: 1.3em;">New Tracks & Artists</h1>
+
+                            <div id="gen_pop_slider_text" class="range-slider-text">Popularity: 0 - 100</div>
+                            <div id="gen_pop_slider" class="range-slider"></div>
+
+                            <div id="gen_dance_slider_text" class="range-slider-text">Danceability: 0 - 100</div>
+                            <div id="gen_dance_slider" class="range-slider"></div>
+
+                            <div id="gen_energy_slider_text" class="range-slider-text">Energy: 0 - 100</div>
+                            <div id="gen_energy_slider" class="range-slider"></div>
+
+                            <div id="gen_valence_slider_text" class="range-slider-text">Happiness: 0 - 100</div>
+                            <div id="gen_valence_slider" class="range-slider"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- bottom pop up bar script -->
+        <!-- Bottom pop up bar script -->
         <script type="text/javascript" src="/js/bottom_bar.js"></script>
         
         <!-- Details tab -->
@@ -431,10 +504,101 @@
         
         <!--  Graph Bar sidebar -->
         <script type="text/javascript" src="/js/resize_filter_sliders.js"></script>
-    
+        
         <!--  Generate Playlist -->
         <script type="text/javascript" src="/js/generate_playlist.js"></script>
         
+        <script type="text/javascript">
+            /* When the user clicks on the button, 
+            toggle between hiding and showing the dropdown content */
+            
+            fetchPlaylists = function(offset, name, first) {
+                if (name == "myDropdown") {
+                    if (lastSelected == null || originalID != d3.select(lastSelected).datum().tid) {
+                        return;
+                    }
+                }
+                
+                spotifyApi.getUserPlaylists({
+                    limit: 50, 
+                    offset: offset
+                }, 
+                function(err, data) {
+                    if (!err) {
+                        data.items.forEach(function(d) {
+                            d3.select("#" + name)
+                                .append("a")
+                                .attr("class", "noSelect")
+                                .html(d.name)
+                                .on("click", function() {
+                                    var selTrackID = "";
+                                    if (name == "myDropdown") {
+                                        selTrackID = newPlaylistTrackID;
+                                    } else {
+                                        selTrackID = savedIDObj[name];
+                                    }
+                                    if (selTrackID != null && selTrackID != "") {
+                                        spotifyApi.addTracksToPlaylist(me.uid, d.id, ["spotify:track:" + selTrackID], {}, function(err, data) {
+                                            if (!err) {
+                                                d3.select("#addToPlaylistBtn").html("Added to: " + d.name);
+                                            } else {
+                                                d3.select("#addToPlaylistBtn").html("Error adding to: " + d.name);
+                                            }
+                                            setTimeout(function() {
+                                                    if (lastSelected != null && selTrackID == d3.select(lastSelected).datum().tid) {
+                                                        d3.select("#addToPlaylistBtn").html("Add to Playlist");
+                                                    }
+                                                }, 2500);
+                                        });
+                                    }
+                                });
+                        });
+                        
+                        if (first) {
+                            d3PlaylistToggle(name);
+                        }
+                        
+                        if (data.next != null) {
+                            fetchPlaylists((offset + data.items.length), name, false);
+                        }
+                    } else if (first) {
+                        refreshAccessToken(function() { fetchPlaylists(0, name, true); });
+                        callAPI(function() { getTrackRecommendations(id, source, true); }, true);
+                    }
+                });
+            }
+            
+            d3.select("#addToPlaylistBtn").on("mouseover", function (d) {
+                d3.select(this).style("background-color", "#4B9877");
+            });
+            
+            d3.select("#addToPlaylistBtn").on("mouseout", function (d) {
+                if (!document.getElementById("myDropdown").classList.contains('show')) {
+                    d3.select(this).style("background-color", "rgba(40, 40, 40, 0.5)");
+                }
+            });
+            
+            // Close the dropdown menu if the user clicks outside of it
+            window.onclick = function(event) {
+                if (!event.target.matches('.dropbtn') && !event.target.matches('.playEnd')) {
+                    d3.select("#addToPlaylistBtn").style("background-color", "rgba(40, 40, 40, 0.5)");
+                    
+                    var dropdowns = document.getElementsByClassName("dropdown-content");
+                    var i;
+                    for (i = 0; i < dropdowns.length; i++) {
+                      var openDropdown = dropdowns[i];
+                      var id = d3.select(openDropdown).attr("id");
+                      if (id == "myDropdown1" || id == "myDropdown2") {
+                        d3.select(openDropdown).style("display", "none");
+                      } else if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                      }
+                    }
+                } else {
+                    d3.select("#addToPlaylistBtn").style("background-color", "#4B9877");
+                }
+            }
+        </script>
         <!-- Unit testing with Jasmine
         <script src="/js/unit_tests.js"></script>
         -->

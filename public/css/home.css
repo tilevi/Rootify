@@ -15,9 +15,15 @@ body {
     font-family: "Source Sans Pro", sans-serif;
     font-size: .9em;
     line-height: 1em;
+    
     max-width: 100%;
+    
     overflow-x: hidden;
     overflow-y: hidden;
+}
+
+#bigContainer {
+    min-width: 1000px;
 }
 
 html {
@@ -77,7 +83,7 @@ a {
 
 /* ------------- Bottom Bar ------------ */
 
-.noSelect, #leftSide, #rightSide, #generateFilters, #closeButton, #geneatePlaylistBtn {
+.noSelect, #leftSide, #middleSide, #rightSide, #generateFilters, #closeButton, #geneatePlaylistBtn {
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
     -khtml-user-select: none; /* Konqueror HTML */
@@ -91,6 +97,7 @@ a {
     position: fixed;
     bottom: 0;
     width: 82%;
+    max-width: calc(100% - 225px);
 }
 
 #slideout {
@@ -119,7 +126,7 @@ a {
     left: 50%;
     width: 36px;
     margin-left: -18px;
-    margin-bottom: 2px;
+    margin-bottom: 0px;
     background-color: #4B9877; /* Green */
     border: none;
     color: white;
@@ -144,16 +151,42 @@ a {
 }
 
 #leftSide {
-    margin-left: 2%;
-    width: 48%;
+    padding-left: 2%;
+    width: 31%;
+    height: 100%;
+    float: left;
+}
+
+#middleSide {
+    padding-left: 2%;
+    width: 31%;
     height: 100%;
     float: left;
 }
 
 #rightSide {
-    width: 50%;
+    padding-left: 2%;
+    width: 31%;
     height: 100%;
     float: left;
+}
+
+#inside1 {
+    padding: 0px 10px 10px 10px;
+    
+    min-width: 225px;
+    overflow-x: hidden;
+}
+
+#inside2, #inside3 {
+    padding: 0px 10px 10px 10px;
+    
+    min-width: 200px;
+    overflow-x: hidden;
+}
+
+#outer1 {
+    min-width: 825px;
 }
 
 /*  ------------- Checkboxes ------------ */
@@ -225,7 +258,7 @@ a {
 }
 
 /* ------------- Header ------------ */
-#tophead {
+#tophead {    
     height: 60px;
     margin: 0;
     background-color: #252F41;
@@ -489,6 +522,7 @@ a {
     position: fixed;
     right: 0;
     width: 18%;
+    min-width: 225px;
     height: calc(100vh - 60px);
     background-color: #252F41;
     border-left: .5px solid #242A34;
@@ -539,12 +573,30 @@ a {
     margin-bottom: 4px;
 }
 
+#place {
+    margin-top: 2px;
+    margin-bottom: 2px;
+    line-height: 1.2em;
+    background-color: rgba(40, 40, 40, 0.5);
+}
+
+#place h2 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
 #spotifyTracks {
     display: none;
     padding: 5px 0px 0px 10px;
     margin-top: 0px;
     margin-bottom: 2px;
     background-color: rgba(40, 40, 40, 0.5);
+    
+    position: relative;
+}
+
+#spotifyTracks2 {
+    position: relative;
 }
 
 #spotifyTracks h2 {
@@ -739,6 +791,7 @@ a {
     position: fixed;
     background-color: #05AC81;
     width: 18%;
+    min-width: 225px;
     height: 50px;
     z-index: 10;
     bottom:0;
@@ -968,4 +1021,186 @@ li {
 }
 .select2-results__options {
     overflow-y: auto;
+}
+
+
+
+
+/* Dropdown Button */
+#dropdown-container {
+    margin-top: 2px;
+    vertical-align: middle;
+    display: block;
+    width: 100%;
+}
+
+#dropdown-container button {
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+    color: #fff;
+    background-color: rgba(40, 40, 40, 0.5);
+    border: 1px solid #4B9877;
+    float: left;
+    padding: 10px 30px;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: "Source Sans Pro", sans-serif;
+    font-weight: 100;
+    font-size: .8em;
+    transition-property: all;
+    transition-duration: .5s;
+    transition-timing-function: ease-out;
+    border-radius: 0;
+}
+
+#dropdown-container button:hover {
+    color: #fff;
+    background-color: #4B9877;
+    border-color: #4B9877;
+    transition-property: all;
+    transition-duration: .5s;
+}
+
+#dropdown-container button:active {
+    background-color: #4B9877;
+}
+
+.dropbtn {
+    width: 100%;
+    background-color: rgba(40, 40, 40, 0.5);
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Dropdown button on hover & focus */
+.dropbtn:hover, .dropbtn:focus {
+    color: #fff;
+    background-color: #4B9877;
+    border-color: #4B9877;
+    transition-property: all;
+    transition-duration: .5s;
+}
+
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    left: 0;
+    
+    display: none;
+    position: relative;
+    background-color: #f9f9f9;
+    
+    width: 100%;
+    max-height: 160px;
+    
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    overflow: auto;
+}
+
+.dropdown-content::-webkit-scrollbar {
+    display: block;
+    width: 7px;
+}
+
+.dropdown-content::-webkit-resizer {
+    display: none;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {
+    background-color: #f1f1f1
+}
+
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.show {
+    display:block;
+}
+
+#iframeOverlay {
+    position: absolute;
+    top: 75px;
+    left: 0;
+    width: 100%;
+    height: 274px;
+    background-color: rgba(0, 0, 0, 0);
+    cursor: pointer;
+}
+
+.playEnd {
+    position: absolute;
+    right: 0px;
+    margin-bottom 2px;
+    
+    background-color: rgba(40, 40, 40, 1);
+    
+    -webkit-animation: fadein 1.5s; /* Safari, Chrome and Opera > 12.1 */
+       -moz-animation: fadein 1.5s; /* Firefox < 16 */
+        -ms-animation: fadein 1.5s; /* Internet Explorer */
+         -o-animation: fadein 1.5s; /* Opera < 12.1 */
+            animation: fadein 1.5s;
+    
+    width: 8%;
+    height: 75px;
+    
+    border: 0;
+    color: #fff;
+}
+
+.playEnd span {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Firefox < 16 */
+@-moz-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Safari, Chrome and Opera > 12.1 */
+@-webkit-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Internet Explorer */
+@-ms-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Opera < 12.1 */
+@-o-keyframes fadein {
+    from { opacity: 0; }
+    to   { opacity: 1; }
 }

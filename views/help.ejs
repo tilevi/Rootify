@@ -51,6 +51,8 @@
                 <div class="panel">
                 <img align="middle" width="50%" src="/assets/help/tree.png">
                     <p>The tree initially shows your top 5 tracks and artists from your short-term listening experience. A track is a piece of music. Tracks are represented by squares with their album art. An artist is often the main person behind a track. Artists are represented by circles with the artist's image.</p>
+                    
+                    <p>Your most popular tracks and artists go from left to right. In other words, your number 1 track will be the leftmost track. Your number 1 artist will be the leftmost artist.</p>
                 </div>
 
                 <button class="accordion">Zooming & Dragging</button>
@@ -96,15 +98,22 @@
                 </div>
                 
                 
-                <button class="accordion">Resizing Nodes</button>
+                <button class="accordion">[Bottom Bar] Resizing Nodes</button>
                 <div class="panel"><img align="middle" width="50%" src="/assets/help/bottom_bar_resize.gif">
                     <p>Checking one or more of the boxes under 'Resizing Tracks & Artists' will cause all of the tracks and artists in the tree to resize according to the checked attributes. A smaller track (or artist) means that it has quantitatively less of the checked attributes than a larger track and/or artist. (Technial side note: when multiple boxes are checked, all of the attribute numbers between 0-1 are multiplied together.) Tracks will resize for a combination of any of the four attributes. Artists will only resize when popularity is checked because artists don't have audio features.</p>
                 </div>
                 
-                <button class="accordion">Filtering Nodes</button>
+                <button class="accordion">[Bottom Bar] Filtering Nodes</button>
                 <div class="panel">
                 <img align="middle" width="50%" src="/assets/help/bottom_bar_filter.gif">
                 <p>The sliders below 'Filter Tracks & Artists' can be adjusted from either end. Any tracks or artists that do not fulfill the slider criteria will become grayed out.</p>
+                </div>
+                
+                <button class="accordion">[Bottom Bar] New Tracks & Artists</button>
+                <div class="panel">
+                <p>The sliders below 'New Tracks & Artists' can be adjusted between 0 and 100 (inclusive). Any tracks or artists that you expand (either by initially left-clicking a down arrow or right-clicking an arrow) will generally bring new tracks or artists into the tree. These new tracks or artists will fit the set criteria.</p>
+                    
+                    <p>As an example, say we want to discover related tracks to the song "Getaway Car" by Taylor Swift to have at least a 'Danceability' rating of 60. We would set the 'Danceability' slider under 'New Tracks & Artists' to the range 60 - 100. Now, we click on the down arrow to "Getaway Car" by Taylor Swift. The resulting tracks are "King Of My Heart" by Taylor Swift, "Atmosphere" by Bebe Rexha, and "EASE" by Troye Sivan—all of which have a 'Danceability' rating of at least 60.</p>
                 </div>
                 
                 <button class="accordion">'Details' Tab</button>

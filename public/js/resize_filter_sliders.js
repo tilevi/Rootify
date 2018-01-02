@@ -23,7 +23,22 @@ function upperCaseFirstLetter(string) {
 
 $( function() {
     for (var key in filterOptions) {
+        
+        $("#gen_" + key).slider({
+            range: true, 
+            min: 0, 
+            max: 100, 
+            values: [0, 100], 
+            slide: function(event, ui) {
+                var min = ui.values[0];
+                var max = ui.values[1];
+                var id = $(this).attr("id");
 
+                var typ = filterOptions[id.slice(4)].typ;
+                $("#" + id + "_text").html(upperCaseFirstLetter(typ) + ": " + min + " - " + max);
+            }
+        });
+        
         $("#filter_" + key).slider({
             range: true, 
             min: 0, 

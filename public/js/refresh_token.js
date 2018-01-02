@@ -4,30 +4,18 @@
     Purpose:
             This code handles retrieving a new access token.
 */
-var refreshAccessToken = function(callback) {
+refreshAccessToken = function(callback) {
     $.ajax({
         url: '/refresh_token',
         data: {
             'refresh_token': refresh_token
         }
     }).done(function(data) {
-        spotifyApi.setAccessToken(data.access_token);
-        console.log(data);
+        access_token = data.access_token;
+        spotifyApi.setAccessToken(access_token);
+        
         if (callback) {
             callback(true);
-        }
-    });
-}
-
-/*
-    Token sanity check.
-    This is used to generate a new access token if ours has expired.
-*/
-var tokenSanityCheck = function() {
-    spotifyApi.getMe({}, function(err, data) {
-        if (err) {
-            // Generate a new access token.
-            refreshAccessToken();
         }
     });
 }

@@ -7,42 +7,51 @@
 
 var preventPlaylist = false;
 
-var addTracksToPlaylist = function(playlistID, uriArr, trackInfo, second_pass) {
+var addTracksToPlaylist = function(playlistID, uriArr, trackInfo, second_pass, new_playlist) {
     spotifyApi.addTracksToPlaylist(me.uid, playlistID, uriArr, {}, function(err, data) {
-        console.log(err, data);
         if (!err) {
-            var genPlaylistDiv = d3.select("#recommendedTracks");
-            genPlaylistDiv.html("");
-            d3.select("#generatedPlaylistTracks").style("display", "block");
+            if (!new_playlist) {
+                var genPlaylistDiv = d3.select("#recommendedTracks");
+                genPlaylistDiv.html("");
+                d3.select("#generatedPlaylistTracks").style("display", "block");
 
-            trackInfo.forEach(function(d) {
-                genPlaylistDiv.append('div')
-                    .attr("class", "trackBox")
-                    .attr("font-family", "sans-serif")
-                    .attr("font-size", "10px")
-                    .html(d);
-            });
-
-            document.getElementById('geneatePlaylistBtn2').innerHTML = 'PLAYLIST CREATED!';
+                trackInfo.forEach(function(d) {
+                    genPlaylistDiv.append('div')
+                        .attr("class", "trackBox")
+                        .attr("font-family", "sans-serif")
+                        .attr("font-size", "10px")
+                        .html(d);
+                });
+                
+                document.getElementById('geneatePlaylistBtn2').innerHTML = 'PLAYLIST CREATED!';
+            } else {
+                document.getElementById('geneatePlaylistBtn3').innerHTML = 'PLAYLIST CREATED!';
+            }
+            
             setTimeout(function() {
                 // Close the dialog box
-                $('#dialog').dialog('close');
+                if (new_playlist) {
+                    $('#dialog2').dialog('close');
+                    document.getElementById('geneatePlaylistBtn3').innerHTML = 'Create Playlist';
+                } else {
+                    $('#dialog').dialog('close');
+                    document.getElementById('geneatePlaylistBtn2').innerHTML = 'Create Playlist';
+                    // Scroll down to the recommended playlist.
+                    $('#generatedPlaylistTracks')[0].scrollIntoView(true);
+                }
                 
                 // Re-allow playlist creation
                 preventPlaylist = false;
-                
-                // Scroll down to the recommended playlist.
-                $('#generatedPlaylistTracks')[0].scrollIntoView( true );
             }, 750); 
         } else if (!second_pass) {
-            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, true); }, true);
+            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, true, new_playlist); }, true);
         } else {
             preventPlaylist = false;
         }
     });
 }
 
-var createRealPlaylist = function(name, uriArr, trackInfo, maxTracks, second_pass) {
+var createRealPlaylist = function(name, uriArr, trackInfo, maxTracks, second_pass, new_playlist) {
     spotifyApi.createPlaylist(me.uid, 
     {
         name: name, 
@@ -51,9 +60,9 @@ var createRealPlaylist = function(name, uriArr, trackInfo, maxTracks, second_pas
     function(err, data) {
         if (!err) {
             var playlistID = data.id;
-            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo); });
+            callAPI(function() { addTracksToPlaylist(playlistID, uriArr, trackInfo, false, new_playlist); });
         } else if (!second_pass) {
-            callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks, true) }, true);
+            callAPI(function() { createRealPlaylist(name, uriArr, trackInfo, maxTracks, true, new_playlist); }, true);
         } else {
             preventPlaylist = false;
         }
@@ -122,9 +131,7 @@ var createPlaylist = function(name, maxTracks, second_pass) {
             max_valence: positivityMax / 100
         }, 
         function(err, data) {
-            console.log(err, data);
             if (!err) {
-                
                 var trackEmpty = false;
                 
                 if (data.tracks.length == 0) {
@@ -176,12 +183,49 @@ var finallyCreatePlaylist = function() {
     createPlaylist(name, maxTracks);
 }
 
+var createNewPlaylist = function() {
+    if (preventPlaylist) {
+        return;
+    }
+    
+    var trackID = newPlaylistTrackID; // d3.select(lastSelected).datum().tid;
+    
+    if (trackID != "") {
+        document.getElementById('geneatePlaylistBtn2').innerHTML = 'CREATING PLAYLIST...';
+        // https://stackoverflow.com/questions/12754256/removing-invalid-characters-in-javascript
+        var name = ($('#playlistName2').val()).replace(/\uFFFD/g, '');
+        if (name == "") {
+            name = "[Rootify] Playlist";
+        }
+        
+        document.getElementById('geneatePlaylistBtn3').innerHTML = 'CREATING...';
+        createRealPlaylist(name, ["spotify:track:" + trackID], [], 0, false, true);
+    } else {
+        $('#dialog2').dialog('close');
+    }
+}
+
 $(function() {
     $("#dialog").dialog({
         modal: true, 
         autoOpen: false, 
         resizable: false, 
         height: 180, 
+        show: {
+            effect: "blind", 
+            duration: 500
+        },
+        hide: {
+            effect: "blind", 
+            duration: 500
+        }
+    });
+    
+    $("#dialog2").dialog({
+        modal: true, 
+        autoOpen: false, 
+        resizable: false, 
+        height: 135, 
         show: {
             effect: "blind", 
             duration: 500
@@ -210,6 +254,7 @@ $(function() {
             document.getElementById('geneatePlaylistBtn2').innerHTML = 'GENERATE PLAYLIST';
             // Set the text back to 25 (default max tracks).
             $("#max_tracks_slider_text").html("Max tracks: 25");
+            $("#playlistName").val('');
             $("#dialog").dialog("open");
         }
     });

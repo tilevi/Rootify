@@ -8,12 +8,12 @@
 $("#search_artists").select2({
     placeholder: "Please click to search for an artist.", 
     ajax: {
-        url: "https://api.spotify.com/v1/search",
-        dataType: 'json',
-        delay: 250,
+        url: "https://api.spotify.com/v1/search", 
+        dataType: 'json', 
+        delay: 250, 
         headers: {
-            "Authorization": "Bearer " + access_token, 
-            "Content-Type": "application/json",
+            "Authorization": "Bearer " + spotifyApi.getAccessToken(), 
+            "Content-Type": "application/json", 
         }, 
         data: function (params) {
             return {
@@ -74,7 +74,6 @@ $('#search_artists').data('select2').on('results:message', function(params){
 });
 
 $('#search_artists').on("select2:open", function(e) {
-    tokenSanityCheck();
     $('#search_artists').val('');
 });
 

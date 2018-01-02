@@ -17,10 +17,11 @@ body {
 }
 
 p {
-    padding-top: 10px;
 	color: #7B7B7B;
 	font-size: 1.3em;
 	line-height: 1.2em;
+    width: 50%;
+    text-align: center;
 }
 
 h1 {
@@ -98,12 +99,13 @@ li a:hover {
 #div {
 	width: 50%;
     margin-top: 5%;
-	margin-bottom: 5%;
+	margin-bottom: 2%;
 }
 
 #thediv {
 	width: 80%;
-	margin: 0 auto;
+	margin: 2% auto;
+    min-width: 400px;
 }
 
 #thediv a { 

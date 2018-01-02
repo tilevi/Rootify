@@ -30,7 +30,9 @@ function redraw() {
         .attr("class", "overlay");
     
     if (!generateTabIsActive) {
-        barManager.updateBars();
+        setTimeout(function() {
+            barManager.updateBars();
+        }, 0);
     }
 }
 

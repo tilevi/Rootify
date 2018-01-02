@@ -212,6 +212,7 @@ var BarManager = function() {
                     return "Key: " + pitchclass[d.key] + " " + (d.mode == 0 ? "Minor" : "Major");
                 }
             })
+            .attr("class", "noSelect")
             .attr("dy", "0.5em") // Centers it vertically
             .attr("x", barBorder * 2)
             .attr("y", function(d, i) {

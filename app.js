@@ -81,7 +81,7 @@ var clearState = function(res) {
 app.get('/login', function(req, res) {
     var state = setAndGetState(res);
     
-    var scope = 'user-top-read user-read-private playlist-modify-public playlist-modify-private';
+    var scope = 'user-top-read user-read-private playlist-read-private playlist-read-collaborative playlist-modify-public playlist-modify-private';
     res.redirect('https://accounts.spotify.com/authorize?' + 
     querystring.stringify({
         response_type: 'code', 
@@ -200,20 +200,43 @@ app.get('/refresh_token', function(req, res) {
     // requesting access token from refresh token
     var refresh_token = req.query.refresh_token;
     var authOptions = {
-        url: 'https://accounts.spotify.com/api/token',
+        url: 'https://accounts.spotify.com/api/token', 
         headers: {
             'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
-        },
+        }, 
         form: {
-            grant_type: 'refresh_token',
+            grant_type: 'refresh_token', 
             refresh_token: refresh_token
-        },
+        }, 
         json: true
     };
+    
+    var options1 = {
+        domain: 'rootify.io', 
+        path: '/', 
+        maxAge: 3600000 * 24 * 30,
+    };
+    
+    res.clearCookie('myToken', options1);
     
     request.post(authOptions, function(error, response, body) {
         if (!error && response.statusCode === 200) {
             var access_token = body.access_token;
+            
+            //
+            
+            var options2 = {
+                domain: 'rootify.io', 
+                path: '/', 
+                maxAge: 3600000 * 24 * 30,
+            };
+            
+            //
+            
+            res.cookie('myToken', access_token, options2);
+            
+            //
+            
             res.send({
                 'access_token': access_token
             });

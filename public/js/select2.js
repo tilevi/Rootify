@@ -3456,7 +3456,12 @@ S2.define('select2/data/ajax',[
 
       this._request = null;
     }
-
+    
+    this.ajaxOptions.headers = {
+        "Authorization": "Bearer " + spotifyApi.getAccessToken(), 
+        "Content-Type": "application/json"
+    }
+    
     var options = $.extend({
       type: 'GET'
     }, this.ajaxOptions);
@@ -3470,7 +3475,7 @@ S2.define('select2/data/ajax',[
     }
 
     function request () {
-      var $request = options.transport(options, function (data) {
+        var $request = options.transport(options, function (data) {
         var results = self.processResults(data, params);
 
         if (self.options.get('debug') && window.console && console.error) {

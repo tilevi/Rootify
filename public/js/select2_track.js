@@ -12,7 +12,7 @@ $("#search_tracks").select2({
         dataType: 'json',
         delay: 250,
         headers: {
-            "Authorization": "Bearer " + access_token, 
+            "Authorization": "Bearer " + spotifyApi.getAccessToken(), 
             "Content-Type": "application/json",
         }, 
         data: function (params) {
@@ -74,7 +74,6 @@ $('#search_tracks').data('select2').on('results:message', function(params){
 });
 
 $('#search_tracks').on("select2:open", function(e) {
-    tokenSanityCheck();
     $('#search_tracks').val('');
 });
 
