@@ -661,10 +661,11 @@ var selectedTrackInfo = {};
             if (trackOnly) {
                 html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe>";
             } else {
-                html = html + "<button onclick='savedIDObj[\"myDropdown" + (i+1) + "\"] = \"" + trackID + "\"; var drop = d3.select(\"#myDropdown" + (i+1) + "\"); drop.html(\"\"); drop.append(\"a\").attr(\"class\", \"noSelect\").html(\"New Playlist\").on(\"click\", function() { newPlaylistTrackID = \"" + trackID + "\"; $(\"#playlistName2\").val(\"\"); $(\"#dialog2\").dialog(\"open\"); }); drop.append(\"hr\").style(\"margin\", \"1px 0px 1px 0px\"); fetchPlaylists(0, \"myDropdown" + (i+1) + "\", true);' class='playEnd' width='8%' height='" + height + "px'>&#x2b;</button><iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='92%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe><div id=\"myDropdown" + (i+1) + "\" class=\"dropdown-content\"></div>";
+                html = html + "<button onclick='clearTimeout(timeOut); savedIDObj[\"myDropdown" + (i+1) + "\"] = \"" + trackID + "\"; var drop = d3.select(\"#myDropdown" + (i+1) + "\"); drop.html(\"\"); drop.append(\"a\").attr(\"class\", \"noSelect\").html(\"New Playlist\").on(\"click\", function() { newPlaylistTrackID = \"" + trackID + "\"; $(\"#playlistName2\").val(\"\"); $(\"#dialog2\").dialog(\"open\"); }); drop.append(\"hr\").style(\"margin\", \"1px 0px 1px 0px\"); fetchPlaylists(0, \"myDropdown" + (i+1) + "\", true);' class='playEnd' width='8%' height='" + height + "px'>&#x2b;</button><iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='92%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe><div id=\"myDropdown" + (i+1) + "\" class=\"dropdown-content\"></div><button width=100% id='myDropdown" + (i+1) + "Box' class='dropbtn2'></button>";
             }
+            
             if ((i + 1) != numberOfTracks) {
-                html = html + "<br/>";
+                html = html + "<div class='noSpace'><br/></div>";
             }
         }
         

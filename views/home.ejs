@@ -27,6 +27,8 @@
             var tokenSanityCheck = function() {}
             var redraw = function() {}
             
+            var timeOut = null;
+            
             var d3PlaylistToggle = function(name) {
                 if (name == "myDropdown") {
                     document.getElementById(name).classList.toggle("show");
@@ -186,7 +188,7 @@
                             </div>
                             
                             <div id="dropdown-container" style="display: none;">
-                                <button id="addToPlaylistBtn" class="dropbtn" onclick="if (lastSelected != null) { originalID = d3.select(lastSelected).datum().tid; d3.select('#myDropdown').html(''); d3.select('#myDropdown').append('a').attr('class', 'noSelect').html('New Playlist').on('click', function() { newPlaylistTrackID = originalID; $('#playlistName2').val(''); $('#dialog2').dialog('open'); }); d3.select('#myDropdown').append('hr').style('margin', '1px 0px 1px 0px'); fetchPlaylists(0, 'myDropdown', true); }">Add to Playlist</button>
+                                <button id="addToPlaylistBtn" class="dropbtn" onclick="clearTimeout(timeOut); if (lastSelected != null) { originalID = d3.select(lastSelected).datum().tid; d3.select('#myDropdown').html(''); d3.select('#myDropdown').append('a').attr('class', 'noSelect').html('New Playlist').on('click', function() { newPlaylistTrackID = originalID; $('#playlistName2').val(''); $('#dialog2').dialog('open'); }); d3.select('#myDropdown').append('hr').style('margin', '1px 0px 1px 0px'); fetchPlaylists(0, 'myDropdown', true); }">Add to Playlist</button>
                                 <div id="myDropdown" class="dropdown-content"></div>
                             </div>
                             
@@ -533,22 +535,35 @@
                                 .on("click", function() {
                                     var selTrackID = "";
                                     if (name == "myDropdown") {
-                                        selTrackID = newPlaylistTrackID;
+                                        selTrackID = originalID;
                                     } else {
                                         selTrackID = savedIDObj[name];
                                     }
                                     if (selTrackID != null && selTrackID != "") {
                                         spotifyApi.addTracksToPlaylist(me.uid, d.id, ["spotify:track:" + selTrackID], {}, function(err, data) {
                                             if (!err) {
-                                                d3.select("#addToPlaylistBtn").html("Added to: " + d.name);
+                                                if (name == "myDropdown") {
+                                                    d3.select("#addToPlaylistBtn").html("Added to: " + d.name);
+                                                } else {
+                                                    d3.select("#" + name + "Box")
+                                                            .style("display", "block")
+                                                            .html("Added to: " + d.name);
+                                                }
                                             } else {
-                                                d3.select("#addToPlaylistBtn").html("Error adding to: " + d.name);
+                                                if (name == "myDropdown") {
+                                                    d3.select("#addToPlaylistBtn").html("Error adding to: " + d.name);
+                                                } else {
+                                                    d3.select("#" + name + "Box").html("Error adding to: " + d.name);
+                                                }
                                             }
-                                            setTimeout(function() {
-                                                    if (lastSelected != null && selTrackID == d3.select(lastSelected).datum().tid) {
-                                                        d3.select("#addToPlaylistBtn").html("Add to Playlist");
-                                                    }
-                                                }, 2500);
+                                            
+                                            timeOut = setTimeout(function() {
+                                                if (name == "myDropdown") {
+                                                    d3.select("#addToPlaylistBtn").html("Add to Playlist");
+                                                } else {
+                                                    d3.select("#" + name + "Box").style("display", "none");
+                                                }
+                                            }, 2500);
                                         });
                                     }
                                 });
@@ -556,6 +571,7 @@
                         
                         if (first) {
                             d3PlaylistToggle(name);
+                            $('#' + name)[0].scrollIntoView(true);
                         }
                         
                         if (data.next != null) {
