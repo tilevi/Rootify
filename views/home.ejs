@@ -40,6 +40,9 @@
                         drop.style("display", "none");
                     }
                 }
+                
+                $("#" + name).scrollTop(0);
+                $('#' + name)[0].scrollIntoView(true);
             }
             
             var originalID = -1;
@@ -169,7 +172,7 @@
                     <div id="overflowing" class="tabcontent">
                         &nbsp;
                         <div class="tabcontentinner" id="detailsTab">
-                            <div id="description" class="descript noSelect"> Click on a track or artist to get more details. <br/><br/> Click on a track's or artist's arrow to fetch or collapse related tracks or artists. <br/><br/> Right-click on an arrow to fetch a new set of related tracks or artists. </div>
+                            <div id="description" class="descript noSelect"> Click on a track or artist to get more details. <br/><br/> Click on a track's or artist's arrow to fetch or collapse related tracks or artists. <br/><br/> Right-click on an arrow to fetch a new set of related tracks or artists. <br/><br/><hr/><br/>Your <b>short-term</b> tracks and artists are based on your listening activity during the past 4 weeks. <br/><br/>Your<b> long-term</b> tracks and artists are based on your activity during the past 6 months.</div>
                             
                             <div id="place" class="noSelect" width="100%"></div>
                             
@@ -188,15 +191,34 @@
                             </div>
                             
                             <div id="dropdown-container" style="display: none;">
-                                <button id="addToPlaylistBtn" class="dropbtn" onclick="clearTimeout(timeOut); if (lastSelected != null) { originalID = d3.select(lastSelected).datum().tid; d3.select('#myDropdown').html(''); d3.select('#myDropdown').append('a').attr('class', 'noSelect').html('New Playlist').on('click', function() { newPlaylistTrackID = originalID; $('#playlistName2').val(''); $('#dialog2').dialog('open'); }); d3.select('#myDropdown').append('hr').style('margin', '1px 0px 1px 0px'); fetchPlaylists(0, 'myDropdown', true); }">Add to Playlist</button>
+                                <button id="addToPlaylistBtn" class="dropbtn" onclick="if (lastSelected != null) { originalID = d3.select(lastSelected).datum().tid; d3.select('#myDropdown').html(''); d3.select('#myDropdown').append('a').attr('class', 'noSelect').html('New Playlist').on('click', function() { clearTimeout(timeOut); newPlaylistTrackID = originalID; $('#playlistName2').val(''); $('#dialog2').dialog('open'); }); d3.select('#myDropdown').append('hr').style('margin', '1px 0px 1px 0px'); fetchPlaylists(0, 'myDropdown', true); }">Add to Playlist</button>
                                 <div id="myDropdown" class="dropdown-content"></div>
                             </div>
                             
                             <div id="detailsGenres" width="100%"><p style="padding-left: 8px; padding-right: 8px;"></p></div>
                         </div>
                     </div>
-                </div>
+                    
+                        <div id="donateFooter" class="slideFooter noSelect">
 
+                            <button type="button" id="bottombarbtn2" class="button_slide2">&#x25B2;</button>
+
+                            <div id="slideout2" class="slideFooter">
+                                <p>If you enjoy using Rootify, please consider making a donation. It would be very much appreciated!</p>
+                                <p>Donations help with future development and keep the site running. ~Tristan I. (Fish Development)</p>
+                                
+                                <center>
+                                    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+                                        <input type="hidden" name="cmd" value="_s-xclick">
+                                        <input type="hidden" name="hosted_button_id" value="PBGJHHDLHRECU">
+                                        <input type="image" src="/assets/donate.png" style="max-width: 120px; margin-top: 5px;" width="40%" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+                                        <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+                                    </form>
+                                </center>
+                            </div>
+                        </div>
+                </div>
+                
                 <div class="c-tab">
                     <div id="overflowss" class="tabcontent">
                         <h2 class="noSelect"> Selected </h2>
@@ -533,6 +555,8 @@
                                 .attr("class", "noSelect")
                                 .html(d.name)
                                 .on("click", function() {
+                                    clearTimeout(timeOut);
+                                    
                                     var selTrackID = "";
                                     if (name == "myDropdown") {
                                         selTrackID = originalID;
@@ -571,7 +595,6 @@
                         
                         if (first) {
                             d3PlaylistToggle(name);
-                            $('#' + name)[0].scrollIntoView(true);
                         }
                         
                         if (data.next != null) {

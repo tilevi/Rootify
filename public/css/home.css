@@ -100,6 +100,69 @@ a {
     max-width: calc(100% - 225px);
 }
 
+#donateFooter {
+    position: absolute;
+    width: 100%;
+    margin: 0px 0px 0px 0px;
+    font-family: "Avenir Next", sans-serif;
+    text-decoration: none;
+    font-weight: normal;
+    color: #fff;
+}
+
+#slideout2 {
+    position: relative;
+    width: 100%;
+    margin: 0px 0px 0px 0px;
+    
+    max-height: 0px;
+    transition-property: all;
+    transition-duration: .5s;
+    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+}
+
+#slideout2 p {
+    display: none;
+}
+
+#slideout2.on p {
+    padding-top: 0px;
+    padding-right: 10px;
+    padding-bottom: 0px;
+    padding-left: 10px;
+    display: block;
+}
+
+#slideout2.on {
+    max-height: 400px;
+}
+
+.button_slide2 {
+    position: relative;
+    left: 50%;
+    width: 36px;
+    margin-left: -18px;
+    margin-bottom: 0px;
+    background-color: #4B9877; /* Green */
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 12px;
+    cursor: pointer;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+}
+
+.slideFooter {
+    background-color: #252F41;
+    z-index: 1002;
+    bottom: 0px;
+    width: 100%;
+    line-height: 1.4em;
+}
+
 #slideout {
     background: #212938;
     border-top: 1px solid #242A34;
@@ -628,6 +691,14 @@ a {
     background-color: #212938;
     outline: .5px solid #1f2126;
     color: #959da0;
+    
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently
+                          supported by Chrome and Opera */
 }
 
 .trackBoxText {
@@ -900,10 +971,10 @@ a {
     font-family: "Avenir Next", sans-serif;
 }
 
-.link {
+path.link {
     fill: none;
     stroke: #979797;
-    stroke-width: 0.8px;
+    stroke-width: 1px;
 }
 
 .line {

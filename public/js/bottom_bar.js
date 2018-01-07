@@ -14,3 +14,14 @@ $('#bottombarbtn').click(function(){
         $('#bottombarbtn').html("&#x25B2;");
     }
 });
+
+$('#bottombarbtn2').click(function(){
+    $('#slideout2').toggleClass('on');
+    var status = $('#bottombarbtn2').html();
+
+    if (status == "▲"){
+        $('#bottombarbtn2').html("&#x25BC;");
+    } else {
+        $('#bottombarbtn2').html("&#x25B2;");
+    }
+});

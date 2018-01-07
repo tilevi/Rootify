@@ -90,20 +90,40 @@ var selectedTrackInfo = {};
     */
     var tree = d3.layout.tree()
         .size([viewerWidth, viewerHeight]);
-
+    
     /*
         This is a path generator that creates an elbow shape.
     */
     var elbow = function(d, i) {
         var targetY = -10;
+        var startY = (d.source.y + ((d.source.root) ? 55 : verticalSpacing)) + 0.5;
+        
         if (d.target.tid || d.target.aid) {
             targetY = d.target.y;
         }
-
-        return "M" + d.source.x + "," + ( d.source.y + ((d.source.root) ? 55 : verticalSpacing))
-        + "H" + d.target.x + "V" + ( targetY );
+        
+        /*
+            There is a small problem with overlapping lines.
+            Lines that overlap are darker.
+            
+            I tried the following solution but it didn't seem to work: 
+                https://stackoverflow.com/questions/23126590/colour-issues-when-2-svg-lines-are-overlapping
+            
+            As a workaround, I only allow the leftmost and rightmost nodes to have long branches.
+            The rest have vertical lines (or sticks).
+        */
+        if (d.source.root) {
+            if (d.target.place && ((d.target == d.source.children[0]) || 
+                (d.target == d.source.children[d.source.children.length - 1]))) {
+                return ("M" + (d.source.x + 0.5) + "," + (startY) + "H" + d.target.x + "V" + (targetY));
+            } else {
+                return ("M" + (d.target.x) + "," + (startY + 0.5) + "H" + (d.target.x - 0.1) + "V" + (targetY));
+            }
+        }
+        
+        return ("M" + (d.source.x) + "," + (startY) + "H" + d.target.x + "V" + (targetY));
     }
-
+    
     /*
         We use this to sort our tree.
         Top tracks and artists appear left to right.
@@ -345,6 +365,7 @@ var selectedTrackInfo = {};
         d3.select("#artistAbout").style("display", "none");
         
         d3.select("#description").style("display", "block");
+        d3.select("#donateFooter").style("display", "block");
     }
     
     var triangleSize = function(d) {
@@ -458,6 +479,7 @@ var selectedTrackInfo = {};
             if (typ == "artist") {
                 d3.select("#dropdown-container").style("display", "none");
                 d3.select("#description").style("display", "none");
+                d3.select("#donateFooter").style("display", "none");
                 
                 if (d.place != null) {
                     //var modeStr = (mode == "short") ? "Short-term" : "Long-term";
@@ -514,6 +536,7 @@ var selectedTrackInfo = {};
                 d3.select("#addToPlaylistBtn").html("Add to Playlist");
                 
                 d3.select("#description").style("display", "none");
+                d3.select("#donateFooter").style("display", "none");
                 
                 // Hide the artist header image and associated genres.
                 d3.select("#headerImage").style("display", "none");
@@ -661,7 +684,7 @@ var selectedTrackInfo = {};
             if (trackOnly) {
                 html = html + "<iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='100%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe>";
             } else {
-                html = html + "<button onclick='clearTimeout(timeOut); savedIDObj[\"myDropdown" + (i+1) + "\"] = \"" + trackID + "\"; var drop = d3.select(\"#myDropdown" + (i+1) + "\"); drop.html(\"\"); drop.append(\"a\").attr(\"class\", \"noSelect\").html(\"New Playlist\").on(\"click\", function() { newPlaylistTrackID = \"" + trackID + "\"; $(\"#playlistName2\").val(\"\"); $(\"#dialog2\").dialog(\"open\"); }); drop.append(\"hr\").style(\"margin\", \"1px 0px 1px 0px\"); fetchPlaylists(0, \"myDropdown" + (i+1) + "\", true);' class='playEnd' width='8%' height='" + height + "px'>&#x2b;</button><iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='92%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe><div id=\"myDropdown" + (i+1) + "\" class=\"dropdown-content\"></div><button width=100% id='myDropdown" + (i+1) + "Box' class='dropbtn2'></button>";
+                html = html + "<button onclick='savedIDObj[\"myDropdown" + (i+1) + "\"] = \"" + trackID + "\"; var drop = d3.select(\"#myDropdown" + (i+1) + "\"); drop.html(\"\"); drop.append(\"a\").attr(\"class\", \"noSelect\").html(\"New Playlist\").on(\"click\", function() { clearTimeout(timeOut); newPlaylistTrackID = \"" + trackID + "\"; $(\"#playlistName2\").val(\"\"); $(\"#dialog2\").dialog(\"open\"); }); drop.append(\"hr\").style(\"margin\", \"1px 0px 1px 0px\"); fetchPlaylists(0, \"myDropdown" + (i+1) + "\", true);' class='playEnd' width='8%' height='" + height + "px'>&#x2b;</button><iframe src='https://open.spotify.com/embed/track/" + trackID + "' width='92%' height='" + height + "px' frameborder='0' allowtransparency='true'></iframe><div id=\"myDropdown" + (i+1) + "\" class=\"dropdown-content\"></div><button width=100% id='myDropdown" + (i+1) + "Box' class='dropbtn2'></button>";
             }
             
             if ((i + 1) != numberOfTracks) {
@@ -849,7 +872,7 @@ var selectedTrackInfo = {};
     }
 
     // Our zoom listener
-    var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom).scale(1.4);
+    var zoomListener = d3.behavior.zoom().scaleExtent([0.1, 3]).on("zoom", zoom).scale(1.5);
 
     // Our base SVG
     var baseSvg = d3.select("#baseSVG").call(zoomListener);
@@ -1284,16 +1307,16 @@ var selectedTrackInfo = {};
                         y: (d.root ? 32 : (d.howTall ? (d.howTall + 2) : 26))
                     }, 
                     {
-                        x: 0, 
+                        x: 0.01, 
                         y: (d.root ? 55 : (verticalSpacing - 12))
                     }
                 ]))
             .style("stroke", "#979797")
-            .style("stroke-width", 0)
+            .style("stroke-width", "1px")
+            .style("stroke-opacity", 0)
             .transition()
             .duration(duration)
-            .style("stroke-width", .8)
-            .style("stroke", "#979797");
+            .style("stroke-opacity", 1);
     }
     
     /* Text overflow solution by user2846569 on Stack Overflow*/
@@ -1547,26 +1570,26 @@ var selectedTrackInfo = {};
         */
         var link = svgGroup.selectAll("path.link")
             .data(links, function(d) {
-                return d.target.aid ? ("link_" + d.target.aid) : ("link_" + d.target.tid);
+                return d.target.tid ? ("link_t_" + d.target.tid) : ("link_a_" + d.target.aid); 
             });
         
         // Transition links to their new position.
         link.transition()
-                    .duration(duration)
-                    .style("opacity", function(d) {
-                        return (d.target.aid || d.target.tid) ? 1 : 0;
-                    })
-                    .attr("d", elbow);
+            .duration(duration)
+            .style("stroke-opacity", function(d) {
+                return (d.target.aid || d.target.tid) ? 1 : 0;
+            })
+            .attr("d", elbow);
         
         // Enter any new nodes.
         var linkEnter = link.enter().append('path')
-                            .classed("link", true)
-                            .style("opacity", 0);
+                            .attr("class", "link")
+                            .style("stroke-opacity", 0);
         
         linkEnter.transition()
             .delay(duration * 0.3)
             .duration(duration - (duration * 0.3))
-            .style("opacity", function(d) {
+            .style("stroke-opacity", function(d) {
                 if (d.target.spacer) {
                     return 0;
                 }
@@ -2299,7 +2322,7 @@ var selectedTrackInfo = {};
     registerLogout("logout-b2");
     
     d3.select("#short-term").style("background-color", "#4B9877");
-
+    
     $(".chosen").on('change', function(evt, params) {
         if (params.selected) {
             selectedGenre.push(params.selected);

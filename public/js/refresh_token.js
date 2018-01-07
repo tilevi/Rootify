@@ -5,6 +5,10 @@
             This code handles retrieving a new access token.
 */
 refreshAccessToken = function(callback) {
+    if ((refresh_token == null) || (refresh_token.trim() == "")) {
+        window.location.replace('http://rootify.io');
+    }
+    
     $.ajax({
         url: '/refresh_token',
         data: {
