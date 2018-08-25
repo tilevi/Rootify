@@ -22,9 +22,9 @@ app.use(express.static(__dirname + '/public'))
 
 // These fields are information from the Spotify Developer site.
 // They should be kept private at all times.
-var client_id = '***REMOVED***';
-var client_secret = '***REMOVED***';
-var redirect_uri = 'http://localhost:8888/home'; // Your redirect uri
+var client_id = '';
+var client_secret = '';
+var redirect_uri = ''; // Your redirect uri
 
 // Generates a random string
 var generateRandomString = function(length) {
@@ -67,7 +67,7 @@ app.get('/logout', function(req, res) {
     res.cookie(stateKey, state);
     
     // Logout and present a new login screen
-    res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D***REMOVED***%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Flocalhost%3A8888%252Fhome%26state%3D' + state + '%26show_dialog%3Dtrue');
+    res.redirect('https://accounts.spotify.com/en/logout?continue=https%3A%2F%2Faccounts.spotify.com%2Fen%2Fauthorize%3Fresponse_type%3Dcode%26client_id%3D8d9483d3d91b4031b96286a03fd88478%26scope%3Duser-read-recently-played%2520user-top-read%2520user-read-private%2520user-read-email%26redirect_uri%3Dhttp%3A%252F%252Flocalhost%3A8888%252Fhome%26state%3D' + state + '%26show_dialog%3Dtrue');
 });
 
 /*
@@ -177,5 +177,5 @@ app.all('*', function(req, res) {
 });
 
 // Listen on the port 8888
-console.log('Listening on 8888');
+// console.log('Listening on 8888');
 app.listen(8888);
