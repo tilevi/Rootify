@@ -2,7 +2,7 @@
 
 Rootify visualizes your taste in music and allows you to branch out and discover new music.
 
- <a href="http://rootify.io/" target="_blank">Rootify Demo</a>
+ <a href="http://rootify.io/" target="_blank">Demo: rootify.io</a>
  
  ![](https://lh6.googleusercontent.com/cKIABNWx2QnYQuZPHGr7u0vzShiTG4j9JyZKub3Exd2oeRqipbYA3f1MQJM0gth1rKwpzeveaouHZw=w1920-h974-rw)
  ![](https://lh3.googleusercontent.com/5xXN-16c1bMupjxjDZsHSuyb_f9LIuv_ZfdCi64TfF23wZwnDkxNJFwzsHCuPayrkss9w74sqT-Leg=w1920-h974-rw)
